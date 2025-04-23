@@ -41,8 +41,19 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+// User type definition
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: "admin" | "manager" | "user";
+  department: string;
+  status: "active" | "inactive";
+  lastLogin: string;
+}
+
 // 使用者數據
-const mockUsers = [
+const mockUsers: User[] = [
   {
     id: 1,
     name: "張小明",
@@ -93,10 +104,10 @@ const userFormSchema = z.object({
 type UserFormValues = z.infer<typeof userFormSchema>;
 
 const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState<User[]>(mockUsers);
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
@@ -133,7 +144,7 @@ const UserManagement: React.FC = () => {
   };
 
   // 開啟編輯對話框
-  const handleEditUser = (user: any) => {
+  const handleEditUser = (user: User) => {
     setEditingUser(user);
     form.reset({
       name: user.name,
@@ -155,9 +166,13 @@ const UserManagement: React.FC = () => {
       toast.success("成功更新使用者資料");
     } else {
       // 新增用戶
-      const newUser = {
+      const newUser: User = {
         id: Date.now(),
-        ...data,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        department: data.department,
+        status: data.status,
         lastLogin: "尚未登入"
       };
       setUsers([...users, newUser]);
@@ -249,14 +264,14 @@ const UserManagement: React.FC = () => {
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={roleBadgeStyles[user.role as keyof typeof roleBadgeStyles]}>
-                        {roleNames[user.role as keyof typeof roleNames]}
+                      <Badge variant="outline" className={roleBadgeStyles[user.role]}>
+                        {roleNames[user.role]}
                       </Badge>
                     </TableCell>
                     <TableCell>{user.department}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={statusInfo[user.status as keyof typeof statusInfo].class}>
-                        {statusInfo[user.status as keyof typeof statusInfo].label}
+                      <Badge variant="outline" className={statusInfo[user.status].class}>
+                        {statusInfo[user.status].label}
                       </Badge>
                     </TableCell>
                     <TableCell>{user.lastLogin}</TableCell>
