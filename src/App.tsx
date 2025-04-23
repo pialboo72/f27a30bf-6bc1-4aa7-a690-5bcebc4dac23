@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import ActivityList from "./pages/ActivityList";
 import Activity from "./pages/Activity";
 import Programs from "./pages/Programs";
 import Login from "./pages/Login";
@@ -20,10 +21,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/activity" element={<Activity />} />
+          <Route path="/activities" element={<ActivityList />} />
+          <Route path="/activity/:id" element={<Activity />} />
+          <Route path="/activity/new" element={<Activity />} />
           <Route path="/programs" element={<Programs />} />
           <Route path="/login" element={<Login />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
@@ -32,3 +34,4 @@ const App = () => (
 );
 
 export default App;
+

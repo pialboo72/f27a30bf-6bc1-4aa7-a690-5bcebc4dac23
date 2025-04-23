@@ -1,5 +1,5 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -171,7 +171,6 @@ const BudgetForm: React.FC = () => {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
         
-        // 如果修改了數量或單價，自動計算金額
         if (field === 'quantity' || field === 'unitPrice') {
           const quantity = field === 'quantity' ? Number(value) : item.quantity;
           const unitPrice = field === 'unitPrice' ? Number(value) : item.unitPrice;
@@ -288,13 +287,28 @@ const BudgetForm: React.FC = () => {
 };
 
 const Activity: React.FC = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isNew = id === "new";
+
+  useEffect(() => {
+    if (!isNew) {
+      // 在這裡載入活動資料
+      // 實際應用中需要與後端API整合
+    }
+  }, [id, isNew]);
+
   return (
     <MainLayout>
       <div className="fade-in">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold">活動資料填寫</h1>
-            <p className="text-muted-foreground mt-1">填寫活動相關資料，系統將自動生成申請文件</p>
+            <h1 className="text-3xl font-bold">
+              {isNew ? "新增活動資料" : "編輯活動資料"}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              填寫活動相關資料，系統將自動生成申請文件
+            </p>
           </div>
         </div>
 
