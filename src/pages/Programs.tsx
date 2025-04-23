@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Tag, Clock, Info } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 // 模擬補助計劃數據
 const subsidyPrograms = [
@@ -79,6 +81,7 @@ const categories = ["全部", "文化藝術", "體育", "教育", "健康照護"
 const Programs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("全部");
+  const navigate = useNavigate();
 
   // 處理搜索和過濾
   const filteredPrograms = subsidyPrograms.filter((program) => {
@@ -90,6 +93,12 @@ const Programs: React.FC = () => {
     
     return matchesSearch && matchesCategory;
   });
+
+  // 處理申請按鈕點擊
+  const handleApply = (programId: number) => {
+    toast.success("開始申請補助計劃");
+    navigate(`/applications/new?programId=${programId}`);
+  };
 
   return (
     <MainLayout>
@@ -175,8 +184,8 @@ const Programs: React.FC = () => {
                   <Button variant="ghost" size="sm" asChild>
                     <a href="#" className="text-muted-foreground">查看詳情</a>
                   </Button>
-                  <Button size="sm" asChild>
-                    <a href={program.applyUrl}>開始申請</a>
+                  <Button size="sm" onClick={() => handleApply(program.id)}>
+                    開始申請
                   </Button>
                 </CardFooter>
               </Card>
