@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,14 @@ import {
   Users
 } from "lucide-react";
 
-const mainNavItems = [
+// Define the NavItem interface that was missing
+interface NavItem {
+  title: string;
+  href: string;
+  icon: React.ElementType;
+}
+
+const mainNavItems: NavItem[] = [
   {
     title: "儀表板",
     href: "/",
