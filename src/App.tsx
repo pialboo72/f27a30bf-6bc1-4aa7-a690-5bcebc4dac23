@@ -25,6 +25,12 @@ const App = () => (
           <Route path="/activity/:id" element={<Activity />} />
           <Route path="/activity/new" element={<Activity />} />
           <Route path="/programs" element={<Programs />} />
+          <Route path="/applications" element={<ActivityList />} />
+          <Route path="/files" element={<NotFound />} />
+          <Route path="/statistics" element={<NotFound />} />
+          <Route path="/admin" element={<NotFound />} />
+          <Route path="/logs" element={<NotFound />} />
+          <Route path="/users" element={<NotFound />} />
           <Route path="/login" element={<Login />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -34,4 +40,3 @@ const App = () => (
 );
 
 export default App;
-

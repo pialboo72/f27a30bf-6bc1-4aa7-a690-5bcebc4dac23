@@ -29,7 +29,7 @@ const mainNavItems: NavItem[] = [
   },
   {
     title: "活動資料填寫",
-    href: "/activity",
+    href: "/activities",
     icon: FileText,
   },
   {
@@ -74,7 +74,11 @@ const adminNavItems: NavItem[] = [
 
 const SidebarNav: React.FC = () => {
   const location = useLocation();
-  const isActive = (href: string) => location.pathname === href;
+  const isActive = (href: string) => {
+    if (href === "/" && location.pathname === "/") return true;
+    if (href !== "/" && location.pathname.startsWith(href)) return true;
+    return false;
+  };
 
   return (
     <div className="w-64 bg-sidebar border-r border-border h-full flex flex-col overflow-y-auto">
