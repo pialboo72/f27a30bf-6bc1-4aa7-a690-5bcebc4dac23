@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -15,20 +14,14 @@ import {
   Users
 } from "lucide-react";
 
-type NavItem = {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-};
-
-const mainNavItems: NavItem[] = [
+const mainNavItems = [
   {
     title: "儀表板",
     href: "/",
     icon: Home,
   },
   {
-    title: "活動資料填寫",
+    title: "活動管理",
     href: "/activities",
     icon: FileText,
   },

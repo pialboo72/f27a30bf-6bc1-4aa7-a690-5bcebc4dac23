@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import ActivityList from "./pages/ActivityList";
 import Activity from "./pages/Activity";
 import Programs from "./pages/Programs";
+import ApplicationTracking from "./pages/ApplicationTracking";
+import Statistics from "./pages/Statistics";
+import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -25,10 +28,10 @@ const App = () => (
           <Route path="/activity/:id" element={<Activity />} />
           <Route path="/activity/new" element={<Activity />} />
           <Route path="/programs" element={<Programs />} />
-          <Route path="/applications" element={<ActivityList />} />
+          <Route path="/applications" element={<ApplicationTracking />} />
           <Route path="/files" element={<NotFound />} />
-          <Route path="/statistics" element={<NotFound />} />
-          <Route path="/admin" element={<NotFound />} />
+          <Route path="/statistics" element={<Statistics />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/logs" element={<NotFound />} />
           <Route path="/users" element={<NotFound />} />
           <Route path="/login" element={<Login />} />
