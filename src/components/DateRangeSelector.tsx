@@ -72,6 +72,14 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
     }
   };
 
+  // Handle date range selection specifically for the Calendar in range mode
+  const handleRangeSelect = (range: { from: Date | undefined; to: Date | undefined }) => {
+    setDateRange(range);
+    if (range.from && range.to) {
+      onDateChange({ start: range.from, end: range.to });
+    }
+  };
+
   const handleTimeChange = (type: "start" | "end", value: string) => {
     setTimeSlots(prev => ({
       ...prev,
@@ -117,13 +125,23 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode={selectionType === "multiple" ? "multiple" : selectionType === "range" ? "range" : "single"}
-            selected={selectionType === "range" ? dateRange : selectedDates}
-            onSelect={selectionType === "range" ? setDateRange : handleDateSelect}
-            initialFocus
-            className={cn("p-3 pointer-events-auto")}
-          />
+          {selectionType === "range" ? (
+            <Calendar
+              mode="range"
+              selected={dateRange}
+              onSelect={handleRangeSelect}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          ) : (
+            <Calendar
+              mode={selectionType === "multiple" ? "multiple" : "single"}
+              selected={selectedDates}
+              onSelect={handleDateSelect}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          )}
           <div className="p-3 border-t">
             <div className="flex items-center gap-2">
               <Input
