@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,7 +23,6 @@ import { SystemFile, FileTag, FILE_CATEGORIES, FileCategory } from '@/types/prog
 import { useFiles } from '@/contexts/FileContext';
 
 interface FileSelectorProps {
-  files: SystemFile[];
   selectedFiles: SystemFile[];
   onFileSelect: (files: SystemFile[]) => void;
 }
@@ -61,7 +61,7 @@ export const FileSelector = ({
           <SheetHeader>
             <SheetTitle>選擇申請文件</SheetTitle>
             <SheetDescription>
-              從檔案管理系統中選擇需要的文件並設定分類
+              從檔案管理系統中選擇需要的文件
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
