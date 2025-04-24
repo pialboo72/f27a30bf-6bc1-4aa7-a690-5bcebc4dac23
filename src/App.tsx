@@ -18,6 +18,7 @@ import FileManagement from "./pages/FileManagement";
 import UserManagement from "./pages/UserManagement";
 import SystemLogs from "./pages/SystemLogs";
 import UnitManagement from "./pages/UnitManagement";
+import DocumentTemplate from "./pages/DocumentTemplate";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/logs" element={<SystemLogs />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/document-template" element={<DocumentTemplate />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

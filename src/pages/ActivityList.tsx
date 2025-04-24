@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +14,12 @@ import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
 import { useFiles } from "@/contexts/FileContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const ActivityList: React.FC = () => {
   const { downloadFile } = useFiles();
@@ -74,7 +79,7 @@ const ActivityList: React.FC = () => {
     }
   };
 
-  const handleDownload = (id: number) => {
+  const handleDownload = (id: number, format: string = 'docx') => {
     // 檢查此活動是否有生成文件
     const activity = activities.find(a => a.id === id);
     
@@ -83,7 +88,7 @@ const ActivityList: React.FC = () => {
       return;
     }
     
-    toast.success(`正在下載 ${activity.name} 申請文件`);
+    toast.success(`正在下載 ${activity.name} 申請文件 (${format})`);
     
     // 模擬下載過程
     setTimeout(() => {
@@ -91,13 +96,13 @@ const ActivityList: React.FC = () => {
       const link = document.createElement('a');
       const blob = new Blob([`${activity.name} 申請文件內容`], { type: 'text/plain' });
       link.href = URL.createObjectURL(blob);
-      link.download = `${activity.name}_申請文件.docx`;
+      link.download = `${activity.name}_申請文件.${format}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
       toast.success("文件下載完成");
-    }, 1000);
+    }, 1500);
   };
 
   const handlePrint = (id: number) => {
@@ -129,12 +134,20 @@ const ActivityList: React.FC = () => {
               在這裡管理您的所有活動申請案
             </p>
           </div>
-          <Button asChild>
-            <Link to="/activity/new">
-              <Plus className="mr-2 h-4 w-4" />
-              新增活動
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild>
+              <Link to="/activity/new">
+                <Plus className="mr-2 h-4 w-4" />
+                新增活動
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/document-template">
+                <FileText className="mr-2 h-4 w-4" />
+                文件模板
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -173,14 +186,28 @@ const ActivityList: React.FC = () => {
                         {/* 只有已生成文件的活動才顯示下載和列印按鈕 */}
                         {activity.hasDocument && (
                           <>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleDownload(activity.id)}
-                              title="下載申請文件"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  title="下載申請文件"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleDownload(activity.id, 'docx')}>
+                                  下載 DOCX 格式
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownload(activity.id, 'odt')}>
+                                  下載 ODT 格式
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownload(activity.id, 'pdf')}>
+                                  下載 PDF 格式
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                             <Button
                               variant="outline"
                               size="icon"
@@ -220,5 +247,25 @@ const ActivityList: React.FC = () => {
     </MainLayout>
   );
 };
+
+// 添加 FileText 圖標元件
+const FileText = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <line x1="10" y1="9" x2="8" y2="9" />
+  </svg>
+);
 
 export default ActivityList;
