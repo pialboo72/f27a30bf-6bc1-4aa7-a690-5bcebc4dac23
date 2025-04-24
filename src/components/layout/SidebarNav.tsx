@@ -12,7 +12,8 @@ import {
   Tag,
   Info,
   Folder,
-  Users
+  Users,
+  Building
 } from "lucide-react";
 
 // Define the NavItem interface that was missing
@@ -47,6 +48,11 @@ const mainNavItems: NavItem[] = [
     title: "附件與檔案",
     href: "/files",
     icon: Folder,
+  },
+  {
+    title: "單位資料",
+    href: "/units",
+    icon: Building,
   }
 ];
 

@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { zhTW } from "date-fns/locale";
 import { Calendar as CalendarIcon, FileText, Save, Upload } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
+import { toast } from "sonner";
 
 const ActivityForm: React.FC = () => {
   const [date, setDate] = useState<Date>();
@@ -149,14 +150,13 @@ const ActivityForm: React.FC = () => {
 
 const BudgetForm: React.FC = () => {
   const [budgetItems, setBudgetItems] = useState([
-    { id: 1, name: "", item: "", quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }
+    { id: 1, item: "", quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }
   ]);
 
   const handleAddItem = () => {
     const newId = budgetItems.length > 0 ? Math.max(...budgetItems.map(item => item.id)) + 1 : 1;
     setBudgetItems([...budgetItems, { 
       id: newId, 
-      name: "", 
       item: "", 
       quantity: 0, 
       unit: "", 
@@ -189,6 +189,10 @@ const BudgetForm: React.FC = () => {
     return budgetItems.reduce((sum, item) => sum + item.amount, 0);
   };
 
+  const handleSaveBudget = () => {
+    toast.success("預算已成功儲存");
+  };
+
   return (
     <div className="space-y-6">
       <div className="overflow-x-auto">
@@ -196,7 +200,6 @@ const BudgetForm: React.FC = () => {
           <thead>
             <tr className="bg-muted">
               <th className="border px-4 py-2 text-left">項次</th>
-              <th className="border px-4 py-2 text-left">名稱</th>
               <th className="border px-4 py-2 text-left">項目</th>
               <th className="border px-4 py-2 text-left">數量</th>
               <th className="border px-4 py-2 text-left">單位</th>
@@ -209,14 +212,6 @@ const BudgetForm: React.FC = () => {
             {budgetItems.map((item, index) => (
               <tr key={item.id} className="border-b">
                 <td className="border px-4 py-2">{index + 1}</td>
-                <td className="border px-4 py-2">
-                  <Input
-                    value={item.name}
-                    onChange={(e) => handleUpdateItem(item.id, 'name', e.target.value)}
-                    className="border-0 p-0 h-8"
-                    placeholder="請輸入名稱"
-                  />
-                </td>
                 <td className="border px-4 py-2">
                   <Input
                     value={item.item}
@@ -265,7 +260,7 @@ const BudgetForm: React.FC = () => {
               </tr>
             ))}
             <tr className="bg-muted">
-              <td colSpan={6} className="border px-4 py-2 text-right font-medium">總計：</td>
+              <td colSpan={5} className="border px-4 py-2 text-right font-medium">總計：</td>
               <td className="border px-4 py-2 font-bold">{calculateTotal().toLocaleString()}</td>
               <td className="border px-4 py-2"></td>
             </tr>
@@ -277,7 +272,7 @@ const BudgetForm: React.FC = () => {
         <Button onClick={handleAddItem} variant="outline">
           新增項目
         </Button>
-        <Button>
+        <Button onClick={handleSaveBudget}>
           <Save className="mr-2 h-4 w-4" />
           儲存預算
         </Button>
