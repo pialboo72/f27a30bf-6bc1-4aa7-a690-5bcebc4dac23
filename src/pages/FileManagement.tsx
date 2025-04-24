@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -35,6 +34,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { File, Folder, Upload, Plus, X, FileText, Download, CheckSquare } from "lucide-react";
+import { useFiles } from '@/contexts/FileContext';
 
 // 模擬文件數據
 const mockFolders = [
@@ -102,6 +102,7 @@ const fileConversions: {[key: string]: string[]} = {
 };
 
 const FileManagement: React.FC = () => {
+  const { setSystemFiles } = useFiles();
   const [activeTab, setActiveTab] = useState("all");
   const [folders, setFolders] = useState(mockFolders);
   const [files, setFiles] = useState(mockFiles);
@@ -123,7 +124,7 @@ const FileManagement: React.FC = () => {
     return matchesSearch && matchesFolder;
   });
   
-  // 處理文件選擇
+  // 處理文件選��
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
@@ -149,7 +150,9 @@ const FileManagement: React.FC = () => {
         availableFormats: supportsConversion ? fileConversions[fileType] : [fileType]
       };
       
-      setFiles([...files, newFile]);
+      const updatedFiles = [...files, newFile];
+      setFiles(updatedFiles);
+      setSystemFiles(updatedFiles);  // Update the shared context
       
       let successMessage = `成功上傳檔案: ${fileName}.${fileType}`;
       if (supportsConversion) {
@@ -471,7 +474,7 @@ const FileManagement: React.FC = () => {
           </DialogContent>
         </Dialog>
         
-        {/* 新增資料夾對話框 */}
+        {/* 新��資料夾對話框 */}
         <Dialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen}>
           <DialogContent>
             <DialogHeader>

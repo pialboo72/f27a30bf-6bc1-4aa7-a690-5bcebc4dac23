@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { SystemFile, FileTag, FILE_CATEGORIES, FileCategory } from '@/types/program';
+import { useFiles } from '@/contexts/FileContext';
 
 interface FileSelectorProps {
   files: SystemFile[];
@@ -27,32 +27,11 @@ interface FileSelectorProps {
   onFileSelect: (files: SystemFile[]) => void;
 }
 
-// 模擬系統檔案資料
-const mockSystemFiles: SystemFile[] = [
-  {
-    id: 1,
-    name: '申請表.pdf',
-    path: '/files/application.pdf',
-    tags: [{ id: 1, name: FILE_CATEGORIES.APPLICATION }]
-  },
-  {
-    id: 2,
-    name: '計畫書範本.docx',
-    path: '/files/proposal-template.docx',
-    tags: [{ id: 2, name: FILE_CATEGORIES.REQUIRED }]
-  },
-  {
-    id: 3,
-    name: '補充文件範本.docx',
-    path: '/files/supplementary.docx',
-    tags: [{ id: 3, name: FILE_CATEGORIES.OPTIONAL }]
-  }
-];
-
 export const FileSelector = ({
   selectedFiles,
   onFileSelect
 }: FileSelectorProps) => {
+  const { systemFiles } = useFiles();
   const [tempSelectedFiles, setTempSelectedFiles] = useState<SystemFile[]>(selectedFiles);
   const [fileCategories, setFileCategories] = useState<Record<number, FileCategory>>({});
 
@@ -82,11 +61,11 @@ export const FileSelector = ({
           <SheetHeader>
             <SheetTitle>選擇申請文件</SheetTitle>
             <SheetDescription>
-              請選擇需要的文件並設定分類
+              從檔案管理系統中選擇需要的文件並設定分類
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
-            {mockSystemFiles.map((file) => (
+            {systemFiles.map((file) => (
               <div key={file.id} className="flex flex-col gap-2 p-4 border rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
