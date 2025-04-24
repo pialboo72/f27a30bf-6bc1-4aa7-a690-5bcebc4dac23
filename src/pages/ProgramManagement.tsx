@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,13 +9,39 @@ import { toast } from 'sonner';
 import MainLayout from '@/components/layout/MainLayout';
 import { FileSelector } from '@/components/FileSelector';
 import { SystemFile, Program } from '@/types/program';
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
+import { format } from "date-fns";
+import { CalendarIcon, Plus, Search, Copy, Edit, Trash } from "lucide-react";
+import {
+  Table, 
+  TableHeader,
+  TableBody, 
+  TableHead,
+  TableRow,
+  TableCell
+} from '@/components/ui/table';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogFooter, 
+  DialogTitle, 
+  DialogDescription 
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const initialPrograms = [
   {
