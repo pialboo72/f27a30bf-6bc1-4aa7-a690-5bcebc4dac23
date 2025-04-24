@@ -9,6 +9,7 @@ export interface SystemFile {
   name: string;
   path: string;
   tags: FileTag[];
+  folders?: string[]; // Add the optional folders property
 }
 
 export interface Program {
@@ -24,7 +25,7 @@ export interface Program {
   subsidyLimit: number;
   description: string;
   documents: SystemFile[];
-  links: string;  // Adding the missing 'links' property
+  links: string;
 }
 
 export const FILE_CATEGORIES = {
