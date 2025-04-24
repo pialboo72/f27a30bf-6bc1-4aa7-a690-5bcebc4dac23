@@ -18,13 +18,34 @@ import { toast } from "sonner";
 
 const ActivityForm: React.FC = () => {
   const [date, setDate] = useState<Date>();
-  
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    title: '',
+    category: '',
+    date: null,
+    location: '',
+    purpose: '',
+    content: '',
+    target: '',
+    participants: '',
+    unit: '',
+    subsidyUnit: '',
+    subsidyAmount: 0,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement actual save logic
+    toast.success("活動資料已儲存");
+  };
+
   const handleGenerateDocument = () => {
     toast.success("申請文件生成中，請稍候...");
-    // 實際應用中需連接文件生成服務
+    // 模擬文件生成過程
     setTimeout(() => {
-      toast.success("申請文件已生成，請至附件與檔案頁面查看");
-    }, 2000);
+      toast.success("申請文件已生成");
+      navigate('/activities');
+    }, 1500);
   };
 
   return (
@@ -81,6 +102,31 @@ const ActivityForm: React.FC = () => {
           <div className="space-y-3">
             <Label htmlFor="activity-location">活動地點</Label>
             <Input id="activity-location" placeholder="請輸入活動地點" />
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b pb-6">
+        <h2 className="text-lg font-semibold mb-4">補助單位資料</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <Label htmlFor="subsidy-unit">補助單位</Label>
+            <Input
+              id="subsidy-unit"
+              value={formData.subsidyUnit}
+              onChange={(e) => setFormData(prev => ({ ...prev, subsidyUnit: e.target.value }))}
+              placeholder="請輸入補助單位名稱"
+            />
+          </div>
+          <div className="space-y-3">
+            <Label htmlFor="subsidy-amount">補助金額</Label>
+            <Input
+              id="subsidy-amount"
+              type="number"
+              value={formData.subsidyAmount}
+              onChange={(e) => setFormData(prev => ({ ...prev, subsidyAmount: Number(e.target.value) }))}
+              placeholder="請輸入補助金額"
+            />
           </div>
         </div>
       </div>
@@ -227,28 +273,22 @@ const BudgetForm: React.FC = () => {
     return budgetItems.reduce((sum, item) => sum + item.amount, 0);
   };
 
-  const handleSaveBudget = () => {
-    // Validate all items
-    let newErrors: {[key: string]: {[key: string]: boolean}} = {};
-    let hasErrors = false;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    budgetItems.forEach((item, index) => {
-      const itemErrors = validateItem(item, index);
-      if (Object.keys(itemErrors).length > 0) {
-        newErrors[item.id] = itemErrors;
-        hasErrors = true;
-      }
-    });
-    
-    if (hasErrors) {
-      setErrors(newErrors);
+    // Validate required fields
+    const hasEmptyFields = budgetItems.some(item => 
+      item.quantity <= 0 || !item.unit.trim() || item.unitPrice <= 0
+    );
+
+    if (hasEmptyFields) {
       toast.error("請填寫所有必填欄位");
       return;
     }
-    
-    // If validation passes, save the budget
-    setBudgetSaved(true);
+
+    // Save budget
     toast.success("預算已成功儲存");
+    setBudgetSaved(true);
   };
 
   return (
@@ -327,7 +367,7 @@ const BudgetForm: React.FC = () => {
         <Button onClick={handleAddItem} variant="outline">
           新增項目
         </Button>
-        <Button onClick={handleSaveBudget}>
+        <Button onClick={handleSubmit}>
           <Save className="mr-2 h-4 w-4" />
           儲存預算
         </Button>

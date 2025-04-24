@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,12 +9,15 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { Plus, Pencil, Copy, Trash2 } from "lucide-react";
+import { Plus, Pencil, Copy, Trash2, Download, Printer } from "lucide-react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
+import { useFiles } from "@/contexts/FileContext";
 
 const ActivityList: React.FC = () => {
+  const { downloadFile } = useFiles();
+  
   // 模擬活動數據
   const activities = [
     {
@@ -42,6 +44,16 @@ const ActivityList: React.FC = () => {
   const handleCopy = (id: number) => {
     // 實際應用中需要與後端API整合
     toast.success("活動已複製");
+  };
+
+  const handleDownload = (id: number) => {
+    downloadFile(id);
+  };
+
+  const handlePrint = (id: number) => {
+    // Implement print functionality
+    window.print();
+    toast.success("正在列印文件");
   };
 
   return (
@@ -97,6 +109,20 @@ const ActivityList: React.FC = () => {
                         <Button
                           variant="outline"
                           size="icon"
+                          onClick={() => handleDownload(activity.id)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handlePrint(activity.id)}
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleCopy(activity.id)}
                         >
                           <Copy className="h-4 w-4" />
@@ -122,4 +148,3 @@ const ActivityList: React.FC = () => {
 };
 
 export default ActivityList;
-
