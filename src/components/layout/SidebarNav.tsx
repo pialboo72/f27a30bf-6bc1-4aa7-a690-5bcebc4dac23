@@ -50,7 +50,7 @@ const mainNavItems: NavItem[] = [
     icon: Folder,
   },
   {
-    title: "單位資料",
+    title: "單位管理",
     href: "/units",
     icon: Building,
   }

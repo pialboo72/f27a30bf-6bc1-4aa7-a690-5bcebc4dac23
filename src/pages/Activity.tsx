@@ -18,6 +18,14 @@ import { toast } from "sonner";
 
 const ActivityForm: React.FC = () => {
   const [date, setDate] = useState<Date>();
+  
+  const handleGenerateDocument = () => {
+    toast.success("申請文件生成中，請稍候...");
+    // 實際應用中需連接文件生成服務
+    setTimeout(() => {
+      toast.success("申請文件已生成，請至附件與檔案頁面查看");
+    }, 2000);
+  };
 
   return (
     <div className="space-y-8">
@@ -139,7 +147,7 @@ const ActivityForm: React.FC = () => {
           <Save className="mr-2 h-4 w-4" />
           儲存草稿
         </Button>
-        <Button>
+        <Button onClick={handleGenerateDocument}>
           <FileText className="mr-2 h-4 w-4" />
           生成申請文件
         </Button>
@@ -148,22 +156,42 @@ const ActivityForm: React.FC = () => {
   );
 };
 
+interface BudgetItem {
+  id: number;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  amount: number;
+  remarks: string;
+}
+
 const BudgetForm: React.FC = () => {
-  const [budgetItems, setBudgetItems] = useState([
-    { id: 1, item: "", quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }
+  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([
+    { id: 1, quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }
   ]);
+  const [budgetSaved, setBudgetSaved] = useState<boolean>(false);
+  const [errors, setErrors] = useState<{[key: string]: {[key: string]: boolean}}>({});
 
   const handleAddItem = () => {
     const newId = budgetItems.length > 0 ? Math.max(...budgetItems.map(item => item.id)) + 1 : 1;
     setBudgetItems([...budgetItems, { 
       id: newId, 
-      item: "", 
       quantity: 0, 
       unit: "", 
       unitPrice: 0, 
       amount: 0, 
       remarks: "" 
     }]);
+  };
+
+  const validateItem = (item: BudgetItem, index: number) => {
+    let itemErrors: {[key: string]: boolean} = {};
+    
+    if (item.quantity <= 0) itemErrors.quantity = true;
+    if (!item.unit.trim()) itemErrors.unit = true;
+    if (item.unitPrice <= 0) itemErrors.unitPrice = true;
+    
+    return itemErrors;
   };
 
   const handleUpdateItem = (id: number, field: string, value: string | number) => {
@@ -183,6 +211,16 @@ const BudgetForm: React.FC = () => {
     });
     
     setBudgetItems(updatedItems);
+    
+    // Clear error for this field if it exists
+    if (errors[id] && errors[id][field]) {
+      const newErrors = {...errors};
+      delete newErrors[id][field];
+      if (Object.keys(newErrors[id]).length === 0) {
+        delete newErrors[id];
+      }
+      setErrors(newErrors);
+    }
   };
 
   const calculateTotal = () => {
@@ -190,6 +228,26 @@ const BudgetForm: React.FC = () => {
   };
 
   const handleSaveBudget = () => {
+    // Validate all items
+    let newErrors: {[key: string]: {[key: string]: boolean}} = {};
+    let hasErrors = false;
+    
+    budgetItems.forEach((item, index) => {
+      const itemErrors = validateItem(item, index);
+      if (Object.keys(itemErrors).length > 0) {
+        newErrors[item.id] = itemErrors;
+        hasErrors = true;
+      }
+    });
+    
+    if (hasErrors) {
+      setErrors(newErrors);
+      toast.error("請填寫所有必填欄位");
+      return;
+    }
+    
+    // If validation passes, save the budget
+    setBudgetSaved(true);
     toast.success("預算已成功儲存");
   };
 
@@ -200,10 +258,9 @@ const BudgetForm: React.FC = () => {
           <thead>
             <tr className="bg-muted">
               <th className="border px-4 py-2 text-left">項次</th>
-              <th className="border px-4 py-2 text-left">項目</th>
-              <th className="border px-4 py-2 text-left">數量</th>
-              <th className="border px-4 py-2 text-left">單位</th>
-              <th className="border px-4 py-2 text-left">單價</th>
+              <th className="border px-4 py-2 text-left">數量 <span className="text-red-500">*</span></th>
+              <th className="border px-4 py-2 text-left">單位 <span className="text-red-500">*</span></th>
+              <th className="border px-4 py-2 text-left">單價 <span className="text-red-500">*</span></th>
               <th className="border px-4 py-2 text-left">金額</th>
               <th className="border px-4 py-2 text-left">備註</th>
             </tr>
@@ -214,37 +271,35 @@ const BudgetForm: React.FC = () => {
                 <td className="border px-4 py-2">{index + 1}</td>
                 <td className="border px-4 py-2">
                   <Input
-                    value={item.item}
-                    onChange={(e) => handleUpdateItem(item.id, 'item', e.target.value)}
-                    className="border-0 p-0 h-8"
-                    placeholder="請輸入項目"
-                  />
-                </td>
-                <td className="border px-4 py-2">
-                  <Input
                     type="number"
                     value={item.quantity === 0 ? '' : item.quantity}
                     onChange={(e) => handleUpdateItem(item.id, 'quantity', Number(e.target.value))}
-                    className="border-0 p-0 h-8"
+                    className={cn("border-0 p-0 h-8", errors[item.id]?.quantity ? "border-red-500 ring-1 ring-red-500" : "")}
                     placeholder="0"
+                    required
                   />
+                  {errors[item.id]?.quantity && <span className="text-xs text-red-500">必填</span>}
                 </td>
                 <td className="border px-4 py-2">
                   <Input
                     value={item.unit}
                     onChange={(e) => handleUpdateItem(item.id, 'unit', e.target.value)}
-                    className="border-0 p-0 h-8"
+                    className={cn("border-0 p-0 h-8", errors[item.id]?.unit ? "border-red-500 ring-1 ring-red-500" : "")}
                     placeholder="單位"
+                    required
                   />
+                  {errors[item.id]?.unit && <span className="text-xs text-red-500">必填</span>}
                 </td>
                 <td className="border px-4 py-2">
                   <Input
                     type="number"
                     value={item.unitPrice === 0 ? '' : item.unitPrice}
                     onChange={(e) => handleUpdateItem(item.id, 'unitPrice', Number(e.target.value))}
-                    className="border-0 p-0 h-8"
+                    className={cn("border-0 p-0 h-8", errors[item.id]?.unitPrice ? "border-red-500 ring-1 ring-red-500" : "")}
                     placeholder="0"
+                    required
                   />
+                  {errors[item.id]?.unitPrice && <span className="text-xs text-red-500">必填</span>}
                 </td>
                 <td className="border px-4 py-2 font-medium">
                   {item.amount.toLocaleString()}
@@ -260,7 +315,7 @@ const BudgetForm: React.FC = () => {
               </tr>
             ))}
             <tr className="bg-muted">
-              <td colSpan={5} className="border px-4 py-2 text-right font-medium">總計：</td>
+              <td colSpan={4} className="border px-4 py-2 text-right font-medium">總計：</td>
               <td className="border px-4 py-2 font-bold">{calculateTotal().toLocaleString()}</td>
               <td className="border px-4 py-2"></td>
             </tr>
