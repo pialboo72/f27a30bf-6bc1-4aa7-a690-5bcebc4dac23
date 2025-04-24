@@ -51,8 +51,10 @@ const mockFiles = [
     name: "文化部藝術補助申請表", 
     path: "/files/application-form.docx",
     tags: [{ id: 1, name: "申請表格" }],
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    size: 245000, // Convert KB to bytes
+    uploadDate: "2025-03-05",
     originalType: "docx", 
-    size: "245 KB", 
     uploaded: "2025-03-05", 
     folders: ["申請表格範本"],
     availableFormats: ["docx", "odt", "pdf"]
@@ -62,8 +64,10 @@ const mockFiles = [
     name: "經費核銷表", 
     path: "/files/expense-form.xlsx",
     tags: [{ id: 2, name: "財務" }],
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    size: 120000,
+    uploadDate: "2025-03-10",
     originalType: "xlsx", 
-    size: "120 KB", 
     uploaded: "2025-03-10", 
     folders: ["申請表格範本"],
     availableFormats: ["xlsx", "ods", "pdf"]
@@ -73,8 +77,10 @@ const mockFiles = [
     name: "活動場地規劃", 
     path: "/files/venue-plan.pdf",
     tags: [{ id: 3, name: "活動" }],
+    type: "application/pdf",
+    size: 1200000,
+    uploadDate: "2025-03-18",
     originalType: "pdf", 
-    size: "1.2 MB", 
     uploaded: "2025-03-18", 
     folders: ["活動相關文件", "宣傳資料"],
     availableFormats: ["pdf"]
@@ -84,8 +90,10 @@ const mockFiles = [
     name: "宣傳海報範例", 
     path: "/files/poster-sample.jpg",
     tags: [{ id: 4, name: "宣傳" }],
+    type: "image/jpeg",
+    size: 3500000,
+    uploadDate: "2025-03-22",
     originalType: "jpg", 
-    size: "3.5 MB", 
     uploaded: "2025-03-22", 
     folders: ["宣傳資料"],
     availableFormats: ["jpg", "png", "pdf"]
@@ -121,7 +129,7 @@ const FileManagement: React.FC = () => {
     uploaded: string;
     folders: string[];
     availableFormats: string[];
-  }>>(mockFiles);
+  }>>(mockFiles as any);
   const [searchTerm, setSearchTerm] = useState("");
   
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -134,7 +142,7 @@ const FileManagement: React.FC = () => {
   const [selectedFolders, setSelectedFolders] = useState<{[key: string]: boolean}>({});
   
   useEffect(() => {
-    setSystemFiles(files);
+    setSystemFiles(files as any);
   }, []);
   
   const filteredFiles = files.filter(file => {
@@ -161,16 +169,18 @@ const FileManagement: React.FC = () => {
         name: fileName,
         path: `/files/${fileName.toLowerCase().replace(/\s+/g, '-')}.${fileType}`,
         tags: [{ id: Date.now(), name: selectedFolder === "全部" ? "未分類" : selectedFolder }],
+        type: getMimeType(fileType),
+        size: selectedFile.size,
+        uploadDate: new Date().toISOString().split('T')[0],
         originalType: fileType,
-        size: `${(selectedFile.size / 1024).toFixed(0)} KB`,
         uploaded: new Date().toISOString().split('T')[0],
         folders: selectedFolder === "全部" ? ["未分類"] : [selectedFolder],
         availableFormats: supportsConversion ? fileConversions[fileType] : [fileType]
       };
       
-      const updatedFiles = [...files, newFile];
+      const updatedFiles = [...files, newFile as any];
       setFiles(updatedFiles);
-      setSystemFiles(updatedFiles);
+      setSystemFiles(updatedFiles as any);
       
       let successMessage = `成功上傳檔案: ${fileName}.${fileType}`;
       if (supportsConversion) {
@@ -263,6 +273,21 @@ const FileManagement: React.FC = () => {
   
   const downloadFile = (fileName: string, fileType: string) => {
     toast.success(`開始下載 ${fileName}.${fileType}`);
+  };
+  
+  const getMimeType = (extension: string): string => {
+    const mimeTypes: {[key: string]: string} = {
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      pdf: "application/pdf",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      odt: "application/vnd.oasis.opendocument.text",
+      ods: "application/vnd.oasis.opendocument.spreadsheet",
+      txt: "text/plain"
+    };
+    return mimeTypes[extension.toLowerCase()] || "application/octet-stream";
   };
   
   return (
@@ -469,7 +494,7 @@ const FileManagement: React.FC = () => {
                   <p className="mb-1">已選擇: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</p>
                   <p className="text-xs text-muted-foreground">
                     {selectedFile.name.split('.').pop() in fileConversions ? 
-                      `此檔案格式將自動轉換為相容的其他格式 (${fileConversions[selectedFile.name.split('.').pop() || ""].join(', ')})` : 
+                      `此檔案格式將自動轉���為相容的其他格式 (${fileConversions[selectedFile.name.split('.').pop() || ""].join(', ')})` : 
                       '此檔案格式不支援自動轉換'
                     }
                   </p>
