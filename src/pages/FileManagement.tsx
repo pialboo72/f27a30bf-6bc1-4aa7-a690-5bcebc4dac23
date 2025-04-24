@@ -164,21 +164,43 @@ const FileManagement: React.FC = () => {
       
       const supportsConversion = fileType in fileConversions;
       
-      const newFile = {
-        id: Date.now(),
-        name: fileName,
-        path: `/files/${fileName.toLowerCase().replace(/\s+/g, '-')}.${fileType}`,
-        tags: [{ id: Date.now(), name: selectedFolder === "全部" ? "未分類" : selectedFolder }],
-        type: getMimeType(fileType),
-        size: selectedFile.size,
-        uploadDate: new Date().toISOString().split('T')[0],
-        originalType: fileType,
-        uploaded: new Date().toISOString().split('T')[0],
-        folders: selectedFolder === "全部" ? ["未分類"] : [selectedFolder],
-        availableFormats: supportsConversion ? fileConversions[fileType] : [fileType]
-      };
+      const filesToUpload = [
+        {
+          id: Date.now(),
+          name: fileName,
+          path: `/files/${fileName.toLowerCase().replace(/\s+/g, '-')}.${fileType}`,
+          tags: [{ id: Date.now(), name: selectedFolder === "全部" ? "未分類" : selectedFolder }],
+          type: getMimeType(fileType),
+          size: selectedFile.size,
+          uploadDate: new Date().toISOString().split('T')[0],
+          originalType: fileType,
+          uploaded: new Date().toISOString().split('T')[0],
+          folders: selectedFolder === "全部" ? ["未分類"] : [selectedFolder],
+          availableFormats: supportsConversion ? fileConversions[fileType] : [fileType]
+        }
+      ];
+
+      if (supportsConversion) {
+        fileConversions[fileType]?.forEach((format, index) => {
+          if (format !== fileType) {
+            filesToUpload.push({
+              id: Date.now() + index + 1,
+              name: fileName,
+              path: `/files/${fileName.toLowerCase().replace(/\s+/g, '-')}.${format}`,
+              tags: [{ id: Date.now() + index + 1, name: selectedFolder === "全部" ? "未分類" : selectedFolder }],
+              type: getMimeType(format),
+              size: selectedFile.size,
+              uploadDate: new Date().toISOString().split('T')[0],
+              originalType: format,
+              uploaded: new Date().toISOString().split('T')[0],
+              folders: selectedFolder === "全部" ? ["未分類"] : [selectedFolder],
+              availableFormats: [format]
+            });
+          }
+        });
+      }
       
-      const updatedFiles = [...files, newFile as any];
+      const updatedFiles = [...files, ...filesToUpload as any];
       setFiles(updatedFiles);
       setSystemFiles(updatedFiles as any);
       

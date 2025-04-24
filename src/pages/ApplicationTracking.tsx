@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -62,7 +61,11 @@ const ApplicationTracking: React.FC = () => {
 
   const handleStatusChange = (id: number, newStatus: string) => {
     setApplications(applications.map(app => 
-      app.id === id ? { ...app, status: newStatus } : app
+      app.id === id ? { 
+        ...app, 
+        status: newStatus,
+        lastUpdate: new Date().toISOString().split('T')[0]
+      } : app
     ));
     toast.success("狀態已更新");
   };

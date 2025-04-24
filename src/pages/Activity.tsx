@@ -70,45 +70,14 @@ const ActivityForm: React.FC = () => {
       name: formData.title,
       category: formData.category,
       date: formData.date ? format(formData.date, 'yyyy-MM-dd') : '',
-      status: '草稿',
-      ...formData
-    };
-    
-    activities.push(newActivity);
-    localStorage.setItem('activities', JSON.stringify(activities));
-    toast.success("活動資料已儲存");
-  };
-
-  const handleGenerateDocument = () => {
-    // 驗證必填欄位
-    if (!formData.title || !formData.category || !formData.date || !formData.location) {
-      toast.error("請填寫所有必填欄位");
-      return;
-    }
-
-    toast.success("申請文件生成中，請稍候...");
-    
-    // 儲存活動資料並添加下載/列印功能標記
-    const activities = JSON.parse(localStorage.getItem('activities') || '[]');
-    const activityId = new Date().getTime();
-    const newActivity = {
-      id: activityId,
-      name: formData.title,
-      category: formData.category,
-      date: formData.date ? format(formData.date, 'yyyy-MM-dd') : '',
       status: '已提交',
-      hasDocument: true, // 標記此活動有生成的文件
       ...formData
     };
     
     activities.push(newActivity);
     localStorage.setItem('activities', JSON.stringify(activities));
-    
-    // 模擬文件生成過程
-    setTimeout(() => {
-      toast.success("申請文件已生成");
-      navigate('/activities');
-    }, 1500);
+    toast.success("活動資料已送出");
+    navigate('/activities');
   };
 
   return (
@@ -277,9 +246,8 @@ const ActivityForm: React.FC = () => {
           <Save className="mr-2 h-4 w-4" />
           儲存草稿
         </Button>
-        <Button onClick={handleGenerateDocument}>
-          <FileText className="mr-2 h-4 w-4" />
-          生成申請文件
+        <Button onClick={handleSubmit}>
+          送出
         </Button>
       </div>
     </div>
