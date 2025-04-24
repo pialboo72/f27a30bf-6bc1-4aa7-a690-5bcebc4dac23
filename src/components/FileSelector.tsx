@@ -1,5 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -8,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { SystemFile, FileTag } from '@/types/program';
+import { SystemFile, FileTag, FILE_CATEGORIES, FileCategory } from '@/types/program';
 
 interface FileSelectorProps {
   files: SystemFile[];
@@ -22,19 +33,19 @@ const mockSystemFiles: SystemFile[] = [
     id: 1,
     name: '申請表.pdf',
     path: '/files/application.pdf',
-    tags: [{ id: 1, name: '申請書' }]
+    tags: [{ id: 1, name: FILE_CATEGORIES.APPLICATION }]
   },
   {
     id: 2,
     name: '計畫書範本.docx',
     path: '/files/proposal-template.docx',
-    tags: [{ id: 2, name: '必備附件' }]
+    tags: [{ id: 2, name: FILE_CATEGORIES.REQUIRED }]
   },
   {
     id: 3,
     name: '補充文件範本.docx',
     path: '/files/supplementary.docx',
-    tags: [{ id: 3, name: '可選附件' }]
+    tags: [{ id: 3, name: FILE_CATEGORIES.OPTIONAL }]
   }
 ];
 
@@ -42,38 +53,89 @@ export const FileSelector = ({
   selectedFiles,
   onFileSelect
 }: FileSelectorProps) => {
+  const [tempSelectedFiles, setTempSelectedFiles] = useState<SystemFile[]>(selectedFiles);
+  const [fileCategories, setFileCategories] = useState<Record<number, FileCategory>>({});
+
+  const handleFileSelect = (file: SystemFile, checked: boolean) => {
+    if (checked) {
+      setTempSelectedFiles([...tempSelectedFiles, file]);
+    } else {
+      setTempSelectedFiles(tempSelectedFiles.filter(f => f.id !== file.id));
+    }
+  };
+
+  const handleSave = () => {
+    const filesWithCategories = tempSelectedFiles.map(file => ({
+      ...file,
+      tags: [{ id: file.id, name: fileCategories[file.id] || FILE_CATEGORIES.OPTIONAL }]
+    }));
+    onFileSelect(filesWithCategories);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="grid gap-4">
-        {mockSystemFiles.map((file) => (
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline">選擇文件</Button>
+        </SheetTrigger>
+        <SheetContent className="w-[400px] sm:w-[540px]">
+          <SheetHeader>
+            <SheetTitle>選擇申請文件</SheetTitle>
+            <SheetDescription>
+              請選擇需要的文件並設定分類
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {mockSystemFiles.map((file) => (
+              <div key={file.id} className="flex flex-col gap-2 p-4 border rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={tempSelectedFiles.some(f => f.id === file.id)}
+                      onCheckedChange={(checked) => handleFileSelect(file, checked as boolean)}
+                    />
+                    <span>{file.name}</span>
+                  </div>
+                </div>
+                {tempSelectedFiles.some(f => f.id === file.id) && (
+                  <Select
+                    value={fileCategories[file.id]}
+                    onValueChange={(value: FileCategory) => 
+                      setFileCategories({...fileCategories, [file.id]: value})
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="選擇文件分類" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(FILE_CATEGORIES).map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            ))}
+          </div>
+          <SheetFooter className="mt-4">
+            <Button onClick={handleSave}>確認選擇</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <div className="grid gap-2">
+        {selectedFiles.map((file) => (
           <div key={file.id} className="flex items-center justify-between p-2 border rounded-lg">
             <div className="flex items-center gap-2">
-              <div>{file.name}</div>
+              <span>{file.name}</span>
               {file.tags.map((tag) => (
                 <Badge key={tag.id} variant="secondary">
                   {tag.name}
                 </Badge>
               ))}
             </div>
-            <Select
-              onValueChange={(value) => {
-                const isSelected = value === 'selected';
-                if (isSelected) {
-                  onFileSelect([...selectedFiles, file]);
-                } else {
-                  onFileSelect(selectedFiles.filter(f => f.id !== file.id));
-                }
-              }}
-              value={selectedFiles.some(f => f.id === file.id) ? 'selected' : 'unselected'}
-            >
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="選擇狀態" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="selected">已選擇</SelectItem>
-                <SelectItem value="unselected">未選擇</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         ))}
       </div>
