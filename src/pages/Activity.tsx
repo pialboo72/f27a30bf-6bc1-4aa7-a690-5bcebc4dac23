@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,14 +16,15 @@ import { zhTW } from "date-fns/locale";
 import { Calendar as CalendarIcon, FileText, Save, Upload } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
+import { useFiles } from "@/contexts/FileContext";
 
 const ActivityForm: React.FC = () => {
-  const [date, setDate] = useState<Date>();
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     category: '',
-    date: null,
+    date: null as Date | null,
     location: '',
     purpose: '',
     content: '',
@@ -33,14 +35,66 @@ const ActivityForm: React.FC = () => {
     subsidyAmount: 0,
   });
 
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    setDate(selectedDate);
+    setFormData(prev => ({ ...prev, date: selectedDate || null }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual save logic
+    
+    // 驗證必填欄位
+    if (!formData.title || !formData.category || !formData.date || !formData.location) {
+      toast.error("請填寫所有必填欄位");
+      return;
+    }
+    
+    // 儲存活動資料到 localStorage，實際應用中應使用後端 API
+    const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+    const activityId = new Date().getTime();
+    const newActivity = {
+      id: activityId,
+      name: formData.title,
+      category: formData.category,
+      date: formData.date ? format(formData.date, 'yyyy-MM-dd') : '',
+      status: '草稿',
+      ...formData
+    };
+    
+    activities.push(newActivity);
+    localStorage.setItem('activities', JSON.stringify(activities));
     toast.success("活動資料已儲存");
   };
 
   const handleGenerateDocument = () => {
+    // 驗證必填欄位
+    if (!formData.title || !formData.category || !formData.date || !formData.location) {
+      toast.error("請填寫所有必填欄位");
+      return;
+    }
+
     toast.success("申請文件生成中，請稍候...");
+    
+    // 儲存活動資料並添加下載/列印功能標記
+    const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+    const activityId = new Date().getTime();
+    const newActivity = {
+      id: activityId,
+      name: formData.title,
+      category: formData.category,
+      date: formData.date ? format(formData.date, 'yyyy-MM-dd') : '',
+      status: '已提交',
+      hasDocument: true, // 標記此活動有生成的文件
+      ...formData
+    };
+    
+    activities.push(newActivity);
+    localStorage.setItem('activities', JSON.stringify(activities));
+    
     // 模擬文件生成過程
     setTimeout(() => {
       toast.success("申請文件已生成");
@@ -54,27 +108,35 @@ const ActivityForm: React.FC = () => {
         <h2 className="text-lg font-semibold mb-4">基本資料</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="activity-title">活動名稱</Label>
-            <Input id="activity-title" placeholder="請輸入活動名稱" />
+            <Label htmlFor="activity-title">活動名稱 <span className="text-red-500">*</span></Label>
+            <Input 
+              id="activity-title" 
+              placeholder="請輸入活動名稱" 
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+            />
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="activity-category">活動類別</Label>
-            <Select>
+            <Label htmlFor="activity-category">活動類別 <span className="text-red-500">*</span></Label>
+            <Select 
+              value={formData.category} 
+              onValueChange={(value) => handleInputChange('category', value)}
+            >
               <SelectTrigger id="activity-category">
                 <SelectValue placeholder="請選擇活動類別" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="culture">文化藝術</SelectItem>
-                <SelectItem value="sports">體育活動</SelectItem>
-                <SelectItem value="education">教育學習</SelectItem>
-                <SelectItem value="community">社區服務</SelectItem>
+                <SelectItem value="文化藝術">文化藝術</SelectItem>
+                <SelectItem value="體育活動">體育活動</SelectItem>
+                <SelectItem value="教育學習">教育學習</SelectItem>
+                <SelectItem value="社區服務">社區服務</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="activity-date">活動日期</Label>
+            <Label htmlFor="activity-date">活動日期 <span className="text-red-500">*</span></Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -92,7 +154,7 @@ const ActivityForm: React.FC = () => {
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={handleDateChange}
                   initialFocus
                 />
               </PopoverContent>
@@ -100,8 +162,13 @@ const ActivityForm: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="activity-location">活動地點</Label>
-            <Input id="activity-location" placeholder="請輸入活動地點" />
+            <Label htmlFor="activity-location">活動地點 <span className="text-red-500">*</span></Label>
+            <Input 
+              id="activity-location" 
+              placeholder="請輸入活動地點" 
+              value={formData.location}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+            />
           </div>
         </div>
       </div>
@@ -114,7 +181,7 @@ const ActivityForm: React.FC = () => {
             <Input
               id="subsidy-unit"
               value={formData.subsidyUnit}
-              onChange={(e) => setFormData(prev => ({ ...prev, subsidyUnit: e.target.value }))}
+              onChange={(e) => handleInputChange('subsidyUnit', e.target.value)}
               placeholder="請輸入補助單位名稱"
             />
           </div>
@@ -123,8 +190,8 @@ const ActivityForm: React.FC = () => {
             <Input
               id="subsidy-amount"
               type="number"
-              value={formData.subsidyAmount}
-              onChange={(e) => setFormData(prev => ({ ...prev, subsidyAmount: Number(e.target.value) }))}
+              value={formData.subsidyAmount === 0 ? '' : formData.subsidyAmount}
+              onChange={(e) => handleInputChange('subsidyAmount', Number(e.target.value))}
               placeholder="請輸入補助金額"
             />
           </div>
@@ -136,28 +203,57 @@ const ActivityForm: React.FC = () => {
         <div className="space-y-4">
           <div className="space-y-3">
             <Label htmlFor="activity-purpose">活動目的</Label>
-            <Textarea id="activity-purpose" placeholder="請詳述活動目的" rows={3} />
+            <Textarea 
+              id="activity-purpose" 
+              placeholder="請詳述活動目的" 
+              rows={3} 
+              value={formData.purpose}
+              onChange={(e) => handleInputChange('purpose', e.target.value)}
+            />
           </div>
 
           <div className="space-y-3">
             <Label htmlFor="activity-content">活動內容</Label>
-            <Textarea id="activity-content" placeholder="請詳述活動內容" rows={5} />
+            <Textarea 
+              id="activity-content" 
+              placeholder="請詳述活動內容" 
+              rows={5}
+              value={formData.content}
+              onChange={(e) => handleInputChange('content', e.target.value)}
+            />
           </div>
 
           <div className="space-y-3">
             <Label htmlFor="activity-target">參與對象</Label>
-            <Input id="activity-target" placeholder="請輸入參與對象" />
+            <Input 
+              id="activity-target" 
+              placeholder="請輸入參與對象"
+              value={formData.target}
+              onChange={(e) => handleInputChange('target', e.target.value)}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <Label htmlFor="activity-participants">預計參與人數</Label>
-              <Input id="activity-participants" type="number" placeholder="請輸入預計人數" min="0" />
+              <Input 
+                id="activity-participants" 
+                type="number" 
+                placeholder="請輸入預計人數" 
+                min="0"
+                value={formData.participants}
+                onChange={(e) => handleInputChange('participants', e.target.value)}
+              />
             </div>
 
             <div className="space-y-3">
               <Label htmlFor="activity-unit">主辦單位</Label>
-              <Input id="activity-unit" placeholder="請輸入主辦單位" />
+              <Input 
+                id="activity-unit" 
+                placeholder="請輸入主辦單位"
+                value={formData.unit}
+                onChange={(e) => handleInputChange('unit', e.target.value)}
+              />
             </div>
           </div>
         </div>
@@ -189,7 +285,7 @@ const ActivityForm: React.FC = () => {
       </div>
 
       <div className="flex justify-end space-x-4 pt-4">
-        <Button variant="outline">
+        <Button variant="outline" onClick={handleSubmit}>
           <Save className="mr-2 h-4 w-4" />
           儲存草稿
         </Button>
@@ -217,6 +313,14 @@ const BudgetForm: React.FC = () => {
   ]);
   const [budgetSaved, setBudgetSaved] = useState<boolean>(false);
   const [errors, setErrors] = useState<{[key: string]: {[key: string]: boolean}}>({});
+
+  // 從 localStorage 載入已保存的預算資料
+  useEffect(() => {
+    const savedBudget = localStorage.getItem('budgetItems');
+    if (savedBudget) {
+      setBudgetItems(JSON.parse(savedBudget));
+    }
+  }, []);
 
   const handleAddItem = () => {
     const newId = budgetItems.length > 0 ? Math.max(...budgetItems.map(item => item.id)) + 1 : 1;
@@ -276,17 +380,27 @@ const BudgetForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
-    const hasEmptyFields = budgetItems.some(item => 
-      item.quantity <= 0 || !item.unit.trim() || item.unitPrice <= 0
-    );
-
-    if (hasEmptyFields) {
+    // 驗證必填欄位
+    let newErrors: {[key: string]: {[key: string]: boolean}} = {};
+    let hasErrors = false;
+    
+    budgetItems.forEach((item, index) => {
+      const itemErrors = validateItem(item, index);
+      if (Object.keys(itemErrors).length > 0) {
+        newErrors[item.id] = itemErrors;
+        hasErrors = true;
+      }
+    });
+    
+    setErrors(newErrors);
+    
+    if (hasErrors) {
       toast.error("請填寫所有必填欄位");
       return;
     }
-
-    // Save budget
+    
+    // 儲存預算到 localStorage，實際應用中應使用後端 API
+    localStorage.setItem('budgetItems', JSON.stringify(budgetItems));
     toast.success("預算已成功儲存");
     setBudgetSaved(true);
   };
@@ -384,7 +498,13 @@ const Activity: React.FC = () => {
   useEffect(() => {
     if (!isNew) {
       // 在這裡載入活動資料
-      // 實際應用中需要與後端API整合
+      // 實際應用中需要與後端API整合，這裡僅從 localStorage 載入模擬資料
+      const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+      const activity = activities.find((a: any) => a.id === parseInt(id || '0'));
+      if (activity) {
+        // 載入活動資料...
+        console.log("載入活動資料", activity);
+      }
     }
   }, [id, isNew]);
 

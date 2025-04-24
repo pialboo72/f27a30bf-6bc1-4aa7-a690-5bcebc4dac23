@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -8,14 +9,10 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/components/layout/MainLayout";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash } from "lucide-react";
-
-type ApplicationStatus = "準備中" | "待送件" | "待核定" | "待核銷" | "待撥款" | "已結案";
 
 interface Application {
   id: number;
@@ -24,7 +21,6 @@ interface Application {
   amount: number;
   reviewAgency: string;
   lastUpdate: string;
-  progress: ApplicationStatus;
 }
 
 const ApplicationTracking: React.FC = () => {
@@ -35,8 +31,7 @@ const ApplicationTracking: React.FC = () => {
       submitDate: "2025-03-15",
       amount: 50000,
       reviewAgency: "文化部",
-      lastUpdate: "2025-03-20",
-      progress: "準備中"
+      lastUpdate: "2025-03-20"
     },
     {
       id: 2,
@@ -44,30 +39,9 @@ const ApplicationTracking: React.FC = () => {
       submitDate: "2025-03-10",
       amount: 30000,
       reviewAgency: "教育部",
-      lastUpdate: "2025-03-18",
-      progress: "待核定"
+      lastUpdate: "2025-03-18"
     },
   ]);
-
-  const getProgressBadge = (progress: ApplicationStatus) => {
-    const styles = {
-      "準備中": "bg-purple-500",
-      "待送件": "bg-blue-500",
-      "待核定": "bg-yellow-500",
-      "待核銷": "bg-orange-500",
-      "待撥款": "bg-teal-500",
-      "已結案": "bg-green-500",
-    };
-    return styles[progress];
-  };
-
-  const handleProgressChange = (id: number, value: ApplicationStatus) => {
-    const updatedApplications = applications.map(app => 
-      app.id === id ? { ...app, progress: value, lastUpdate: new Date().toISOString().split('T')[0] } : app
-    );
-    setApplications(updatedApplications);
-    toast.success("進度已更新");
-  };
 
   const handleDeleteApplication = (id: number) => {
     if (window.confirm("確定要刪除此申請案嗎？")) {
@@ -96,7 +70,6 @@ const ApplicationTracking: React.FC = () => {
                   <TableHead>申請金額</TableHead>
                   <TableHead>審核機關</TableHead>
                   <TableHead>最後更新</TableHead>
-                  <TableHead>進度</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -110,24 +83,6 @@ const ApplicationTracking: React.FC = () => {
                     <TableCell>NT$ {app.amount.toLocaleString()}</TableCell>
                     <TableCell>{app.reviewAgency}</TableCell>
                     <TableCell>{app.lastUpdate}</TableCell>
-                    <TableCell>
-                      <Select 
-                        value={app.progress} 
-                        onValueChange={(value: ApplicationStatus) => handleProgressChange(app.id, value)}
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="選擇進度" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="準備中">準備中</SelectItem>
-                          <SelectItem value="待送件">待送件</SelectItem>
-                          <SelectItem value="待核定">待核定</SelectItem>
-                          <SelectItem value="待核銷">待核銷</SelectItem>
-                          <SelectItem value="待撥款">待撥款</SelectItem>
-                          <SelectItem value="已結案">已結案</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
                     <TableCell className="text-right">
                       <Button 
                         variant="ghost" 

@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -17,43 +18,105 @@ import { useFiles } from "@/contexts/FileContext";
 
 const ActivityList: React.FC = () => {
   const { downloadFile } = useFiles();
+  const [activities, setActivities] = useState<any[]>([]);
   
-  // 模擬活動數據
-  const activities = [
-    {
-      id: 1,
-      name: "青年藝術發展計劃",
-      category: "文化藝術",
-      date: "2025-05-01",
-      status: "草稿",
-    },
-    {
-      id: 2,
-      name: "社區服務計劃",
-      category: "社區服務",
-      date: "2025-06-15",
-      status: "已提交",
-    },
-  ];
+  // 載入活動數據
+  useEffect(() => {
+    const savedActivities = localStorage.getItem('activities');
+    if (savedActivities) {
+      setActivities(JSON.parse(savedActivities));
+    } else {
+      // 如果沒有保存的活動，使用初始模擬數據
+      const initialActivities = [
+        {
+          id: 1,
+          name: "青年藝術發展計劃",
+          category: "文化藝術",
+          date: "2025-05-01",
+          status: "草稿",
+        },
+        {
+          id: 2,
+          name: "社區服務計劃",
+          category: "社區服務",
+          date: "2025-06-15",
+          status: "已提交",
+          hasDocument: true, // 標記此活動有生成的文件
+        },
+      ];
+      setActivities(initialActivities);
+      localStorage.setItem('activities', JSON.stringify(initialActivities));
+    }
+  }, []);
 
   const handleDelete = (id: number) => {
-    // 實際應用中需要與後端API整合
-    toast.success("活動已刪除");
+    if (window.confirm('確定要刪除此活動嗎？')) {
+      const updatedActivities = activities.filter(activity => activity.id !== id);
+      setActivities(updatedActivities);
+      localStorage.setItem('activities', JSON.stringify(updatedActivities));
+      toast.success("活動已刪除");
+    }
   };
 
   const handleCopy = (id: number) => {
-    // 實際應用中需要與後端API整合
-    toast.success("活動已複製");
+    const activityToCopy = activities.find(activity => activity.id === id);
+    if (activityToCopy) {
+      const newActivity = {
+        ...activityToCopy,
+        id: new Date().getTime(),
+        name: `${activityToCopy.name} (複製)`,
+        status: "草稿"
+      };
+      const updatedActivities = [...activities, newActivity];
+      setActivities(updatedActivities);
+      localStorage.setItem('activities', JSON.stringify(updatedActivities));
+      toast.success("活動已複製");
+    }
   };
 
   const handleDownload = (id: number) => {
-    downloadFile(id);
+    // 檢查此活動是否有生成文件
+    const activity = activities.find(a => a.id === id);
+    
+    if (!activity?.hasDocument) {
+      toast.error("此活動尚未生成申請文件");
+      return;
+    }
+    
+    toast.success(`正在下載 ${activity.name} 申請文件`);
+    
+    // 模擬下載過程
+    setTimeout(() => {
+      // 在實際應用中，這裡應該下載真實的文件
+      const link = document.createElement('a');
+      const blob = new Blob([`${activity.name} 申請文件內容`], { type: 'text/plain' });
+      link.href = URL.createObjectURL(blob);
+      link.download = `${activity.name}_申請文件.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("文件下載完成");
+    }, 1000);
   };
 
   const handlePrint = (id: number) => {
-    // Implement print functionality
-    window.print();
-    toast.success("正在列印文件");
+    // 檢查此活動是否有生成文件
+    const activity = activities.find(a => a.id === id);
+    
+    if (!activity?.hasDocument) {
+      toast.error("此活動尚未生成申請文件");
+      return;
+    }
+    
+    // 實際應用中，這裡應該載入特定文件內容，而不是直接列印頁面
+    toast.success("正在準備列印文件");
+    
+    // 模擬準備列印過程
+    setTimeout(() => {
+      window.print();
+      toast.success("正在列印文件");
+    }, 500);
   };
 
   return (
@@ -106,24 +169,34 @@ const ActivityList: React.FC = () => {
                             <Pencil className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDownload(activity.id)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handlePrint(activity.id)}
-                        >
-                          <Printer className="h-4 w-4" />
-                        </Button>
+                        
+                        {/* 只有已生成文件的活動才顯示下載和列印按鈕 */}
+                        {activity.hasDocument && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleDownload(activity.id)}
+                              title="下載申請文件"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handlePrint(activity.id)}
+                              title="列印申請文件"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => handleCopy(activity.id)}
+                          title="複製活動"
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -131,6 +204,7 @@ const ActivityList: React.FC = () => {
                           variant="outline"
                           size="icon"
                           onClick={() => handleDelete(activity.id)}
+                          title="刪除活動"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

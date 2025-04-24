@@ -51,7 +51,7 @@ const mainNavItems: NavItem[] = [
   },
   {
     title: "單位管理",
-    href: "/units",
+    href: "/unit-management",
     icon: Building,
   }
 ];
