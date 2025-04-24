@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import MainLayout from "@/components/layout/MainLayout";
 import { 
   Tabs, 
@@ -23,8 +24,17 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast } from "sonner";
-import { File, Folder, Upload, Plus, X } from "lucide-react";
+import { File, Folder, Upload, Plus, X, FileText, Download, CheckSquare } from "lucide-react";
 
 // 模擬文件數據
 const mockFolders = [
@@ -34,11 +44,62 @@ const mockFolders = [
 ];
 
 const mockFiles = [
-  { id: 1, name: "文化部藝術補助申請表.docx", type: "docx", size: "245 KB", uploaded: "2025-03-05", folder: "申請表格範本" },
-  { id: 2, name: "經費核銷表.xlsx", type: "xlsx", size: "120 KB", uploaded: "2025-03-10", folder: "申請表格範本" },
-  { id: 3, name: "活動場地規劃.pdf", type: "pdf", size: "1.2 MB", uploaded: "2025-03-18", folder: "活動相關文件" },
-  { id: 4, name: "宣傳海報範例.jpg", type: "jpg", size: "3.5 MB", uploaded: "2025-03-22", folder: "宣傳資料" }
+  { 
+    id: 1, 
+    name: "文化部藝術補助申請表", 
+    originalType: "docx", 
+    size: "245 KB", 
+    uploaded: "2025-03-05", 
+    folders: ["申請表格範本"],
+    availableFormats: ["docx", "odt", "pdf"]
+  },
+  { 
+    id: 2, 
+    name: "經費核銷表", 
+    originalType: "xlsx", 
+    size: "120 KB", 
+    uploaded: "2025-03-10", 
+    folders: ["申請表格範本"],
+    availableFormats: ["xlsx", "ods", "pdf"]
+  },
+  { 
+    id: 3, 
+    name: "活動場地規劃", 
+    originalType: "pdf", 
+    size: "1.2 MB", 
+    uploaded: "2025-03-18", 
+    folders: ["活動相關文件", "宣傳資料"],
+    availableFormats: ["pdf"]
+  },
+  { 
+    id: 4, 
+    name: "宣傳海報範例", 
+    originalType: "jpg", 
+    size: "3.5 MB", 
+    uploaded: "2025-03-22", 
+    folders: ["宣傳資料"],
+    availableFormats: ["jpg", "png", "pdf"]
+  }
 ];
+
+// 檔案類型對應圖示顏色
+const fileTypeColors: {[key: string]: string} = {
+  docx: "text-blue-500",
+  xlsx: "text-green-500",
+  pdf: "text-red-500",
+  jpg: "text-purple-500",
+  png: "text-yellow-500",
+  odt: "text-blue-400",
+  ods: "text-green-400",
+};
+
+// 檔案格式轉換對照
+const fileConversions: {[key: string]: string[]} = {
+  docx: ["docx", "odt", "pdf"],
+  odt: ["odt", "docx", "pdf"],
+  xlsx: ["xlsx", "ods", "pdf"],
+  ods: ["ods", "xlsx", "pdf"],
+};
 
 const FileManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -48,14 +109,17 @@ const FileManagement: React.FC = () => {
   
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
+  const [folderSelectDialogOpen, setFolderSelectDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedFolder, setSelectedFolder] = useState<string>("全部");
+  const [fileInProcess, setFileInProcess] = useState<any | null>(null);
+  const [selectedFolders, setSelectedFolders] = useState<{[key: string]: boolean}>({});
   
   // 過濾文件
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFolder = selectedFolder === "全部" || file.folder === selectedFolder;
+    const matchesFolder = selectedFolder === "全部" || file.folders.includes(selectedFolder);
     return matchesSearch && matchesFolder;
   });
   
@@ -69,17 +133,30 @@ const FileManagement: React.FC = () => {
   // 處理文件上傳
   const handleFileUpload = () => {
     if (selectedFile) {
+      const fileType = selectedFile.name.split('.').pop() || "unknown";
+      const fileName = selectedFile.name.split('.')[0];
+      
+      // 檢查是否為支援的格式
+      const supportsConversion = fileType in fileConversions;
+      
       const newFile = {
         id: Date.now(),
-        name: selectedFile.name,
-        type: selectedFile.name.split('.').pop() || "unknown",
+        name: fileName,
+        originalType: fileType,
         size: `${(selectedFile.size / 1024).toFixed(0)} KB`,
         uploaded: new Date().toISOString().split('T')[0],
-        folder: selectedFolder === "全部" ? "未分類" : selectedFolder
+        folders: selectedFolder === "全部" ? ["未分類"] : [selectedFolder],
+        availableFormats: supportsConversion ? fileConversions[fileType] : [fileType]
       };
       
       setFiles([...files, newFile]);
-      toast.success(`成功上傳檔案: ${selectedFile.name}`);
+      
+      let successMessage = `成功上傳檔案: ${fileName}.${fileType}`;
+      if (supportsConversion) {
+        successMessage += `\n並自動轉換為 ${fileConversions[fileType].filter(f => f !== fileType).join(', ')} 格式`;
+      }
+      
+      toast.success(successMessage);
       setUploadDialogOpen(false);
       setSelectedFile(null);
     } else {
@@ -110,6 +187,63 @@ const FileManagement: React.FC = () => {
   const handleDeleteFile = (id: number) => {
     setFiles(files.filter(file => file.id !== id));
     toast.success("已刪除檔案");
+  };
+  
+  // 開啟資料夾選擇對話框
+  const handleOpenFolderSelect = (file: any) => {
+    setFileInProcess(file);
+    
+    // 初始化所有資料夾的選擇狀態
+    const initialSelection: {[key: string]: boolean} = {};
+    folders.forEach(folder => {
+      initialSelection[folder.name] = file.folders.includes(folder.name);
+    });
+    setSelectedFolders(initialSelection);
+    
+    setFolderSelectDialogOpen(true);
+  };
+  
+  // 切換資料夾選擇
+  const toggleFolderSelection = (folderName: string) => {
+    setSelectedFolders({
+      ...selectedFolders,
+      [folderName]: !selectedFolders[folderName]
+    });
+  };
+  
+  // 儲存檔案資料夾設定
+  const saveFileFolders = () => {
+    if (!fileInProcess) return;
+    
+    // 獲取選中的資料夾
+    const selectedFolderNames = Object.keys(selectedFolders).filter(
+      folderName => selectedFolders[folderName]
+    );
+    
+    if (selectedFolderNames.length === 0) {
+      selectedFolderNames.push("未分類");
+    }
+    
+    // 更新檔案的資料夾
+    const updatedFiles = files.map(file => {
+      if (file.id === fileInProcess.id) {
+        return {
+          ...file,
+          folders: selectedFolderNames
+        };
+      }
+      return file;
+    });
+    
+    setFiles(updatedFiles);
+    setFolderSelectDialogOpen(false);
+    setFileInProcess(null);
+    toast.success("檔案資料夾已更新");
+  };
+  
+  // 下載不同格式的文件
+  const downloadFile = (fileName: string, fileType: string) => {
+    toast.success(`開始下載 ${fileName}.${fileType}`);
   };
   
   return (
@@ -157,7 +291,9 @@ const FileManagement: React.FC = () => {
                   >
                     <Folder className="mr-2 h-4 w-4" />
                     {folder.name}
-                    <span className="ml-auto text-xs text-muted-foreground">{folder.fileCount}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {files.filter(file => file.folders.includes(folder.name)).length}
+                    </span>
                   </Button>
                 ))}
               </div>
@@ -194,26 +330,50 @@ const FileManagement: React.FC = () => {
                   {filteredFiles.length > 0 ? (
                     <div className="divide-y">
                       {filteredFiles.map(file => (
-                        <div key={file.id} className="flex items-center p-4 hover:bg-muted/50">
-                          <div className="mr-4">
-                            <File className="h-8 w-8 text-blue-500" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium">{file.name}</p>
-                            <div className="flex text-xs text-muted-foreground mt-1">
-                              <span className="mr-3">{file.size}</span>
-                              <span className="mr-3">上傳於: {file.uploaded}</span>
-                              <span>資料夾: {file.folder}</span>
+                        <div key={file.id} className="p-4 hover:bg-muted/50">
+                          <div className="flex items-center mb-2">
+                            <div className="mr-4">
+                              <File className={`h-8 w-8 ${fileTypeColors[file.originalType] || "text-gray-500"}`} />
                             </div>
+                            <div className="flex-1">
+                              <p className="font-medium">{file.name}</p>
+                              <div className="flex flex-wrap text-xs text-muted-foreground mt-1">
+                                <span className="mr-3">大小: {file.size}</span>
+                                <span className="mr-3">上傳於: {file.uploaded}</span>
+                                <span className="mr-3">原始格式: {file.originalType}</span>
+                                <span 
+                                  className="cursor-pointer text-primary"
+                                  onClick={() => handleOpenFolderSelect(file)}
+                                >
+                                  資料夾: {file.folders.join(", ")}
+                                </span>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => handleDeleteFile(file.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => handleDeleteFile(file.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          
+                          {/* 可用格式下載區域 */}
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {file.availableFormats.map(format => (
+                              <Button 
+                                key={format} 
+                                variant="outline" 
+                                size="sm"
+                                className="flex items-center"
+                                onClick={() => downloadFile(file.name, format)}
+                              >
+                                <Download className="mr-1 h-4 w-4" />
+                                <span>下載 {format.toUpperCase()}</span>
+                              </Button>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -256,7 +416,7 @@ const FileManagement: React.FC = () => {
             <DialogHeader>
               <DialogTitle>上傳檔案</DialogTitle>
               <DialogDescription>
-                選擇要上傳的檔案並指定資料夾
+                選擇要上傳的檔案並指定資料夾，系統將自動轉換支援的格式
               </DialogDescription>
             </DialogHeader>
             
@@ -290,8 +450,14 @@ const FileManagement: React.FC = () => {
               </div>
               
               {selectedFile && (
-                <div className="text-sm p-2 bg-muted rounded-md">
-                  已選擇: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)
+                <div className="text-sm p-3 bg-muted rounded-md">
+                  <p className="mb-1">已選擇: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedFile.name.split('.').pop() in fileConversions ? 
+                      `此檔案格式將自動轉換為相容的其他格式 (${fileConversions[selectedFile.name.split('.').pop() || ""].join(', ')})` : 
+                      '此檔案格式不支援自動轉換'
+                    }
+                  </p>
                 </div>
               )}
             </div>
@@ -330,6 +496,44 @@ const FileManagement: React.FC = () => {
             <DialogFooter>
               <Button variant="outline" onClick={() => setFolderDialogOpen(false)}>取消</Button>
               <Button onClick={handleAddFolder}>建立</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* 資料夾選擇對話框 */}
+        <Dialog open={folderSelectDialogOpen} onOpenChange={setFolderSelectDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>選擇檔案資料夾</DialogTitle>
+              <DialogDescription>
+                檔案可以同時存在於多個資料夾中
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-2">
+              <p className="text-sm font-medium">檔案: {fileInProcess?.name}</p>
+              
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {folders.map(folder => (
+                  <div key={folder.id} className="flex items-center space-x-2">
+                    <Button
+                      variant={selectedFolders[folder.name] ? "default" : "outline"}
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => toggleFolderSelection(folder.name)}
+                    >
+                      {selectedFolders[folder.name] && <CheckSquare className="mr-2 h-4 w-4" />}
+                      {!selectedFolders[folder.name] && <Folder className="mr-2 h-4 w-4" />}
+                      {folder.name}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setFolderSelectDialogOpen(false)}>取消</Button>
+              <Button onClick={saveFileFolders}>儲存</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
