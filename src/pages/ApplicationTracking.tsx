@@ -10,6 +10,13 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
 import { Trash } from "lucide-react";
@@ -21,6 +28,7 @@ interface Application {
   amount: number;
   reviewAgency: string;
   lastUpdate: string;
+  status: string;
 }
 
 const ApplicationTracking: React.FC = () => {
@@ -31,7 +39,8 @@ const ApplicationTracking: React.FC = () => {
       submitDate: "2025-03-15",
       amount: 50000,
       reviewAgency: "文化部",
-      lastUpdate: "2025-03-20"
+      lastUpdate: "2025-03-20",
+      status: "審核中"
     },
     {
       id: 2,
@@ -39,7 +48,8 @@ const ApplicationTracking: React.FC = () => {
       submitDate: "2025-03-10",
       amount: 30000,
       reviewAgency: "教育部",
-      lastUpdate: "2025-03-18"
+      lastUpdate: "2025-03-18",
+      status: "已核准"
     },
   ]);
 
@@ -48,6 +58,13 @@ const ApplicationTracking: React.FC = () => {
       setApplications(applications.filter(app => app.id !== id));
       toast.success("申請案已刪除");
     }
+  };
+
+  const handleStatusChange = (id: number, newStatus: string) => {
+    setApplications(applications.map(app => 
+      app.id === id ? { ...app, status: newStatus } : app
+    ));
+    toast.success("狀態已更新");
   };
 
   return (
@@ -70,6 +87,7 @@ const ApplicationTracking: React.FC = () => {
                   <TableHead>申請金額</TableHead>
                   <TableHead>審核機關</TableHead>
                   <TableHead>最後更新</TableHead>
+                  <TableHead>進度</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -83,10 +101,27 @@ const ApplicationTracking: React.FC = () => {
                     <TableCell>NT$ {app.amount.toLocaleString()}</TableCell>
                     <TableCell>{app.reviewAgency}</TableCell>
                     <TableCell>{app.lastUpdate}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={app.status}
+                        onValueChange={(value) => handleStatusChange(app.id, value)}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="選擇狀態" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="待審核">待審核</SelectItem>
+                          <SelectItem value="審核中">審核中</SelectItem>
+                          <SelectItem value="補件中">補件中</SelectItem>
+                          <SelectItem value="已核准">已核准</SelectItem>
+                          <SelectItem value="已駁回">已駁回</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button 
                         variant="ghost" 
-                        size="icon" 
+                        size="icon"
                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
                         onClick={() => handleDeleteApplication(app.id)}
                       >

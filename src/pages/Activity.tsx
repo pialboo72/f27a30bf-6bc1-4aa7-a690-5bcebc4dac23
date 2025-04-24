@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +16,7 @@ import { Calendar as CalendarIcon, FileText, Save, Upload } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
 import { useFiles } from "@/contexts/FileContext";
+import { DateRangeSelector } from "@/components/DateRangeSelector";
 
 const ActivityForm: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -25,6 +25,7 @@ const ActivityForm: React.FC = () => {
     title: '',
     category: '',
     date: null as Date | null,
+    dateRange: null as { start: Date; end: Date } | null,
     location: '',
     purpose: '',
     content: '',
@@ -39,9 +40,17 @@ const ActivityForm: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleDateChange = (selectedDate: Date | undefined) => {
-    setDate(selectedDate);
-    setFormData(prev => ({ ...prev, date: selectedDate || null }));
+  const handleDateChange = (dates: Date[] | { start: Date; end: Date } | null) => {
+    if (!dates) {
+      handleInputChange('date', null);
+      return;
+    }
+
+    if (Array.isArray(dates)) {
+      handleInputChange('date', dates);
+    } else {
+      handleInputChange('dateRange', dates);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -137,28 +146,7 @@ const ActivityForm: React.FC = () => {
 
           <div className="space-y-3">
             <Label htmlFor="activity-date">活動日期 <span className="text-red-500">*</span></Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP", { locale: zhTW }) : "請選擇日期"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={handleDateChange}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <DateRangeSelector onDateChange={handleDateChange} />
           </div>
 
           <div className="space-y-3">
@@ -314,7 +302,6 @@ const BudgetForm: React.FC = () => {
   const [budgetSaved, setBudgetSaved] = useState<boolean>(false);
   const [errors, setErrors] = useState<{[key: string]: {[key: string]: boolean}}>({});
 
-  // 從 localStorage 載入已保存的預算資料
   useEffect(() => {
     const savedBudget = localStorage.getItem('budgetItems');
     if (savedBudget) {
@@ -362,7 +349,6 @@ const BudgetForm: React.FC = () => {
     
     setBudgetItems(updatedItems);
     
-    // Clear error for this field if it exists
     if (errors[id] && errors[id][field]) {
       const newErrors = {...errors};
       delete newErrors[id][field];
@@ -380,7 +366,6 @@ const BudgetForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 驗證必填欄位
     let newErrors: {[key: string]: {[key: string]: boolean}} = {};
     let hasErrors = false;
     
@@ -399,7 +384,6 @@ const BudgetForm: React.FC = () => {
       return;
     }
     
-    // 儲存預算到 localStorage，實際應用中應使用後端 API
     localStorage.setItem('budgetItems', JSON.stringify(budgetItems));
     toast.success("預算已成功儲存");
     setBudgetSaved(true);
@@ -497,12 +481,9 @@ const Activity: React.FC = () => {
 
   useEffect(() => {
     if (!isNew) {
-      // 在這裡載入活動資料
-      // 實際應用中需要與後端API整合，這裡僅從 localStorage 載入模擬資料
       const activities = JSON.parse(localStorage.getItem('activities') || '[]');
       const activity = activities.find((a: any) => a.id === parseInt(id || '0'));
       if (activity) {
-        // 載入活動資料...
         console.log("載入活動資料", activity);
       }
     }

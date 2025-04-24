@@ -48,11 +48,6 @@ const mainNavItems: NavItem[] = [
     title: "附件與檔案",
     href: "/files",
     icon: Folder,
-  },
-  {
-    title: "單位管理",
-    href: "/unit-management",
-    icon: Building,
   }
 ];
 
@@ -61,6 +56,11 @@ const adminNavItems: NavItem[] = [
     title: "統計分析",
     href: "/statistics",
     icon: BarChart,
+  },
+  {
+    title: "單位管理",
+    href: "/admin/units",
+    icon: Building,
   },
   {
     title: "管理員設定",
