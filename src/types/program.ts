@@ -1,4 +1,3 @@
-
 export interface FileTag {
   id: number;
   name: string;
@@ -8,8 +7,11 @@ export interface SystemFile {
   id: number;
   name: string;
   path: string;
+  size: number;
+  type: string;
+  uploadDate?: string;
   tags: FileTag[];
-  folders?: string[]; // Add the optional folders property
+  folders?: string[];
 }
 
 export interface Program {
