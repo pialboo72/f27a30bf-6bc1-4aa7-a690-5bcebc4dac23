@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 interface FileContextType {
   systemFiles: SystemFile[];
   setSystemFiles: (files: SystemFile[]) => void;
-  downloadFile: (fileId: string) => void;
+  downloadFile: (fileId: number) => void;
 }
 
 const FileContext = createContext<FileContextType | undefined>(undefined);
@@ -15,7 +15,7 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
   const [systemFiles, setSystemFiles] = useState<SystemFile[]>([]);
 
   // Function to simulate file download
-  const downloadFile = (fileId: string) => {
+  const downloadFile = (fileId: number) => {
     // Find the file in system files
     const file = systemFiles.find(f => f.id === fileId);
     
@@ -32,11 +32,12 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
     setTimeout(() => {
       // Create a dummy download element
       const link = document.createElement('a');
-      link.href = file.url || '#'; // Use the file URL if available or a placeholder
+      // Use file path as the "url" since the SystemFile doesn't have a url property
+      link.href = file.path || '#'; // Use the file path if available or a placeholder
       link.setAttribute('download', file.name);
       
-      // For demo purposes, if there's no real URL, create a small text file
-      if (!file.url) {
+      // For demo purposes, if there's no real path, create a small text file
+      if (!file.path) {
         const blob = new Blob([`This is a sample content for ${file.name}`], { type: 'text/plain' });
         link.href = URL.createObjectURL(blob);
       }
