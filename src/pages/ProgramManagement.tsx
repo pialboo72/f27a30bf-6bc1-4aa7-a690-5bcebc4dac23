@@ -187,6 +187,12 @@ const ProgramManagement: React.FC = () => {
     resetForm();
   };
 
+  // 分頁切換處理
+  const handlePageClick = (pageNumber: number) => {
+    // 這裡可以增加分頁切換邏輯
+    console.log(`切換到第 ${pageNumber} 頁`);
+  };
+
   return (
     <MainLayout>
       <div className="container mx-auto p-6">
@@ -289,13 +295,13 @@ const ProgramManagement: React.FC = () => {
               <Pagination className="mt-4">
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious href="#" />
+                    <PaginationPrevious onClick={() => handlePageClick(0)} />
                   </PaginationItem>
                   <PaginationItem>
-                    <PaginationLink href="#" isActive>1</PaginationLink>
+                    <PaginationLink isActive onClick={() => handlePageClick(1)}>1</PaginationLink>
                   </PaginationItem>
                   <PaginationItem>
-                    <PaginationNext href="#" />
+                    <PaginationNext onClick={() => handlePageClick(2)} />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
