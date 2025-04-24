@@ -1,39 +1,21 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
 import MainLayout from '@/components/layout/MainLayout';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { FileSelector } from '@/components/FileSelector';
+import { SystemFile, Program } from '@/types/program';
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from '@/components/ui/label';
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious 
-} from '@/components/ui/pagination';
-import { Search, Edit, Trash, Plus, Copy } from 'lucide-react';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
-// 模擬補助計畫資料
 const initialPrograms = [
   {
     id: 1,
@@ -41,12 +23,13 @@ const initialPrograms = [
     agency: '文化部',
     target: '文化藝術工作者、團體',
     standard: '依計畫內容評分，最高補助80%',
-    period: '2025-01-01 至 2025-12-31',
+    startDate: new Date('2025-01-01'),
+    endDate: new Date('2025-12-31'),
     focus: '傳統藝術保存、現代藝術創新',
     totalBudget: 5000000,
     subsidyLimit: 500000,
     description: '促進台灣文化藝術發展，支持優秀創作者及團體。',
-    documents: '申請表、計畫書、前期作品資料',
+    documents: [],
     links: 'https://www.moc.gov.tw'
   },
   {
@@ -55,70 +38,68 @@ const initialPrograms = [
     agency: '經濟部',
     target: '35歲以下青年創業者',
     standard: '資本額50%，最高300萬',
-    period: '2025-03-01 至 2025-12-31',
+    startDate: new Date('2025-03-01'),
+    endDate: new Date('2025-12-31'),
     focus: '數位創新、永續發展',
     totalBudget: 10000000,
     subsidyLimit: 3000000,
     description: '鼓勵青年投入創新創業，促進經濟發展與就業機會。',
-    documents: '創業計畫書、財務規劃',
+    documents: [],
     links: 'https://www.moea.gov.tw'
   }
 ];
 
 const ProgramManagement: React.FC = () => {
-  const [programs, setPrograms] = useState(initialPrograms);
+  const [programs, setPrograms] = useState<Program[]>(initialPrograms);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentProgram, setCurrentProgram] = useState<any | null>(null);
+  const [currentProgram, setCurrentProgram] = useState<Program | null>(null);
   const [isNewProgram, setIsNewProgram] = useState(true);
 
-  // 程式基本資料欄位
   const [programName, setProgramName] = useState('');
   const [agency, setAgency] = useState('');
   const [target, setTarget] = useState('');
   const [standard, setStandard] = useState('');
-  const [period, setPeriod] = useState('');
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
   const [focus, setFocus] = useState('');
   const [totalBudget, setTotalBudget] = useState('');
   const [subsidyLimit, setSubsidyLimit] = useState('');
   const [description, setDescription] = useState('');
-  const [documents, setDocuments] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<SystemFile[]>([]);
   const [links, setLinks] = useState('');
 
-  // 處理搜尋
   const filteredPrograms = programs.filter(program => 
     program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     program.agency.toLowerCase().includes(searchTerm.toLowerCase()) ||
     program.target.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // 開啟對話框新增計畫
   const handleAddProgram = () => {
     setIsNewProgram(true);
     resetForm();
     setIsDialogOpen(true);
   };
 
-  // 開啟對話框編輯計畫
-  const handleEditProgram = (program: any) => {
+  const handleEditProgram = (program: Program) => {
     setIsNewProgram(false);
     setCurrentProgram(program);
     setProgramName(program.name);
     setAgency(program.agency);
     setTarget(program.target);
     setStandard(program.standard);
-    setPeriod(program.period);
+    setStartDate(new Date(program.startDate));
+    setEndDate(new Date(program.endDate));
     setFocus(program.focus);
     setTotalBudget(program.totalBudget.toString());
     setSubsidyLimit(program.subsidyLimit.toString());
     setDescription(program.description);
-    setDocuments(program.documents);
+    setSelectedFiles(program.documents);
     setLinks(program.links);
     setIsDialogOpen(true);
   };
 
-  // 複製計畫
-  const handleCopyProgram = (program: any) => {
+  const handleCopyProgram = (program: Program) => {
     const newProgram = {
       ...program,
       id: Date.now(),
@@ -128,7 +109,6 @@ const ProgramManagement: React.FC = () => {
     toast.success('計畫已複製');
   };
 
-  // 刪除計畫
   const handleDeleteProgram = (id: number) => {
     if (window.confirm('確定要刪除此補助計畫嗎？')) {
       setPrograms(programs.filter(program => program.id !== id));
@@ -136,42 +116,41 @@ const ProgramManagement: React.FC = () => {
     }
   };
 
-  // 重設表單
   const resetForm = () => {
     setProgramName('');
     setAgency('');
     setTarget('');
     setStandard('');
-    setPeriod('');
+    setStartDate(undefined);
+    setEndDate(undefined);
     setFocus('');
     setTotalBudget('');
     setSubsidyLimit('');
     setDescription('');
-    setDocuments('');
+    setSelectedFiles([]);
     setLinks('');
     setCurrentProgram(null);
   };
 
-  // 處理保存
   const handleSave = () => {
-    // 驗證必填欄位
-    if (!programName || !agency || !totalBudget || !subsidyLimit) {
+    if (!programName || !agency || !startDate || !endDate || !totalBudget || !subsidyLimit) {
       toast.error('請填寫所有必填欄位');
       return;
     }
 
-    const programData = {
-      id: isNewProgram ? Date.now() : currentProgram?.id,
+    const programData: Program = {
+      id: isNewProgram ? Date.now() : currentProgram?.id!,
       name: programName,
       agency,
       target,
       standard,
-      period,
+      startDate,
+      endDate,
       focus,
       totalBudget: parseFloat(totalBudget),
       subsidyLimit: parseFloat(subsidyLimit),
       description,
-      documents,
+      documents: selectedFiles,
       links
     };
 
@@ -187,9 +166,7 @@ const ProgramManagement: React.FC = () => {
     resetForm();
   };
 
-  // 分頁切換處理
   const handlePageClick = (pageNumber: number) => {
-    // 這裡可以增加分頁切換邏輯
     console.log(`切換到第 ${pageNumber} 頁`);
   };
 
@@ -309,7 +286,6 @@ const ProgramManagement: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* 新增/編輯計畫對話框 */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
@@ -364,22 +340,55 @@ const ProgramManagement: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="period">補助期間</Label>
-                  <Input
-                    id="period"
-                    value={period}
-                    onChange={(e) => setPeriod(e.target.value)}
-                    placeholder="例：2025-01-01 至 2025-12-31"
-                  />
+                  <Label htmlFor="start-date">開始日期 <span className="text-red-500">*</span></Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "yyyy-MM-dd") : <span>選擇開始日期</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="focus">補助重點</Label>
-                  <Input
-                    id="focus"
-                    value={focus}
-                    onChange={(e) => setFocus(e.target.value)}
-                    placeholder="輸入補助重點"
-                  />
+                  <Label htmlFor="end-date">結束日期 <span className="text-red-500">*</span></Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "yyyy-MM-dd") : <span>選擇結束日期</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               
@@ -418,12 +427,11 @@ const ProgramManagement: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="documents">申請文件</Label>
-                <Input
-                  id="documents"
-                  value={documents}
-                  onChange={(e) => setDocuments(e.target.value)}
-                  placeholder="例：申請表、計畫書"
+                <Label>申請文件</Label>
+                <FileSelector
+                  files={[]}
+                  selectedFiles={selectedFiles}
+                  onFileSelect={setSelectedFiles}
                 />
               </div>
               
