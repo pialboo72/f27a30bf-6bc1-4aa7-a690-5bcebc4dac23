@@ -43,36 +43,21 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
     onDateChange(null);
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
+  // Handle single date selection
+  const handleSingleDateSelect = (date: Date | undefined) => {
     if (!date) return;
-
-    if (selectionType === "single") {
-      setSelectedDates([date]);
-      onDateChange([date]);
-    } else if (selectionType === "multiple") {
-      const newDates = selectedDates.includes(date)
-        ? selectedDates.filter((d) => d.getTime() !== date.getTime())
-        : [...selectedDates, date];
-      setSelectedDates(newDates);
-      onDateChange(newDates);
-    } else if (selectionType === "range") {
-      const range = { ...dateRange };
-      if (!range.from) {
-        range.from = date;
-      } else if (!range.to) {
-        range.to = date;
-      } else {
-        range.from = date;
-        range.to = undefined;
-      }
-      setDateRange(range);
-      if (range.from && range.to) {
-        onDateChange({ start: range.from, end: range.to });
-      }
-    }
+    setSelectedDates([date]);
+    onDateChange([date]);
   };
 
-  // Handle date range selection specifically for the Calendar in range mode
+  // Handle multiple date selection
+  const handleMultipleDateSelect = (dates: Date[] | undefined) => {
+    if (!dates) return;
+    setSelectedDates(dates);
+    onDateChange(dates);
+  };
+
+  // Handle date range selection
   const handleRangeSelect = (range: { from: Date | undefined; to: Date | undefined }) => {
     setDateRange(range);
     if (range.from && range.to) {
@@ -125,7 +110,27 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          {selectionType === "range" ? (
+          {selectionType === "single" && (
+            <Calendar
+              mode="single"
+              selected={selectedDates[0]}
+              onSelect={handleSingleDateSelect}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          )}
+          
+          {selectionType === "multiple" && (
+            <Calendar
+              mode="multiple"
+              selected={selectedDates}
+              onSelect={handleMultipleDateSelect}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          )}
+          
+          {selectionType === "range" && (
             <Calendar
               mode="range"
               selected={dateRange}
@@ -133,15 +138,8 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
               initialFocus
               className={cn("p-3 pointer-events-auto")}
             />
-          ) : (
-            <Calendar
-              mode={selectionType === "multiple" ? "multiple" : "single"}
-              selected={selectedDates}
-              onSelect={handleDateSelect}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-            />
           )}
+          
           <div className="p-3 border-t">
             <div className="flex items-center gap-2">
               <Input
