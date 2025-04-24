@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,6 +101,15 @@ const UnitManagement: React.FC = () => {
   const [accountant, setAccountant] = useState("");
   const [cashier, setCashier] = useState("");
 
+  // Add new state for files
+  const [files, setFiles] = useState<{
+    registration: File | null;
+    bankbook: File | null;
+  }>({
+    registration: null,
+    bankbook: null
+  });
+
   const filteredUnits = units.filter(unit => 
     unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     unit.representative.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -153,6 +161,7 @@ const UnitManagement: React.FC = () => {
     setAccountant("");
     setCashier("");
     setCurrentUnit(null);
+    setFiles({ registration: null, bankbook: null });
   };
 
   const validateTaxId = (value: string) => {
@@ -160,6 +169,15 @@ const UnitManagement: React.FC = () => {
     return taxIdRegex.test(value);
   };
 
+  // Add file handling functions
+  const handleFileChange = (type: 'registration' | 'bankbook', file: File | null) => {
+    setFiles(prev => ({
+      ...prev,
+      [type]: file
+    }));
+  };
+
+  // Update handleSave to include file handling
   const handleSave = () => {
     if (!name || !address || !representative || !taxId) {
       toast.error("請填寫所有必填欄位");
@@ -195,6 +213,11 @@ const UnitManagement: React.FC = () => {
       toast.success("單位資料已更新");
     }
 
+    // Handle file uploads here (in a real app, you'd upload these to a server)
+    if (files.registration || files.bankbook) {
+      toast.success("附件已上傳");
+    }
+
     setIsDialogOpen(false);
     resetForm();
   };
@@ -203,6 +226,7 @@ const UnitManagement: React.FC = () => {
     console.log(`切換到第 ${pageNumber} 頁`);
   };
 
+  // Update the form JSX to include file upload fields
   return (
     <MainLayout>
       <div className="container mx-auto p-6">
@@ -408,6 +432,54 @@ const UnitManagement: React.FC = () => {
                       onChange={(e) => setAccountName(e.target.value)}
                       placeholder="戶名"
                     />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>附件上傳</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="registration-cert">立案證書</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="registration-cert"
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => handleFileChange('registration', e.target.files?.[0] || null)}
+                        className="flex-1"
+                      />
+                      {files.registration && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleFileChange('registration', null)}
+                        >
+                          清除
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bankbook">銀行存摺</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="bankbook"
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => handleFileChange('bankbook', e.target.files?.[0] || null)}
+                        className="flex-1"
+                      />
+                      {files.bankbook && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleFileChange('bankbook', null)}
+                        >
+                          清除
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

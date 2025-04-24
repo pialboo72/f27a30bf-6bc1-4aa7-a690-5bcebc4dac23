@@ -8,6 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -35,6 +37,7 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
     start: "09:00",
     end: "17:00",
   });
+  const [includeTime, setIncludeTime] = useState(true);
 
   const handleSelectionTypeChange = (value: string) => {
     setSelectionType(value as "single" | "multiple" | "range");
@@ -73,12 +76,22 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   };
 
   const formatDateDisplay = () => {
-    if (selectionType === "single" && selectedDates.length === 1) {
-      return `${format(selectedDates[0], "yyyy/MM/dd", { locale: zhTW })} ${timeSlots.start}-${timeSlots.end}`;
-    } else if (selectionType === "multiple" && selectedDates.length > 0) {
-      return `已選擇 ${selectedDates.length} 天 ${timeSlots.start}-${timeSlots.end}`;
-    } else if (selectionType === "range" && dateRange.from && dateRange.to) {
-      return `${format(dateRange.from, "yyyy/MM/dd")}-${format(dateRange.to, "yyyy/MM/dd")} ${timeSlots.start}-${timeSlots.end}`;
+    if (!includeTime) {
+      if (selectionType === "single" && selectedDates.length === 1) {
+        return format(selectedDates[0], "yyyy/MM/dd", { locale: zhTW });
+      } else if (selectionType === "multiple" && selectedDates.length > 0) {
+        return `已選擇 ${selectedDates.length} 天`;
+      } else if (selectionType === "range" && dateRange.from && dateRange.to) {
+        return `${format(dateRange.from, "yyyy/MM/dd")}-${format(dateRange.to, "yyyy/MM/dd")}`;
+      }
+    } else {
+      if (selectionType === "single" && selectedDates.length === 1) {
+        return `${format(selectedDates[0], "yyyy/MM/dd", { locale: zhTW })} ${timeSlots.start}-${timeSlots.end}`;
+      } else if (selectionType === "multiple" && selectedDates.length > 0) {
+        return `已選擇 ${selectedDates.length} 天 ${timeSlots.start}-${timeSlots.end}`;
+      } else if (selectionType === "range" && dateRange.from && dateRange.to) {
+        return `${format(dateRange.from, "yyyy/MM/dd")}-${format(dateRange.to, "yyyy/MM/dd")} ${timeSlots.start}-${timeSlots.end}`;
+      }
     }
     return "請選擇日期";
   };
@@ -140,22 +153,33 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
             />
           )}
           
-          <div className="p-3 border-t">
-            <div className="flex items-center gap-2">
-              <Input
-                type="time"
-                value={timeSlots.start}
-                onChange={(e) => handleTimeChange("start", e.target.value)}
-                className="w-[120px]"
+          <div className="p-3 border-t space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="include-time" 
+                checked={includeTime} 
+                onCheckedChange={(checked) => setIncludeTime(checked as boolean)} 
               />
-              <span>至</span>
-              <Input
-                type="time"
-                value={timeSlots.end}
-                onChange={(e) => handleTimeChange("end", e.target.value)}
-                className="w-[120px]"
-              />
+              <Label htmlFor="include-time">設定時間</Label>
             </div>
+            
+            {includeTime && (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="time"
+                  value={timeSlots.start}
+                  onChange={(e) => handleTimeChange("start", e.target.value)}
+                  className="w-[120px]"
+                />
+                <span>至</span>
+                <Input
+                  type="time"
+                  value={timeSlots.end}
+                  onChange={(e) => handleTimeChange("end", e.target.value)}
+                  className="w-[120px]"
+                />
+              </div>
+            )}
           </div>
         </PopoverContent>
       </Popover>
