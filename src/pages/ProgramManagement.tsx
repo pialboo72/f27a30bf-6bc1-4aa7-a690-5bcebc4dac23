@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -456,7 +455,6 @@ const ProgramManagement: React.FC = () => {
               <div className="space-y-2">
                 <Label>申請文件</Label>
                 <FileSelector
-                  files={[]}
                   selectedFiles={selectedFiles}
                   onFileSelect={setSelectedFiles}
                 />
