@@ -24,6 +24,7 @@ export interface Program {
   subsidyLimit: number;
   description: string;
   documents: SystemFile[];
+  links: string;  // Adding the missing 'links' property
 }
 
 export const FILE_CATEGORIES = {
