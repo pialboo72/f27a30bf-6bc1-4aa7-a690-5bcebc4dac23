@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Card,
@@ -36,7 +35,6 @@ import {
 } from "@/components/ui/pagination";
 import { toast } from "sonner";
 
-// 模擬系統日誌
 const generateLogs = () => {
   const logTypes = ["info", "warning", "error", "success"];
   const actions = [
@@ -74,7 +72,6 @@ const generateLogs = () => {
     });
   }
   
-  // 按照時間戳降序排序
   return logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 };
 
@@ -89,7 +86,6 @@ const SystemLogs: React.FC = () => {
   
   const itemsPerPage = 10;
   
-  // 處理日期範圍變更
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'start' | 'end') => {
     setDateRange({
       ...dateRange,
@@ -97,18 +93,14 @@ const SystemLogs: React.FC = () => {
     });
   };
   
-  // 處理搜索和過濾
   const filteredLogs = logs.filter(log => {
-    // 搜索條件
     const matchesSearch = 
       log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.details.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // 類型過濾
     const matchesType = filterType === "all" || log.type === filterType;
     
-    // 日期過濾
     let matchesDate = true;
     if (dateRange.start) {
       matchesDate = matchesDate && new Date(log.timestamp) >= new Date(dateRange.start);
@@ -120,14 +112,12 @@ const SystemLogs: React.FC = () => {
     return matchesSearch && matchesType && matchesDate;
   });
   
-  // 計算分頁
   const pageCount = Math.ceil(filteredLogs.length / itemsPerPage);
   const paginatedLogs = filteredLogs.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
   
-  // 處理清空日誌
   const handleClearLogs = () => {
     if (confirm("確定要清空所有系統日誌嗎？此操作無法撤銷。")) {
       setLogs([]);
@@ -135,12 +125,10 @@ const SystemLogs: React.FC = () => {
     }
   };
   
-  // 處理匯出日誌
   const handleExportLogs = () => {
     toast.success("已開始匯出日誌");
   };
   
-  // 日誌類型對應的徽章樣式
   const logTypeBadge = {
     info: "bg-blue-100 text-blue-800",
     warning: "bg-yellow-100 text-yellow-800",
@@ -270,7 +258,6 @@ const SystemLogs: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* 分頁控制 */}
         {pageCount > 0 && (
           <div className="flex justify-center">
             <Pagination>
