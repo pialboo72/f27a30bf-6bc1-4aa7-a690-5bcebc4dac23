@@ -63,6 +63,11 @@ const adminNavItems: NavItem[] = [
     icon: Building,
   },
   {
+    title: "文件模板管理",
+    href: "/document-template",
+    icon: FileText,
+  },
+  {
     title: "管理員設定",
     href: "/admin",
     icon: Settings,

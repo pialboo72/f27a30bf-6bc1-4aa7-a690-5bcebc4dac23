@@ -1,16 +1,24 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MainLayout from "@/components/layout/MainLayout";
 import { useFiles } from "@/contexts/FileContext";
 import { toast } from "sonner";
-import { Upload, FileText, AlertCircle } from "lucide-react";
+import { Upload, FileText, AlertCircle, Trash } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { SystemFile } from "@/types/program";
+
+interface ParsedTemplate {
+  id: number;
+  name: string;
+  markers: string[];
+}
 
 const DocumentTemplate = () => {
-  const { uploadFileWithConversion } = useFiles();
+  const { uploadFileWithConversion, systemFiles } = useFiles();
+  const [parsedTemplates, setParsedTemplates] = useState<ParsedTemplate[]>([]);
 
   const acceptedFormats = [
     ".docx",
@@ -20,6 +28,23 @@ const DocumentTemplate = () => {
     ".xls",
     ".xlsx"
   ];
+
+  useEffect(() => {
+    // 過濾出所有文件模板
+    const templates = systemFiles.filter(file => {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      return ext && acceptedFormats.some(format => format.includes(ext));
+    });
+
+    // 模擬解析模板中的標記（實際應該使用 docx 庫來解析）
+    const parsed = templates.map(template => ({
+      id: template.id,
+      name: template.name,
+      markers: ['{{姓名}}', '{{日期}}', '{{申請單位}}'] // 這裡應該是實際從文件中解析出的標記
+    }));
+
+    setParsedTemplates(parsed);
+  }, [systemFiles]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -40,6 +65,12 @@ const DocumentTemplate = () => {
       toast.error("檔案上傳失敗");
       console.error(error);
     }
+  };
+
+  const handleDeleteTemplate = (templateId: number) => {
+    // 實際應該調用 FileContext 中的刪除方法
+    setParsedTemplates(prev => prev.filter(template => template.id !== templateId));
+    toast.success("模板已刪除");
   };
 
   return (
@@ -95,6 +126,48 @@ const DocumentTemplate = () => {
             </Alert>
           </CardContent>
         </Card>
+
+        {parsedTemplates.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>已上傳的模板</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {parsedTemplates.map((template) => (
+                  <div key={template.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <span className="font-medium">{template.name}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteTemplate(template.id)}
+                      >
+                        <Trash className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <div className="bg-muted p-3 rounded-md">
+                      <p className="text-sm font-medium mb-2">已識別的標記：</p>
+                      <div className="flex flex-wrap gap-2">
+                        {template.markers.map((marker, index) => (
+                          <span
+                            key={index}
+                            className="bg-primary/10 text-primary px-2 py-1 rounded text-sm"
+                          >
+                            {marker}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </MainLayout>
   );
