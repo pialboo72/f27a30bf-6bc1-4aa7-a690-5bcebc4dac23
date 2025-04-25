@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { SystemFile } from '@/types/program';
+import { SystemFile, FileTag } from '@/types/program';
 import { toast } from 'sonner';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
@@ -73,6 +74,8 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
 
   const parseTemplateMarkers = async (file: File): Promise<string[]> => {
     try {
+      // 在實際實現中，這裡應該使用 docx 庫解析 Word 文件中的標記
+      // 目前我們返回一些模擬的標記
       return ['{{姓名}}', '{{日期}}', '{{申請單位}}'];
     } catch (error) {
       console.error('解析模板標記失敗:', error);
@@ -92,7 +95,14 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
         fileToUpload = convertedFile;
       }
       
-      const markers = await parseTemplateMarkers(fileToUpload);
+      // 解析標記
+      const markerStrings = await parseTemplateMarkers(fileToUpload);
+      
+      // 將字串標記轉換為 FileTag 物件陣列
+      const fileTags: FileTag[] = markerStrings.map((marker, index) => ({
+        id: Date.now() + index, // 使用時間戳加索引作為臨時 ID
+        name: marker
+      }));
       
       toast.info(`正在上傳 ${fileToUpload.name}...`);
       
@@ -106,7 +116,7 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
         type: fileToUpload.type,
         uploadDate: new Date().toISOString(),
         folders: ['已上傳'],
-        tags: markers
+        tags: fileTags
       };
       
       setSystemFiles(prevFiles => [...prevFiles, newFile]);
