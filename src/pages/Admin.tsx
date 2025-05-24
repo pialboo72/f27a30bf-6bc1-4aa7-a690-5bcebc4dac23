@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import MainLayout from "@/components/layout/MainLayout";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import ApplicationStatus from "@/components/application/ApplicationStatus";
-import PermissionGuard from "@/components/auth/PermissionGuard";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { Settings, Users, FileText, Copy, FolderOpen, Shield, Activity } from "lucide-react";
@@ -93,19 +92,17 @@ const Admin: React.FC = () => {
         </Card>
 
         <div className="grid gap-6 grid-cols-1 md:grid-cols-3 mb-8">
-          <PermissionGuard requiredRole="admin">
-            <Link to="/admin/programs">
-              <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <FileText className="h-12 w-12 text-primary mb-4" />
-                  <h3 className="text-lg font-medium">補助計劃管理</h3>
-                  <p className="text-sm text-muted-foreground text-center mt-2">
-                    新增、編輯和管理補助計劃
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          </PermissionGuard>
+          <Link to="/admin/programs">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <FileText className="h-12 w-12 text-primary mb-4" />
+                <h3 className="text-lg font-medium">補助計劃管理</h3>
+                <p className="text-sm text-muted-foreground text-center mt-2">
+                  新增、編輯和管理補助計劃
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
           
           <Link to="/files">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
@@ -119,19 +116,17 @@ const Admin: React.FC = () => {
             </Card>
           </Link>
           
-          <PermissionGuard requiredPermission="manage_users">
-            <Link to="/users">
-              <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <Users className="h-12 w-12 text-primary mb-4" />
-                  <h3 className="text-lg font-medium">用戶管理</h3>
-                  <p className="text-sm text-muted-foreground text-center mt-2">
-                    管理系統用戶帳號與權限
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          </PermissionGuard>
+          <Link to="/users">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <Users className="h-12 w-12 text-primary mb-4" />
+                <h3 className="text-lg font-medium">用戶管理</h3>
+                <p className="text-sm text-muted-foreground text-center mt-2">
+                  管理系統用戶帳號與權限
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
           
           <Link to="/logs">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
@@ -147,34 +142,32 @@ const Admin: React.FC = () => {
         </div>
 
         <div className="grid gap-6">
-          <PermissionGuard requiredRole="admin">
-            <Card>
-              <CardHeader>
-                <CardTitle>AI 設定</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">API 金鑰</label>
-                  <Input type="password" placeholder="輸入 OpenAI API 金鑰" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">AI 模型</label>
-                  <Input type="text" defaultValue="gpt-4" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">提示詞範本</label>
-                  <Textarea
-                    placeholder="輸入 AI 生成內容的提示詞範本"
-                    className="h-32"
-                  />
-                </div>
-                <Button onClick={handleSave} disabled={isLoading}>
-                  {isLoading && <LoadingSpinner size="sm" className="mr-2" />}
-                  保存設定
-                </Button>
-              </CardContent>
-            </Card>
-          </PermissionGuard>
+          <Card>
+            <CardHeader>
+              <CardTitle>AI 設定</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">API 金鑰</label>
+                <Input type="password" placeholder="輸入 OpenAI API 金鑰" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">AI 模型</label>
+                <Input type="text" defaultValue="gpt-4" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">提示詞範本</label>
+                <Textarea
+                  placeholder="輸入 AI 生成內容的提示詞範本"
+                  className="h-32"
+                />
+              </div>
+              <Button onClick={handleSave} disabled={isLoading}>
+                {isLoading && <LoadingSpinner size="sm" className="mr-2" />}
+                保存設定
+              </Button>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

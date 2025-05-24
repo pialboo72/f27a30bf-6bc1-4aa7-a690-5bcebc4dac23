@@ -44,6 +44,17 @@ const mockFolders = [
   { id: 3, name: "宣傳資料", created: "2025-03-20", fileCount: 7 }
 ];
 
+// 檔案大小格式化函數
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
 // 將模擬檔案調整為符合 SystemFile 接口
 const mockFiles = [
   { 
@@ -402,7 +413,7 @@ const FileManagement: React.FC = () => {
                             <div className="flex-1">
                               <p className="font-medium">{file.name}</p>
                               <div className="flex flex-wrap text-xs text-muted-foreground mt-1">
-                                <span className="mr-3">大小: {file.size}</span>
+                                <span className="mr-3">大小: {formatFileSize(file.size)}</span>
                                 <span className="mr-3">上傳於: {file.uploaded}</span>
                                 <span className="mr-3">原始格式: {file.originalType}</span>
                                 <span 
@@ -513,10 +524,10 @@ const FileManagement: React.FC = () => {
               
               {selectedFile && (
                 <div className="text-sm p-3 bg-muted rounded-md">
-                  <p className="mb-1">已選擇: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</p>
+                  <p className="mb-1">已選擇: {selectedFile.name} ({formatFileSize(selectedFile.size)})</p>
                   <p className="text-xs text-muted-foreground">
                     {selectedFile.name.split('.').pop() in fileConversions ? 
-                      `此檔案格式將自動轉���為相容的其他格式 (${fileConversions[selectedFile.name.split('.').pop() || ""].join(', ')})` : 
+                      `此檔案格式將自動轉換為相容的其他格式 (${fileConversions[selectedFile.name.split('.').pop() || ""].join(', ')})` : 
                       '此檔案格式不支援自動轉換'
                     }
                   </p>
