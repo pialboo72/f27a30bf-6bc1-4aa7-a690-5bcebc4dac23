@@ -20,6 +20,7 @@ import UserManagement from "./pages/UserManagement";
 import SystemLogs from "./pages/SystemLogs";
 import UnitManagement from "./pages/UnitManagement";
 import DocumentTemplate from "./pages/DocumentTemplate";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/admin/units" element={<UnitManagement />} />
             <Route path="/logs" element={<SystemLogs />} />
             <Route path="/users" element={<UserManagement />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/login" element={<Login />} />
             <Route path="/document-template" element={<DocumentTemplate />} />
             <Route path="*" element={<NotFound />} />

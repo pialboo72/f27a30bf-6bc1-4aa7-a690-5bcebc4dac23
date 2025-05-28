@@ -17,6 +17,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
 import { useFiles } from "@/contexts/FileContext";
 import { DateRangeSelector } from "@/components/DateRangeSelector";
+import SubsidyUnit, { SubsidyUnitData } from "@/components/activity/SubsidyUnit";
 
 const ActivityForm: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -32,8 +33,7 @@ const ActivityForm: React.FC = () => {
     target: '',
     participants: '',
     unit: '',
-    subsidyUnit: '',
-    subsidyAmount: 0,
+    subsidyUnits: [] as SubsidyUnitData[],
   });
 
   const handleInputChange = (field: string, value: any) => {
@@ -51,6 +51,10 @@ const ActivityForm: React.FC = () => {
     } else {
       handleInputChange('dateRange', dates);
     }
+  };
+
+  const handleSubsidyUnitsChange = (units: SubsidyUnitData[]) => {
+    handleInputChange('subsidyUnits', units);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -130,30 +134,10 @@ const ActivityForm: React.FC = () => {
         </div>
       </div>
 
-      <div className="border-b pb-6">
-        <h2 className="text-lg font-semibold mb-4">補助單位資料</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <Label htmlFor="subsidy-unit">補助單位</Label>
-            <Input
-              id="subsidy-unit"
-              value={formData.subsidyUnit}
-              onChange={(e) => handleInputChange('subsidyUnit', e.target.value)}
-              placeholder="請輸入補助單位名稱"
-            />
-          </div>
-          <div className="space-y-3">
-            <Label htmlFor="subsidy-amount">補助金額</Label>
-            <Input
-              id="subsidy-amount"
-              type="number"
-              value={formData.subsidyAmount === 0 ? '' : formData.subsidyAmount}
-              onChange={(e) => handleInputChange('subsidyAmount', Number(e.target.value))}
-              placeholder="請輸入補助金額"
-            />
-          </div>
-        </div>
-      </div>
+      <SubsidyUnit 
+        subsidyUnits={formData.subsidyUnits}
+        onUnitsChange={handleSubsidyUnitsChange}
+      />
 
       <div className="border-b pb-6">
         <h2 className="text-lg font-semibold mb-4">活動內容</h2>
