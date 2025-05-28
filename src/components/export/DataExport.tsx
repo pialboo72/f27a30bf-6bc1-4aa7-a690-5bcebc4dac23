@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Download, FileSpreadsheet, FileText, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
@@ -167,7 +165,23 @@ const DataExport: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Checkbox id="selectAll" />
+          <Checkbox 
+            id="selectAll"
+            checked={availableFields.length > 0 && exportOptions.includeFields.length === availableFields.length}
+            onCheckedChange={(checked) => {
+              if (checked) {
+                setExportOptions(prev => ({
+                  ...prev,
+                  includeFields: availableFields.map(field => field.id)
+                }));
+              } else {
+                setExportOptions(prev => ({
+                  ...prev,
+                  includeFields: []
+                }));
+              }
+            }}
+          />
           <Label htmlFor="selectAll" className="text-sm font-medium">
             全選
           </Label>
@@ -182,6 +196,56 @@ const DataExport: React.FC = () => {
       </CardContent>
     </Card>
   );
+};
+
+const dataTypeOptions = [
+  { value: 'applications', label: '申請資料', icon: FileText },
+  { value: 'activities', label: '活動資料', icon: Calendar },
+  { value: 'users', label: '用戶資料', icon: FileText },
+  { value: 'statistics', label: '統計報表', icon: FileSpreadsheet }
+];
+
+const getAvailableFields = (dataType: string) => {
+  switch (dataType) {
+    case 'applications':
+      return [
+        { id: 'title', label: '申請標題' },
+        { id: 'category', label: '申請類別' },
+        { id: 'status', label: '申請狀態' },
+        { id: 'submitDate', label: '提交日期' },
+        { id: 'amount', label: '申請金額' },
+        { id: 'applicant', label: '申請人' },
+        { id: 'organization', label: '申請單位' }
+      ];
+    case 'activities':
+      return [
+        { id: 'name', label: '活動名稱' },
+        { id: 'category', label: '活動類別' },
+        { id: 'date', label: '活動日期' },
+        { id: 'location', label: '活動地點' },
+        { id: 'participants', label: '參與人數' },
+        { id: 'budget', label: '活動預算' }
+      ];
+    case 'users':
+      return [
+        { id: 'name', label: '用戶姓名' },
+        { id: 'email', label: '電子郵件' },
+        { id: 'role', label: '用戶角色' },
+        { id: 'joinDate', label: '加入日期' },
+        { id: 'lastLogin', label: '最後登入' }
+      ];
+    default:
+      return [];
+  }
+};
+
+const handleFieldToggle = (fieldId: string, checked: boolean, setExportOptions: React.Dispatch<React.SetStateAction<ExportOptions>>) => {
+  setExportOptions(prev => ({
+    ...prev,
+    includeFields: checked
+      ? [...prev.includeFields, fieldId]
+      : prev.includeFields.filter(id => id !== fieldId)
+  }));
 };
 
 export default DataExport;
