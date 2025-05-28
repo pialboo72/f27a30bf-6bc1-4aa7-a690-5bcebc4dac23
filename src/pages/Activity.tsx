@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,20 +16,20 @@ import { DateRangeSelector } from "@/components/DateRangeSelector";
 import SubsidyUnit, { SubsidyUnitData } from "@/components/activity/SubsidyUnit";
 import BudgetExport from "@/components/activity/BudgetExport";
 
-const ActivityForm: React.FC = () => {
+const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initialData, isNew }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    title: '',
-    category: '',
-    date: null as Date | null,
+    title: initialData?.title || initialData?.name || '',
+    category: initialData?.category || '',
+    date: initialData?.date ? new Date(initialData.date) : null,
     dateRange: null as { start: Date; end: Date } | null,
-    location: '',
-    purpose: '',
-    content: '',
-    target: '',
-    participants: '',
-    unit: '',
-    subsidyUnits: [] as SubsidyUnitData[],
+    location: initialData?.location || '',
+    purpose: initialData?.purpose || '',
+    content: initialData?.content || '',
+    target: initialData?.target || '',
+    participants: initialData?.participants || '',
+    unit: initialData?.unit || '',
+    subsidyUnits: initialData?.subsidyUnits || [] as SubsidyUnitData[],
   });
 
   const handleInputChange = (field: string, value: any) => {
@@ -63,19 +62,35 @@ const ActivityForm: React.FC = () => {
     }
     
     const activities = JSON.parse(localStorage.getItem('activities') || '[]');
-    const activityId = new Date().getTime();
-    const newActivity = {
-      id: activityId,
-      name: formData.title,
-      category: formData.category,
-      date: formData.date ? format(formData.date, 'yyyy-MM-dd') : '',
-      status: '已提交',
-      ...formData
-    };
     
-    activities.push(newActivity);
-    localStorage.setItem('activities', JSON.stringify(activities));
-    toast.success("活動資料已送出");
+    if (isNew) {
+      const activityId = new Date().getTime();
+      const newActivity = {
+        id: activityId,
+        name: formData.title,
+        category: formData.category,
+        date: formData.date ? format(formData.date, 'yyyy-MM-dd') : '',
+        status: '已提交',
+        ...formData
+      };
+      
+      activities.push(newActivity);
+      localStorage.setItem('activities', JSON.stringify(activities));
+      toast.success("活動資料已送出");
+    } else {
+      // 更新現有活動
+      const activityIndex = activities.findIndex((a: any) => a.id === initialData?.id);
+      if (activityIndex !== -1) {
+        activities[activityIndex] = {
+          ...activities[activityIndex],
+          name: formData.title,
+          ...formData
+        };
+        localStorage.setItem('activities', JSON.stringify(activities));
+        toast.success("活動資料已更新");
+      }
+    }
+    
     navigate('/activities');
   };
 
@@ -242,19 +257,36 @@ interface BudgetItem {
   remarks: string;
 }
 
-const BudgetForm: React.FC = () => {
-  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([
-    { id: 1, quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }
-  ]);
+const BudgetForm: React.FC<{ activityData?: any; isNew: boolean }> = ({ activityData, isNew }) => {
+  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
+  const [budgetTitle, setBudgetTitle] = useState<string>('');
   const [budgetSaved, setBudgetSaved] = useState<boolean>(false);
   const [errors, setErrors] = useState<{[key: string]: {[key: string]: boolean}}>({});
 
   useEffect(() => {
-    const savedBudget = localStorage.getItem('budgetItems');
-    if (savedBudget) {
-      setBudgetItems(JSON.parse(savedBudget));
+    // 清空或載入預算資料
+    if (isNew) {
+      // 新增活動時清空預算表
+      setBudgetItems([{ id: 1, quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }]);
+      setBudgetTitle('');
+      localStorage.removeItem('budgetItems');
+    } else {
+      // 編輯活動時載入已存在的預算資料
+      const savedBudget = localStorage.getItem('budgetItems');
+      if (savedBudget) {
+        setBudgetItems(JSON.parse(savedBudget));
+      } else {
+        setBudgetItems([{ id: 1, quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }]);
+      }
     }
-  }, []);
+
+    // 設定預算表標題
+    if (activityData) {
+      const unitName = activityData.unit || '申請單位';
+      const activityName = activityData.title || activityData.name || '活動名稱';
+      setBudgetTitle(`${unitName}${activityName}預算表`);
+    }
+  }, [isNew, activityData]);
 
   const handleAddItem = () => {
     const newId = budgetItems.length > 0 ? Math.max(...budgetItems.map(item => item.id)) + 1 : 1;
@@ -339,75 +371,84 @@ const BudgetForm: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">預算項目</h3>
-        <BudgetExport budgetItems={budgetItems} />
+        <div className="flex-1">
+          <Label htmlFor="budget-title">預算表標題</Label>
+          <Input
+            id="budget-title"
+            value={budgetTitle}
+            onChange={(e) => setBudgetTitle(e.target.value)}
+            placeholder="請輸入預算表標題"
+            className="mt-2"
+          />
+        </div>
+        <BudgetExport budgetItems={budgetItems} budgetTitle={budgetTitle} />
       </div>
       
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse border border-gray-400">
           <thead>
             <tr className="bg-muted">
-              <th className="border px-4 py-2 text-left">項次</th>
-              <th className="border px-4 py-2 text-left">數量 <span className="text-red-500">*</span></th>
-              <th className="border px-4 py-2 text-left">單位 <span className="text-red-500">*</span></th>
-              <th className="border px-4 py-2 text-left">單價 <span className="text-red-500">*</span></th>
-              <th className="border px-4 py-2 text-left">金額</th>
-              <th className="border px-4 py-2 text-left">備註</th>
+              <th className="border border-gray-400 px-4 py-2 text-center font-medium">項次</th>
+              <th className="border border-gray-400 px-4 py-2 text-center font-medium">數量 <span className="text-red-500">*</span></th>
+              <th className="border border-gray-400 px-4 py-2 text-center font-medium">單位 <span className="text-red-500">*</span></th>
+              <th className="border border-gray-400 px-4 py-2 text-center font-medium">單價 <span className="text-red-500">*</span></th>
+              <th className="border border-gray-400 px-4 py-2 text-center font-medium">金額</th>
+              <th className="border border-gray-400 px-4 py-2 text-center font-medium">備註</th>
             </tr>
           </thead>
           <tbody>
             {budgetItems.map((item, index) => (
               <tr key={item.id} className="border-b">
-                <td className="border px-4 py-2">{index + 1}</td>
-                <td className="border px-4 py-2">
+                <td className="border border-gray-400 px-4 py-2 text-center">{index + 1}</td>
+                <td className="border border-gray-400 px-4 py-2">
                   <Input
                     type="number"
                     value={item.quantity === 0 ? '' : item.quantity}
                     onChange={(e) => handleUpdateItem(item.id, 'quantity', Number(e.target.value))}
-                    className={cn("border-0 p-0 h-8", errors[item.id]?.quantity ? "border-red-500 ring-1 ring-red-500" : "")}
+                    className={cn("border-0 p-0 h-8 text-center", errors[item.id]?.quantity ? "border-red-500 ring-1 ring-red-500" : "")}
                     placeholder="0"
                     required
                   />
                   {errors[item.id]?.quantity && <span className="text-xs text-red-500">必填</span>}
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border border-gray-400 px-4 py-2">
                   <Input
                     value={item.unit}
                     onChange={(e) => handleUpdateItem(item.id, 'unit', e.target.value)}
-                    className={cn("border-0 p-0 h-8", errors[item.id]?.unit ? "border-red-500 ring-1 ring-red-500" : "")}
+                    className={cn("border-0 p-0 h-8 text-center", errors[item.id]?.unit ? "border-red-500 ring-1 ring-red-500" : "")}
                     placeholder="單位"
                     required
                   />
                   {errors[item.id]?.unit && <span className="text-xs text-red-500">必填</span>}
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border border-gray-400 px-4 py-2">
                   <Input
                     type="number"
                     value={item.unitPrice === 0 ? '' : item.unitPrice}
                     onChange={(e) => handleUpdateItem(item.id, 'unitPrice', Number(e.target.value))}
-                    className={cn("border-0 p-0 h-8", errors[item.id]?.unitPrice ? "border-red-500 ring-1 ring-red-500" : "")}
+                    className={cn("border-0 p-0 h-8 text-center", errors[item.id]?.unitPrice ? "border-red-500 ring-1 ring-red-500" : "")}
                     placeholder="0"
                     required
                   />
                   {errors[item.id]?.unitPrice && <span className="text-xs text-red-500">必填</span>}
                 </td>
-                <td className="border px-4 py-2 font-medium">
+                <td className="border border-gray-400 px-4 py-2 font-medium text-center">
                   {item.amount.toLocaleString()}
                 </td>
-                <td className="border px-4 py-2">
+                <td className="border border-gray-400 px-4 py-2">
                   <Input
                     value={item.remarks}
                     onChange={(e) => handleUpdateItem(item.id, 'remarks', e.target.value)}
-                    className="border-0 p-0 h-8"
+                    className="border-0 p-0 h-8 text-center"
                     placeholder="備註"
                   />
                 </td>
               </tr>
             ))}
             <tr className="bg-muted">
-              <td colSpan={4} className="border px-4 py-2 text-right font-medium">總計：</td>
-              <td className="border px-4 py-2 font-bold">{calculateTotal().toLocaleString()}</td>
-              <td className="border px-4 py-2"></td>
+              <td colSpan={4} className="border border-gray-400 px-4 py-2 text-center font-bold">總計：</td>
+              <td className="border border-gray-400 px-4 py-2 font-bold text-center">{calculateTotal().toLocaleString()}</td>
+              <td className="border border-gray-400 px-4 py-2"></td>
             </tr>
           </tbody>
         </table>
@@ -430,14 +471,19 @@ const Activity: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = id === "new";
+  const [activityData, setActivityData] = useState<any>(null);
 
   useEffect(() => {
-    if (!isNew) {
+    if (!isNew && id) {
       const activities = JSON.parse(localStorage.getItem('activities') || '[]');
-      const activity = activities.find((a: any) => a.id === parseInt(id || '0'));
+      const activity = activities.find((a: any) => a.id === parseInt(id));
       if (activity) {
         console.log("載入活動資料", activity);
+        setActivityData(activity);
       }
+    } else if (isNew) {
+      // 新增活動時清空相關資料
+      setActivityData(null);
     }
   }, [id, isNew]);
 
@@ -466,10 +512,10 @@ const Activity: React.FC = () => {
                 <TabsTrigger value="budget">預算表</TabsTrigger>
               </TabsList>
               <TabsContent value="activity" className="mt-6">
-                <ActivityForm />
+                <ActivityForm initialData={activityData} isNew={isNew} />
               </TabsContent>
               <TabsContent value="budget" className="mt-6">
-                <BudgetForm />
+                <BudgetForm activityData={activityData} isNew={isNew} />
               </TabsContent>
             </Tabs>
           </CardContent>
