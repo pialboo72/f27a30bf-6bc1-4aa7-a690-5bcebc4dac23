@@ -8,6 +8,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { Settings, Users, FileText, Copy, FolderOpen, Building } from "lucide-react";
+import SystemStatus from "@/components/system/SystemStatus";
 
 const Admin: React.FC = () => {
   const handleSave = () => {
@@ -22,6 +23,10 @@ const Admin: React.FC = () => {
           <p className="text-muted-foreground mt-1">
             管理系統設定與參數
           </p>
+        </div>
+
+        <div className="mb-8">
+          <SystemStatus />
         </div>
 
         <div className="grid gap-6 grid-cols-1 md:grid-cols-3 mb-8">
@@ -49,7 +54,7 @@ const Admin: React.FC = () => {
             </Card>
           </Link>
           
-          <Link to="/units">
+          <Link to="/admin/units">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
               <CardContent className="flex flex-col items-center justify-center p-6">
                 <Building className="h-12 w-12 text-primary mb-4" />
@@ -84,36 +89,24 @@ const Admin: React.FC = () => {
               </CardContent>
             </Card>
           </Link>
+
+          <Link to="/settings">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <Settings className="h-12 w-12 text-primary mb-4" />
+                <h3 className="text-lg font-medium">系統設定</h3>
+                <p className="text-sm text-muted-foreground text-center mt-2">
+                  AI設定、系統參數配置
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         <div className="grid gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>AI 設定</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">API 金鑰</label>
-                <Input type="password" placeholder="輸入 OpenAI API 金鑰" />
-              </div>
-              <div>
-                <label className="text-sm font-medium">AI 模型</label>
-                <Input type="text" defaultValue="gpt-4" />
-              </div>
-              <div>
-                <label className="text-sm font-medium">提示詞範本</label>
-                <Textarea
-                  placeholder="輸入 AI 生成內容的提示詞範本"
-                  className="h-32"
-                />
-              </div>
-              <Button onClick={handleSave}>保存設定</Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>系統參數</CardTitle>
+              <CardTitle>快速設定</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -121,12 +114,8 @@ const Admin: React.FC = () => {
                 <Input type="text" defaultValue="補助申請系統" />
               </div>
               <div>
-                <label className="text-sm font-medium">檔案上傳大小限制 (MB)</label>
-                <Input type="number" defaultValue="10" />
-              </div>
-              <div>
-                <label className="text-sm font-medium">允許的檔案類型</label>
-                <Input type="text" defaultValue=".doc,.docx,.pdf,.xls,.xlsx" />
+                <label className="text-sm font-medium">管理員郵箱</label>
+                <Input type="email" placeholder="admin@example.com" />
               </div>
               <Button onClick={handleSave}>保存設定</Button>
             </CardContent>

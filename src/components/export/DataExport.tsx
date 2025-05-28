@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,47 @@ interface ExportOptions {
   includeFields: string[];
 }
 
+const dataTypeOptions = [
+  { value: 'applications', label: '申請資料', icon: FileText },
+  { value: 'activities', label: '活動資料', icon: Calendar },
+  { value: 'users', label: '用戶資料', icon: FileText },
+  { value: 'statistics', label: '統計報表', icon: FileSpreadsheet }
+];
+
+const getAvailableFields = (dataType: string) => {
+  switch (dataType) {
+    case 'applications':
+      return [
+        { id: 'title', label: '申請標題' },
+        { id: 'category', label: '申請類別' },
+        { id: 'status', label: '申請狀態' },
+        { id: 'submitDate', label: '提交日期' },
+        { id: 'amount', label: '申請金額' },
+        { id: 'applicant', label: '申請人' },
+        { id: 'organization', label: '申請單位' }
+      ];
+    case 'activities':
+      return [
+        { id: 'name', label: '活動名稱' },
+        { id: 'category', label: '活動類別' },
+        { id: 'date', label: '活動日期' },
+        { id: 'location', label: '活動地點' },
+        { id: 'participants', label: '參與人數' },
+        { id: 'budget', label: '活動預算' }
+      ];
+    case 'users':
+      return [
+        { id: 'name', label: '用戶姓名' },
+        { id: 'email', label: '電子郵件' },
+        { id: 'role', label: '用戶角色' },
+        { id: 'joinDate', label: '加入日期' },
+        { id: 'lastLogin', label: '最後登入' }
+      ];
+    default:
+      return [];
+  }
+};
+
 const DataExport: React.FC = () => {
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     format: 'excel',
@@ -21,47 +63,6 @@ const DataExport: React.FC = () => {
     dateRange: null,
     includeFields: []
   });
-
-  const dataTypeOptions = [
-    { value: 'applications', label: '申請資料', icon: FileText },
-    { value: 'activities', label: '活動資料', icon: Calendar },
-    { value: 'users', label: '用戶資料', icon: FileText },
-    { value: 'statistics', label: '統計報表', icon: FileSpreadsheet }
-  ];
-
-  const getAvailableFields = (dataType: string) => {
-    switch (dataType) {
-      case 'applications':
-        return [
-          { id: 'title', label: '申請標題' },
-          { id: 'category', label: '申請類別' },
-          { id: 'status', label: '申請狀態' },
-          { id: 'submitDate', label: '提交日期' },
-          { id: 'amount', label: '申請金額' },
-          { id: 'applicant', label: '申請人' },
-          { id: 'organization', label: '申請單位' }
-        ];
-      case 'activities':
-        return [
-          { id: 'name', label: '活動名稱' },
-          { id: 'category', label: '活動類別' },
-          { id: 'date', label: '活動日期' },
-          { id: 'location', label: '活動地點' },
-          { id: 'participants', label: '參與人數' },
-          { id: 'budget', label: '活動預算' }
-        ];
-      case 'users':
-        return [
-          { id: 'name', label: '用戶姓名' },
-          { id: 'email', label: '電子郵件' },
-          { id: 'role', label: '用戶角色' },
-          { id: 'joinDate', label: '加入日期' },
-          { id: 'lastLogin', label: '最後登入' }
-        ];
-      default:
-        return [];
-    }
-  };
 
   const handleFieldToggle = (fieldId: string, checked: boolean) => {
     setExportOptions(prev => ({
@@ -78,18 +79,11 @@ const DataExport: React.FC = () => {
       return;
     }
 
-    // 模擬導出過程
     toast.success('正在準備導出文件...');
     
     setTimeout(() => {
       const fileName = `${exportOptions.dataType}_${new Date().toISOString().split('T')[0]}.${exportOptions.format}`;
       toast.success(`文件 ${fileName} 已準備完成`);
-      
-      // 實際實現中，這裡應該觸發文件下載
-      const link = document.createElement('a');
-      link.href = '#'; // 實際的文件 URL
-      link.download = fileName;
-      // link.click();
     }, 2000);
   };
 
@@ -196,56 +190,6 @@ const DataExport: React.FC = () => {
       </CardContent>
     </Card>
   );
-};
-
-const dataTypeOptions = [
-  { value: 'applications', label: '申請資料', icon: FileText },
-  { value: 'activities', label: '活動資料', icon: Calendar },
-  { value: 'users', label: '用戶資料', icon: FileText },
-  { value: 'statistics', label: '統計報表', icon: FileSpreadsheet }
-];
-
-const getAvailableFields = (dataType: string) => {
-  switch (dataType) {
-    case 'applications':
-      return [
-        { id: 'title', label: '申請標題' },
-        { id: 'category', label: '申請類別' },
-        { id: 'status', label: '申請狀態' },
-        { id: 'submitDate', label: '提交日期' },
-        { id: 'amount', label: '申請金額' },
-        { id: 'applicant', label: '申請人' },
-        { id: 'organization', label: '申請單位' }
-      ];
-    case 'activities':
-      return [
-        { id: 'name', label: '活動名稱' },
-        { id: 'category', label: '活動類別' },
-        { id: 'date', label: '活動日期' },
-        { id: 'location', label: '活動地點' },
-        { id: 'participants', label: '參與人數' },
-        { id: 'budget', label: '活動預算' }
-      ];
-    case 'users':
-      return [
-        { id: 'name', label: '用戶姓名' },
-        { id: 'email', label: '電子郵件' },
-        { id: 'role', label: '用戶角色' },
-        { id: 'joinDate', label: '加入日期' },
-        { id: 'lastLogin', label: '最後登入' }
-      ];
-    default:
-      return [];
-  }
-};
-
-const handleFieldToggle = (fieldId: string, checked: boolean, setExportOptions: React.Dispatch<React.SetStateAction<ExportOptions>>) => {
-  setExportOptions(prev => ({
-    ...prev,
-    includeFields: checked
-      ? [...prev.includeFields, fieldId]
-      : prev.includeFields.filter(id => id !== fieldId)
-  }));
 };
 
 export default DataExport;

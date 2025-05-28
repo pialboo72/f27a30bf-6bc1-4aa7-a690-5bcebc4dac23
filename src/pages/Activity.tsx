@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,20 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { zhTW } from "date-fns/locale";
-import { Calendar as CalendarIcon, FileText, Save, Upload } from "lucide-react";
+import { Save, Upload } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
-import { useFiles } from "@/contexts/FileContext";
 import { DateRangeSelector } from "@/components/DateRangeSelector";
 import SubsidyUnit, { SubsidyUnitData } from "@/components/activity/SubsidyUnit";
+import BudgetExport from "@/components/activity/BudgetExport";
 
 const ActivityForm: React.FC = () => {
-  const [date, setDate] = useState<Date | undefined>(undefined);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -60,13 +57,11 @@ const ActivityForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 驗證必填欄位
     if (!formData.title || !formData.category || !formData.date || !formData.location) {
       toast.error("請填寫所有必填欄位");
       return;
     }
     
-    // 儲存活動資料到 localStorage，實際應用中應使用後端 API
     const activities = JSON.parse(localStorage.getItem('activities') || '[]');
     const activityId = new Date().getTime();
     const newActivity = {
@@ -343,6 +338,11 @@ const BudgetForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">預算項目</h3>
+        <BudgetExport budgetItems={budgetItems} />
+      </div>
+      
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
@@ -457,7 +457,7 @@ const Activity: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>青年藝術發展計劃</CardTitle>
+            <CardTitle>活動申請表單</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="activity" className="w-full">
