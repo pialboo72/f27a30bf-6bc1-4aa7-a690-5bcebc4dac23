@@ -16,6 +16,15 @@ import { DateRangeSelector } from "@/components/DateRangeSelector";
 import SubsidyUnit, { SubsidyUnitData } from "@/components/activity/SubsidyUnit";
 import BudgetExport from "@/components/activity/BudgetExport";
 
+// 補助計畫選項
+const subsidyPrograms = [
+  { id: 1, name: "文化部藝術發展補助" },
+  { id: 2, name: "體育署全民運動補助" },
+  { id: 3, name: "教育部學生社團活動補助" },
+  { id: 4, name: "衛生福利部社區健康促進補助" },
+  { id: 5, name: "環保署環境教育活動補助" },
+];
+
 const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initialData, isNew }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -30,6 +39,7 @@ const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initial
     participants: '',
     unit: '',
     subsidyUnits: [] as SubsidyUnitData[],
+    selectedProgram: '', // 新增補助計畫選擇
   });
 
   // 當 initialData 變更時更新表單資料
@@ -48,6 +58,7 @@ const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initial
         participants: initialData.participants || '',
         unit: initialData.unit || '',
         subsidyUnits: initialData.subsidyUnits || [],
+        selectedProgram: initialData.selectedProgram || '',
       });
     } else if (isNew) {
       // 新增活動時重置表單
@@ -63,6 +74,7 @@ const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initial
         participants: '',
         unit: '',
         subsidyUnits: [],
+        selectedProgram: '',
       });
     }
   }, [initialData, isNew]);
@@ -177,6 +189,25 @@ const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initial
               value={formData.location}
               onChange={(e) => handleInputChange('location', e.target.value)}
             />
+          </div>
+
+          <div className="space-y-3 md:col-span-2">
+            <Label htmlFor="selected-program">預定申請補助計畫</Label>
+            <Select 
+              value={formData.selectedProgram} 
+              onValueChange={(value) => handleInputChange('selectedProgram', value)}
+            >
+              <SelectTrigger id="selected-program">
+                <SelectValue placeholder="請選擇預定申請的補助計畫（可選）" />
+              </SelectTrigger>
+              <SelectContent>
+                {subsidyPrograms.map((program) => (
+                  <SelectItem key={program.id} value={program.id.toString()}>
+                    {program.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

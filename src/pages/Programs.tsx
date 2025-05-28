@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -13,8 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Tag, Clock, Info } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import ApplicationForm from "@/components/application/ApplicationForm";
 
 // 模擬補助計劃數據
 const subsidyPrograms = [
@@ -81,7 +81,9 @@ const categories = ["全部", "文化藝術", "體育", "教育", "健康照護"
 const Programs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("全部");
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const showApplicationForm = searchParams.get('apply');
 
   // 處理搜索和過濾
   const filteredPrograms = subsidyPrograms.filter((program) => {
@@ -96,9 +98,22 @@ const Programs: React.FC = () => {
 
   // 處理申請按鈕點擊
   const handleApply = (programId: number) => {
-    toast.success("開始申請補助計劃");
-    navigate(`/applications/new?programId=${programId}`);
+    navigate(`/programs?apply=${programId}`);
   };
+
+  if (showApplicationForm) {
+    return (
+      <MainLayout>
+        <div className="fade-in">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold">申請補助計劃</h1>
+            <p className="text-muted-foreground mt-1">選擇活動並提交申請</p>
+          </div>
+          <ApplicationForm programId={showApplicationForm} />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

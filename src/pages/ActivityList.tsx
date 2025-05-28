@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,12 +57,11 @@ const ActivityList: React.FC = () => {
 
   // 生成活動申請文件內容
   const generateDocumentContent = (activity: any) => {
-    return `
-活動申請書
+    return `活動申請書
 
-活動名稱：${activity.name || activity.title}
-活動類別：${activity.category}
-活動日期：${activity.date}
+活動名稱：${activity.name || activity.title || ''}
+活動類別：${activity.category || ''}
+活動日期：${activity.date || ''}
 活動地點：${activity.location || ''}
 主辦單位：${activity.unit || ''}
 
@@ -77,8 +75,7 @@ ${activity.content || ''}
 預計參與人數：${activity.participants || ''}人
 
 申請日期：${new Date().toLocaleDateString()}
-申請狀態：${activity.status}
-    `.trim();
+申請狀態：${activity.status || ''}`;
   };
 
   const handleDelete = (id: number) => {
@@ -107,7 +104,6 @@ ${activity.content || ''}
   };
 
   const handleDownload = (id: number, format: string = 'docx') => {
-    // 檢查此活動是否有生成文件
     const activity = activities.find(a => a.id === id);
     
     if (!activity?.hasDocument) {
@@ -115,9 +111,8 @@ ${activity.content || ''}
       return;
     }
     
-    toast.success(`正在下載 ${activity.name} 申請文件 (${format})`);
-    
     const content = generateDocumentContent(activity);
+    const fileName = `${activity.name || activity.title}_申請文件`;
     
     try {
       if (format === 'xlsx') {
@@ -125,9 +120,9 @@ ${activity.content || ''}
         const ws = XLSX.utils.aoa_to_sheet([
           ['活動申請書'],
           [''],
-          ['活動名稱', activity.name || activity.title],
-          ['活動類別', activity.category],
-          ['活動日期', activity.date],
+          ['活動名稱', activity.name || activity.title || ''],
+          ['活動類別', activity.category || ''],
+          ['活動日期', activity.date || ''],
           ['活動地點', activity.location || ''],
           ['主辦單位', activity.unit || ''],
           [''],
@@ -141,34 +136,25 @@ ${activity.content || ''}
           ['預計參與人數', `${activity.participants || ''}人`],
           [''],
           ['申請日期', new Date().toLocaleDateString()],
-          ['申請狀態', activity.status]
+          ['申請狀態', activity.status || '']
         ]);
         
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, '活動申請書');
-        XLSX.writeFile(wb, `${activity.name}_申請文件.xlsx`);
-      } else if (format === 'pdf') {
-        // PDF 格式（模擬）
-        const blob = new Blob([content], { type: 'application/pdf' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `${activity.name}_申請文件.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
       } else {
-        // DOCX/ODT 格式（文字格式）
-        const mimeType = format === 'odt' 
-          ? 'application/vnd.oasis.opendocument.text' 
-          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-        
-        const blob = new Blob([content], { type: mimeType });
+        // 其他格式使用文字內容
+        const blob = new Blob([content], { 
+          type: format === 'pdf' ? 'application/pdf' : 'text/plain'
+        });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `${activity.name}_申請文件.${format}`;
+        link.href = url;
+        link.download = `${fileName}.${format}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       }
       
       toast.success("文件下載完成");
@@ -179,7 +165,6 @@ ${activity.content || ''}
   };
 
   const handlePrint = (id: number) => {
-    // 檢查此活動是否有生成文件
     const activity = activities.find(a => a.id === id);
     
     if (!activity?.hasDocument) {
