@@ -19,18 +19,53 @@ import BudgetExport from "@/components/activity/BudgetExport";
 const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initialData, isNew }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    title: initialData?.title || initialData?.name || '',
-    category: initialData?.category || '',
-    date: initialData?.date ? new Date(initialData.date) : null,
+    title: '',
+    category: '',
+    date: null as Date | null,
     dateRange: null as { start: Date; end: Date } | null,
-    location: initialData?.location || '',
-    purpose: initialData?.purpose || '',
-    content: initialData?.content || '',
-    target: initialData?.target || '',
-    participants: initialData?.participants || '',
-    unit: initialData?.unit || '',
-    subsidyUnits: initialData?.subsidyUnits || [] as SubsidyUnitData[],
+    location: '',
+    purpose: '',
+    content: '',
+    target: '',
+    participants: '',
+    unit: '',
+    subsidyUnits: [] as SubsidyUnitData[],
   });
+
+  // 當 initialData 變更時更新表單資料
+  useEffect(() => {
+    if (initialData) {
+      console.log("正在載入活動資料到表單", initialData);
+      setFormData({
+        title: initialData.title || initialData.name || '',
+        category: initialData.category || '',
+        date: initialData.date ? new Date(initialData.date) : null,
+        dateRange: null,
+        location: initialData.location || '',
+        purpose: initialData.purpose || '',
+        content: initialData.content || '',
+        target: initialData.target || '',
+        participants: initialData.participants || '',
+        unit: initialData.unit || '',
+        subsidyUnits: initialData.subsidyUnits || [],
+      });
+    } else if (isNew) {
+      // 新增活動時重置表單
+      setFormData({
+        title: '',
+        category: '',
+        date: null,
+        dateRange: null,
+        location: '',
+        purpose: '',
+        content: '',
+        target: '',
+        participants: '',
+        unit: '',
+        subsidyUnits: [],
+      });
+    }
+  }, [initialData, isNew]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -71,12 +106,13 @@ const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initial
         category: formData.category,
         date: formData.date ? format(formData.date, 'yyyy-MM-dd') : '',
         status: '已提交',
+        hasDocument: true, // 標記已生成文件
         ...formData
       };
       
       activities.push(newActivity);
       localStorage.setItem('activities', JSON.stringify(activities));
-      toast.success("活動資料已送出");
+      toast.success("活動資料已送出，申請文件已生成");
     } else {
       // 更新現有活動
       const activityIndex = activities.findIndex((a: any) => a.id === initialData?.id);
@@ -84,10 +120,11 @@ const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initial
         activities[activityIndex] = {
           ...activities[activityIndex],
           name: formData.title,
+          hasDocument: true, // 標記已生成文件
           ...formData
         };
         localStorage.setItem('activities', JSON.stringify(activities));
-        toast.success("活動資料已更新");
+        toast.success("活動資料已更新，申請文件已重新生成");
       }
     }
     
@@ -472,20 +509,36 @@ const Activity: React.FC = () => {
   const navigate = useNavigate();
   const isNew = id === "new";
   const [activityData, setActivityData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isNew && id) {
-      const activities = JSON.parse(localStorage.getItem('activities') || '[]');
-      const activity = activities.find((a: any) => a.id === parseInt(id));
-      if (activity) {
-        console.log("載入活動資料", activity);
-        setActivityData(activity);
+    const loadActivityData = () => {
+      if (!isNew && id) {
+        const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+        const activity = activities.find((a: any) => a.id === parseInt(id));
+        if (activity) {
+          console.log("載入活動資料", activity);
+          setActivityData(activity);
+        }
+      } else if (isNew) {
+        // 新增活動時清空相關資料
+        setActivityData(null);
       }
-    } else if (isNew) {
-      // 新增活動時清空相關資料
-      setActivityData(null);
-    }
+      setIsLoading(false);
+    };
+
+    loadActivityData();
   }, [id, isNew]);
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center h-64">
+          <div>載入中...</div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

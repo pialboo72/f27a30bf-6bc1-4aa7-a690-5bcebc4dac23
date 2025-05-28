@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import * as XLSX from 'xlsx';
 
 const ActivityList: React.FC = () => {
   const { downloadFile } = useFiles();
@@ -53,6 +55,31 @@ const ActivityList: React.FC = () => {
       localStorage.setItem('activities', JSON.stringify(initialActivities));
     }
   }, []);
+
+  // 生成活動申請文件內容
+  const generateDocumentContent = (activity: any) => {
+    return `
+活動申請書
+
+活動名稱：${activity.name || activity.title}
+活動類別：${activity.category}
+活動日期：${activity.date}
+活動地點：${activity.location || ''}
+主辦單位：${activity.unit || ''}
+
+活動目的：
+${activity.purpose || ''}
+
+活動內容：
+${activity.content || ''}
+
+參與對象：${activity.target || ''}
+預計參與人數：${activity.participants || ''}人
+
+申請日期：${new Date().toLocaleDateString()}
+申請狀態：${activity.status}
+    `.trim();
+  };
 
   const handleDelete = (id: number) => {
     if (window.confirm('確定要刪除此活動嗎？')) {
@@ -90,19 +117,65 @@ const ActivityList: React.FC = () => {
     
     toast.success(`正在下載 ${activity.name} 申請文件 (${format})`);
     
-    // 模擬下載過程
-    setTimeout(() => {
-      // 在實際應用中，這裡應該下載真實的文件
-      const link = document.createElement('a');
-      const blob = new Blob([`${activity.name} 申請文件內容`], { type: 'text/plain' });
-      link.href = URL.createObjectURL(blob);
-      link.download = `${activity.name}_申請文件.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    const content = generateDocumentContent(activity);
+    
+    try {
+      if (format === 'xlsx') {
+        // Excel 格式
+        const ws = XLSX.utils.aoa_to_sheet([
+          ['活動申請書'],
+          [''],
+          ['活動名稱', activity.name || activity.title],
+          ['活動類別', activity.category],
+          ['活動日期', activity.date],
+          ['活動地點', activity.location || ''],
+          ['主辦單位', activity.unit || ''],
+          [''],
+          ['活動目的'],
+          [activity.purpose || ''],
+          [''],
+          ['活動內容'],
+          [activity.content || ''],
+          [''],
+          ['參與對象', activity.target || ''],
+          ['預計參與人數', `${activity.participants || ''}人`],
+          [''],
+          ['申請日期', new Date().toLocaleDateString()],
+          ['申請狀態', activity.status]
+        ]);
+        
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '活動申請書');
+        XLSX.writeFile(wb, `${activity.name}_申請文件.xlsx`);
+      } else if (format === 'pdf') {
+        // PDF 格式（模擬）
+        const blob = new Blob([content], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${activity.name}_申請文件.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // DOCX/ODT 格式（文字格式）
+        const mimeType = format === 'odt' 
+          ? 'application/vnd.oasis.opendocument.text' 
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        
+        const blob = new Blob([content], { type: mimeType });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${activity.name}_申請文件.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
       
       toast.success("文件下載完成");
-    }, 1500);
+    } catch (error) {
+      console.error('下載文件時發生錯誤:', error);
+      toast.error("下載文件時發生錯誤");
+    }
   };
 
   const handlePrint = (id: number) => {
@@ -114,14 +187,37 @@ const ActivityList: React.FC = () => {
       return;
     }
     
-    // 實際應用中，這裡應該載入特定文件內容，而不是直接列印頁面
-    toast.success("正在準備列印文件");
+    const content = generateDocumentContent(activity);
     
-    // 模擬準備列印過程
-    setTimeout(() => {
-      window.print();
+    // 創建新視窗進行列印
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>${activity.name} - 申請文件</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+              h1 { text-align: center; margin-bottom: 30px; }
+              .content { white-space: pre-line; }
+            </style>
+          </head>
+          <body>
+            <div class="content">${content}</div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      
+      printWindow.onload = () => {
+        printWindow.print();
+        printWindow.close();
+      };
+      
       toast.success("正在列印文件");
-    }, 500);
+    } else {
+      toast.error("無法開啟列印視窗");
+    }
   };
 
   return (
@@ -202,6 +298,9 @@ const ActivityList: React.FC = () => {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDownload(activity.id, 'odt')}>
                                   下載 ODT 格式
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownload(activity.id, 'xlsx')}>
+                                  下載 Excel 格式
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDownload(activity.id, 'pdf')}>
                                   下載 PDF 格式

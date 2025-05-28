@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
+import * as XLSX from 'xlsx';
 
 interface BudgetItem {
   id: number;
@@ -25,36 +26,62 @@ const BudgetExport: React.FC<BudgetExportProps> = ({ budgetItems, budgetTitle = 
       return;
     }
 
-    // 創建 CSV 內容（可以用 Excel 打開）
-    const headers = ['項次', '數量', '單位', '單價', '金額', '備註'];
-    const csvContent = [
-      `"${budgetTitle}"`,  // 標題行
-      '',  // 空行
-      headers.join(','),
-      ...budgetItems.map((item, index) => 
-        [
-          index + 1,
-          item.quantity,
-          `"${item.unit}"`,
-          item.unitPrice.toLocaleString(),
-          item.amount.toLocaleString(),
-          `"${item.remarks}"`
-        ].join(',')
-      ),
-      ['', '', '', '總計', budgetItems.reduce((sum, item) => sum + item.amount, 0).toLocaleString(), ''].join(',')
-    ].join('\n');
+    // 準備 Excel 資料
+    const data = [
+      [budgetTitle], // 標題行
+      [], // 空行
+      ['項次', '數量', '單位', '單價', '金額', '備註'], // 表頭
+      ...budgetItems.map((item, index) => [
+        index + 1,
+        item.quantity,
+        item.unit,
+        item.unitPrice,
+        item.amount,
+        item.remarks
+      ]),
+      ['', '', '', '總計', budgetItems.reduce((sum, item) => sum + item.amount, 0), ''] // 總計行
+    ];
 
-    // 創建和下載文件
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${budgetTitle}_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // 創建工作簿和工作表
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // 設定欄寬
+    ws['!cols'] = [
+      { wch: 8 },  // 項次
+      { wch: 10 }, // 數量
+      { wch: 12 }, // 單位
+      { wch: 15 }, // 單價
+      { wch: 15 }, // 金額
+      { wch: 20 }  // 備註
+    ];
+
+    // 設定標題行樣式（合併儲存格）
+    if (!ws['!merges']) ws['!merges'] = [];
+    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } });
+
+    // 設定數字格式（千分位）
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let R = 3; R <= range.e.r; R++) {
+      const unitPriceCell = XLSX.utils.encode_cell({ r: R, c: 3 });
+      const amountCell = XLSX.utils.encode_cell({ r: R, c: 4 });
+      
+      if (ws[unitPriceCell]) {
+        ws[unitPriceCell].z = '#,##0';
+      }
+      if (ws[amountCell]) {
+        ws[amountCell].z = '#,##0';
+      }
+    }
+
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, '預算表');
+
+    // 導出檔案
+    const fileName = `${budgetTitle}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
     
-    toast.success('預算表已成功導出');
+    toast.success('預算表已成功導出為 Excel 格式');
   };
 
   return (
