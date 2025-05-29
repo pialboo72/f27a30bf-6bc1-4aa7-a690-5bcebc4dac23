@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -18,11 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import MainLayout from "@/components/layout/MainLayout";
 import ApplicationHistory from "@/components/application/ApplicationHistory";
 import { toast } from "sonner";
-import { Trash, Eye, Filter, Plus } from "lucide-react";
+import { Trash, Eye, Filter, Plus, MessageSquare } from "lucide-react";
 
 interface Application {
   id: number;
@@ -36,10 +44,23 @@ interface Application {
   notes?: string;
 }
 
+interface ProgressRecord {
+  id: number;
+  applicationId: number;
+  date: string;
+  status: string;
+  notes: string;
+  updatedBy: string;
+}
+
 const ApplicationTracking: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [progressRecords, setProgressRecords] = useState<ProgressRecord[]>([]);
+  const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
+  const [newProgressStatus, setNewProgressStatus] = useState('');
+  const [newProgressNotes, setNewProgressNotes] = useState('');
   const [filters, setFilters] = useState({
     status: 'all',
     agency: 'all',
@@ -77,6 +98,12 @@ const ApplicationTracking: React.FC = () => {
       setApplications(initialApplications);
       setFilteredApplications(initialApplications);
       localStorage.setItem('applications', JSON.stringify(initialApplications));
+    }
+
+    // 載入進度記錄
+    const savedProgressRecords = localStorage.getItem('progressRecords');
+    if (savedProgressRecords) {
+      setProgressRecords(JSON.parse(savedProgressRecords));
     }
   }, []);
 
@@ -116,6 +143,34 @@ const ApplicationTracking: React.FC = () => {
     toast.success("狀態已更新");
   };
 
+  const handleAddProgressRecord = () => {
+    if (!selectedApplication || !newProgressStatus) {
+      toast.error("請選擇申請案並填寫進度狀態");
+      return;
+    }
+
+    const newRecord: ProgressRecord = {
+      id: Date.now(),
+      applicationId: selectedApplication.id,
+      date: new Date().toISOString().split('T')[0],
+      status: newProgressStatus,
+      notes: newProgressNotes,
+      updatedBy: "當前用戶" // 實際應用中應該是登入用戶
+    };
+
+    const updatedRecords = [...progressRecords, newRecord];
+    setProgressRecords(updatedRecords);
+    localStorage.setItem('progressRecords', JSON.stringify(updatedRecords));
+
+    // 同時更新申請案的狀態
+    handleStatusChange(selectedApplication.id, newProgressStatus);
+
+    setNewProgressStatus('');
+    setNewProgressNotes('');
+    setIsProgressDialogOpen(false);
+    toast.success("進度記錄已新增");
+  };
+
   const getStatusBadge = (status: string) => {
     const statusColors = {
       '待審核': 'bg-yellow-100 text-yellow-800',
@@ -133,6 +188,9 @@ const ApplicationTracking: React.FC = () => {
   };
 
   const uniqueAgencies = [...new Set(applications.map(app => app.reviewAgency))];
+  const applicationProgressRecords = selectedApplication 
+    ? progressRecords.filter(record => record.applicationId === selectedApplication.id)
+    : [];
 
   return (
     <MainLayout>
@@ -206,6 +264,64 @@ const ApplicationTracking: React.FC = () => {
           <div className="lg:col-span-2">
             <Card>
               <CardContent className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">申請案列表</h3>
+                  <Dialog open={isProgressDialogOpen} onOpenChange={setIsProgressDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button disabled={!selectedApplication}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        新增進度
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>新增進度記錄</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium">申請案</label>
+                          <Input 
+                            value={selectedApplication?.activityName || ''} 
+                            disabled 
+                            className="bg-gray-50"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">進度狀態</label>
+                          <Select value={newProgressStatus} onValueChange={setNewProgressStatus}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="選擇進度狀態" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="待審核">待審核</SelectItem>
+                              <SelectItem value="審核中">審核中</SelectItem>
+                              <SelectItem value="補件中">補件中</SelectItem>
+                              <SelectItem value="已核准">已核准</SelectItem>
+                              <SelectItem value="已駁回">已駁回</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">備註</label>
+                          <Textarea
+                            value={newProgressNotes}
+                            onChange={(e) => setNewProgressNotes(e.target.value)}
+                            placeholder="輸入進度備註或說明..."
+                            rows={3}
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={() => setIsProgressDialogOpen(false)}>
+                            取消
+                          </Button>
+                          <Button onClick={handleAddProgressRecord}>
+                            新增記錄
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -272,10 +388,42 @@ const ApplicationTracking: React.FC = () => {
             </Card>
           </div>
 
-          {/* 申請歷史 */}
+          {/* 申請歷史和進度記錄 */}
           <div>
             {selectedApplication ? (
-              <ApplicationHistory applicationId={selectedApplication.id.toString()} />
+              <div className="space-y-4">
+                <ApplicationHistory applicationId={selectedApplication.id.toString()} />
+                
+                {/* 進度記錄 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <MessageSquare className="mr-2 h-5 w-5" />
+                      進度記錄
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {applicationProgressRecords.length > 0 ? (
+                      <div className="space-y-3">
+                        {applicationProgressRecords.map(record => (
+                          <div key={record.id} className="border-l-2 border-blue-200 pl-4 pb-3">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium">{record.status}</span>
+                              <span className="text-sm text-muted-foreground">{record.date}</span>
+                            </div>
+                            {record.notes && (
+                              <p className="text-sm text-gray-600 mb-1">{record.notes}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground">更新者：{record.updatedBy}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-muted-foreground">尚無進度記錄</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             ) : (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">

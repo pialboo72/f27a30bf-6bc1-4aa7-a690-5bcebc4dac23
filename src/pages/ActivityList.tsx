@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +21,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import * as XLSX from 'xlsx';
 
 const ActivityList: React.FC = () => {
   const { downloadFile } = useFiles();
@@ -103,7 +103,7 @@ ${activity.content || ''}
     }
   };
 
-  const handleDownload = (id: number, format: string = 'docx') => {
+  const handleDownload = (id: number, format: string = 'txt') => {
     const activity = activities.find(a => a.id === id);
     
     if (!activity?.hasDocument) {
@@ -115,47 +115,45 @@ ${activity.content || ''}
     const fileName = `${activity.name || activity.title}_申請文件`;
     
     try {
-      if (format === 'xlsx') {
-        // Excel 格式
-        const ws = XLSX.utils.aoa_to_sheet([
-          ['活動申請書'],
-          [''],
-          ['活動名稱', activity.name || activity.title || ''],
-          ['活動類別', activity.category || ''],
-          ['活動日期', activity.date || ''],
-          ['活動地點', activity.location || ''],
-          ['主辦單位', activity.unit || ''],
-          [''],
-          ['活動目的'],
-          [activity.purpose || ''],
-          [''],
-          ['活動內容'],
-          [activity.content || ''],
-          [''],
-          ['參與對象', activity.target || ''],
-          ['預計參與人數', `${activity.participants || ''}人`],
-          [''],
-          ['申請日期', new Date().toLocaleDateString()],
-          ['申請狀態', activity.status || '']
-        ]);
-        
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, '活動申請書');
-        XLSX.writeFile(wb, `${fileName}.xlsx`);
-      } else {
-        // 其他格式使用文字內容
-        const blob = new Blob([content], { 
-          type: format === 'pdf' ? 'application/pdf' : 'text/plain'
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${fileName}.${format}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+      let blob;
+      let mimeType;
+      let fileExtension;
+      
+      switch (format) {
+        case 'docx':
+          // 簡單的 RTF 格式，可以被 Word 打開
+          const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+\\f0\\fs24 ${content.replace(/\n/g, '\\par ')}}`;
+          blob = new Blob([rtfContent], { type: 'application/rtf' });
+          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          fileExtension = 'rtf'; // 使用 RTF 格式，Word 可以打開
+          break;
+        case 'odt':
+          // ODT 格式的簡單實現
+          blob = new Blob([content], { type: 'application/vnd.oasis.opendocument.text' });
+          mimeType = 'application/vnd.oasis.opendocument.text';
+          fileExtension = 'txt'; // 簡化為文字檔
+          break;
+        case 'pdf':
+          // PDF 格式需要特殊處理，這裡簡化為文字檔
+          blob = new Blob([content], { type: 'text/plain' });
+          mimeType = 'text/plain';
+          fileExtension = 'txt';
+          break;
+        default:
+          blob = new Blob([content], { type: 'text/plain' });
+          mimeType = 'text/plain';
+          fileExtension = 'txt';
       }
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${fileName}.${fileExtension}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       toast.success("文件下載完成");
     } catch (error) {
@@ -283,9 +281,6 @@ ${activity.content || ''}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDownload(activity.id, 'odt')}>
                                   下載 ODT 格式
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDownload(activity.id, 'xlsx')}>
-                                  下載 Excel 格式
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDownload(activity.id, 'pdf')}>
                                   下載 PDF 格式

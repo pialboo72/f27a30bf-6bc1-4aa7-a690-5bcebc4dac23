@@ -93,7 +93,7 @@ const Admin: React.FC = () => {
 
         <div className="grid gap-6 grid-cols-1 md:grid-cols-3 mb-8">
           <Link to="/admin/programs">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full border">
               <CardContent className="flex flex-col items-center justify-center p-6">
                 <FileText className="h-12 w-12 text-primary mb-4" />
                 <h3 className="text-lg font-medium">補助計劃管理</h3>
@@ -105,7 +105,7 @@ const Admin: React.FC = () => {
           </Link>
           
           <Link to="/files">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full border">
               <CardContent className="flex flex-col items-center justify-center p-6">
                 <FolderOpen className="h-12 w-12 text-primary mb-4" />
                 <h3 className="text-lg font-medium">檔案管理</h3>
@@ -116,8 +116,20 @@ const Admin: React.FC = () => {
             </Card>
           </Link>
           
+          <Link to="/admin/units">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full border">
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <Users className="h-12 w-12 text-primary mb-4" />
+                <h3 className="text-lg font-medium">單位管理</h3>
+                <p className="text-sm text-muted-foreground text-center mt-2">
+                  管理系統單位帳號與資料
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          
           <Link to="/users">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full border">
               <CardContent className="flex flex-col items-center justify-center p-6">
                 <Users className="h-12 w-12 text-primary mb-4" />
                 <h3 className="text-lg font-medium">用戶管理</h3>
@@ -129,12 +141,24 @@ const Admin: React.FC = () => {
           </Link>
           
           <Link to="/logs">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full border">
               <CardContent className="flex flex-col items-center justify-center p-6">
                 <Copy className="h-12 w-12 text-primary mb-4" />
                 <h3 className="text-lg font-medium">系統日誌</h3>
                 <p className="text-sm text-muted-foreground text-center mt-2">
                   查看系統操作記錄
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/settings">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full border">
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <Settings className="h-12 w-12 text-primary mb-4" />
+                <h3 className="text-lg font-medium">系統設定</h3>
+                <p className="text-sm text-muted-foreground text-center mt-2">
+                  AI設定、系統參數配置
                 </p>
               </CardContent>
             </Card>
