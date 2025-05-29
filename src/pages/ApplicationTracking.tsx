@@ -41,8 +41,8 @@ const ApplicationTracking: React.FC = () => {
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [filters, setFilters] = useState({
-    status: '',
-    agency: '',
+    status: 'all',
+    agency: 'all',
     search: ''
   });
 
@@ -83,8 +83,8 @@ const ApplicationTracking: React.FC = () => {
   // 篩選功能
   useEffect(() => {
     let filtered = applications.filter(app => {
-      const matchesStatus = !filters.status || app.status === filters.status;
-      const matchesAgency = !filters.agency || app.reviewAgency === filters.agency;
+      const matchesStatus = filters.status === 'all' || app.status === filters.status;
+      const matchesAgency = filters.agency === 'all' || app.reviewAgency === filters.agency;
       const matchesSearch = !filters.search || 
         app.activityName.toLowerCase().includes(filters.search.toLowerCase());
       
@@ -167,7 +167,7 @@ const ApplicationTracking: React.FC = () => {
                     <SelectValue placeholder="所有狀態" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">所有狀態</SelectItem>
+                    <SelectItem value="all">所有狀態</SelectItem>
                     <SelectItem value="待審核">待審核</SelectItem>
                     <SelectItem value="審核中">審核中</SelectItem>
                     <SelectItem value="補件中">補件中</SelectItem>
@@ -182,7 +182,7 @@ const ApplicationTracking: React.FC = () => {
                     <SelectValue placeholder="所有機關" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">所有機關</SelectItem>
+                    <SelectItem value="all">所有機關</SelectItem>
                     {uniqueAgencies.map(agency => (
                       <SelectItem key={agency} value={agency}>{agency}</SelectItem>
                     ))}
@@ -192,7 +192,7 @@ const ApplicationTracking: React.FC = () => {
               <div>
                 <Button 
                   variant="outline" 
-                  onClick={() => setFilters({ status: '', agency: '', search: '' })}
+                  onClick={() => setFilters({ status: 'all', agency: 'all', search: '' })}
                 >
                   清除篩選
                 </Button>
