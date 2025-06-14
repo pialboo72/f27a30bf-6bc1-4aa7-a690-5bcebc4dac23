@@ -88,6 +88,10 @@ const SidebarNav: React.FC = () => {
   const location = useLocation();
   const isActive = (href: string) => {
     if (href === "/" && location.pathname === "/") return true;
+    if (href === "/admin") {
+      // 對於 /admin 路徑，只有完全匹配才算 active，避免 /admin/units 也被匹配
+      return location.pathname === "/admin";
+    }
     if (href !== "/" && location.pathname.startsWith(href)) return true;
     return false;
   };
