@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Dialog,
@@ -26,43 +25,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import * as z from "zod";
-
-const userFormSchema = z.object({
-  name: z.string().min(2, { message: "名稱至少需要2個字元" }),
-  email: z.string().email({ message: "請輸入有效的電子郵件" }),
-  role: z.enum(["admin", "manager", "user"], { message: "請選擇有效的角色" }),
-  unitId: z.number({ message: "請選擇單位" }),
-  status: z.enum(["active", "inactive"], { message: "請選擇狀態" })
-});
-
-type UserFormValues = z.infer<typeof userFormSchema>;
-
-interface Unit {
-  id: number;
-  name: string;
-  address: string;
-  registrationNumber: string;
-  representative: string;
-  contact: string;
-  taxId: string;
-  bankName: string;
-  bankAccount: string;
-  accountName: string;
-  manager: string;
-  accountant: string;
-  cashier: string;
-}
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: "admin" | "manager" | "user";
-  unitId: number;
-  status: "active" | "inactive";
-  lastLogin: string;
-}
+import { Unit, User } from "@/types/user-management";
+import { UserFormValues } from "@/schemas/user-management-schemas";
 
 interface UserFormDialogProps {
   userDialogOpen: boolean;

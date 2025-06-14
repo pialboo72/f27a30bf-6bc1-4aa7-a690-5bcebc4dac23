@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,22 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface Unit {
-  id: number;
-  name: string;
-  address: string;
-  registrationNumber: string;
-  representative: string;
-  contact: string;
-  taxId: string;
-  bankName: string;
-  bankAccount: string;
-  accountName: string;
-  manager: string;
-  accountant: string;
-  cashier: string;
-}
+import { Unit } from "@/types/user-management";
 
 interface SearchAndFiltersProps {
   searchTerm: string;

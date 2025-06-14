@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Dialog,
@@ -19,7 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import * as z from "zod";
+import { Unit } from "@/types/user-management";
+import { UnitFormValues } from "@/schemas/user-management-schemas";
 
 const unitFormSchema = z.object({
   name: z.string().min(2, { message: "單位名稱至少需要2個字元" }),
@@ -37,22 +37,6 @@ const unitFormSchema = z.object({
 });
 
 type UnitFormValues = z.infer<typeof unitFormSchema>;
-
-interface Unit {
-  id: number;
-  name: string;
-  address: string;
-  registrationNumber: string;
-  representative: string;
-  contact: string;
-  taxId: string;
-  bankName: string;
-  bankAccount: string;
-  accountName: string;
-  manager: string;
-  accountant: string;
-  cashier: string;
-}
 
 interface UnitFormDialogProps {
   unitDialogOpen: boolean;

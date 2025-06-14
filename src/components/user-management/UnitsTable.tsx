@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,22 +11,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Building, Users, Edit, Trash } from "lucide-react";
-
-interface Unit {
-  id: number;
-  name: string;
-  address: string;
-  registrationNumber: string;
-  representative: string;
-  contact: string;
-  taxId: string;
-  bankName: string;
-  bankAccount: string;
-  accountName: string;
-  manager: string;
-  accountant: string;
-  cashier: string;
-}
+import { Unit } from "@/types/user-management";
 
 interface UnitsTableProps {
   filteredUnits: Unit[];

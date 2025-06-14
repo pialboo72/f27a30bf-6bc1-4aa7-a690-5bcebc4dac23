@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,16 +11,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Users, Edit, X } from "lucide-react";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: "admin" | "manager" | "user";
-  unitId: number;
-  status: "active" | "inactive";
-  lastLogin: string;
-}
+import { User } from "@/types/user-management";
 
 interface UsersTableProps {
   filteredUsers: User[];
