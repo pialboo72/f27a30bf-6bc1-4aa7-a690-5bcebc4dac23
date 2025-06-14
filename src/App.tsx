@@ -40,7 +40,7 @@ function App() {
               <Route path="/programs" element={<Programs />} />
               <Route path="/activities" element={<ActivityList />} />
               <Route path="/activity/:id?" element={<Activity />} />
-              <Route path="/templates" element={<DocumentTemplate />} />
+              <Route path="/document-template" element={<DocumentTemplate />} />
               <Route path="/files" element={<FileManagement />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/statistics" element={<Statistics />} />
