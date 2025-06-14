@@ -1,51 +1,20 @@
+
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import MainLayout from "@/components/layout/MainLayout";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
-import { Building, Users, Plus, Edit, X, Trash } from "lucide-react";
+import { Building, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@/components/ui/label";
+
+// Import the new components
+import SearchAndFilters from "@/components/user-management/SearchAndFilters";
+import UnitsTable from "@/components/user-management/UnitsTable";
+import UsersTable from "@/components/user-management/UsersTable";
+import UnitFormDialog from "@/components/user-management/UnitFormDialog";
+import UserFormDialog from "@/components/user-management/UserFormDialog";
+import DeleteConfirmDialog from "@/components/user-management/DeleteConfirmDialog";
 
 // Unit type definition
 interface Unit {
@@ -353,23 +322,6 @@ const UserManagement: React.FC = () => {
     return users.filter(user => user.unitId === unitId).length;
   };
 
-  const roleBadgeStyles = {
-    admin: "bg-blue-100 text-blue-800 hover:bg-blue-200",
-    manager: "bg-purple-100 text-purple-800 hover:bg-purple-200",
-    user: "bg-gray-100 text-gray-800 hover:bg-gray-200"
-  };
-
-  const roleNames = {
-    admin: "系統管理員",
-    manager: "部門管理員",
-    user: "一般用戶"
-  };
-
-  const statusInfo = {
-    active: { label: "啟用", class: "bg-green-100 text-green-800 hover:bg-green-200" },
-    inactive: { label: "停用", class: "bg-red-100 text-red-800 hover:bg-red-200" }
-  };
-
   return (
     <MainLayout>
       <div className="fade-in space-y-6">
@@ -390,490 +342,52 @@ const UserManagement: React.FC = () => {
           </div>
         </div>
 
-        {/* Search and filters */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Input
-                  placeholder="搜尋單位或用戶..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label>篩選單位：</Label>
-                <Select 
-                  value={selectedUnitId?.toString() || "all"} 
-                  onValueChange={(value) => setSelectedUnitId(value === "all" ? null : parseInt(value))}
-                >
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">所有單位</SelectItem>
-                    {units.map(unit => (
-                      <SelectItem key={unit.id} value={unit.id.toString()}>
-                        {unit.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+        <SearchAndFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedUnitId={selectedUnitId}
+          setSelectedUnitId={setSelectedUnitId}
+          units={units}
+        />
 
-        {/* Units Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              單位列表
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>單位名稱</TableHead>
-                  <TableHead>負責人</TableHead>
-                  <TableHead>統一編號</TableHead>
-                  <TableHead>用戶數量</TableHead>
-                  <TableHead>銀行帳戶</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUnits.map((unit) => (
-                  <TableRow key={unit.id}>
-                    <TableCell className="font-medium">{unit.name}</TableCell>
-                    <TableCell>{unit.representative}</TableCell>
-                    <TableCell>{unit.taxId}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {getUserCountByUnit(unit.id)} 人
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{unit.bankName} {unit.bankAccount}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => handleAddUser(unit.id)}>
-                        <Users className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleEditUnit(unit)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDeleteConfirm('unit', unit.id)}>
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <UnitsTable
+          filteredUnits={filteredUnits}
+          getUserCountByUnit={getUserCountByUnit}
+          handleAddUser={handleAddUser}
+          handleEditUnit={handleEditUnit}
+          handleDeleteConfirm={handleDeleteConfirm}
+        />
 
-        {/* Users Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              用戶列表
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>所屬單位</TableHead>
-                  <TableHead>名稱</TableHead>
-                  <TableHead>電子郵件</TableHead>
-                  <TableHead>角色</TableHead>
-                  <TableHead>狀態</TableHead>
-                  <TableHead>最近登入</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{getUnitName(user.unitId)}</TableCell>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={roleBadgeStyles[user.role]}>
-                        {roleNames[user.role]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={statusInfo[user.status].class}>
-                        {statusInfo[user.status].label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{user.lastLogin}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDeleteConfirm('user', user.id)}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <UsersTable
+          filteredUsers={filteredUsers}
+          getUnitName={getUnitName}
+          handleEditUser={handleEditUser}
+          handleDeleteConfirm={handleDeleteConfirm}
+        />
 
-        {/* Unit Form Dialog */}
-        <Dialog open={unitDialogOpen} onOpenChange={setUnitDialogOpen}>
-          <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{editingUnit ? "編輯單位" : "新增單位"}</DialogTitle>
-              <DialogDescription>
-                填寫以下資料以{editingUnit ? "更新現有" : "建立新的"}單位
-              </DialogDescription>
-            </DialogHeader>
+        <UnitFormDialog
+          unitDialogOpen={unitDialogOpen}
+          setUnitDialogOpen={setUnitDialogOpen}
+          editingUnit={editingUnit}
+          unitForm={unitForm}
+          onUnitSubmit={onUnitSubmit}
+        />
 
-            <Form {...unitForm}>
-              <form onSubmit={unitForm.handleSubmit(onUnitSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={unitForm.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>單位名稱 <span className="text-red-500">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="輸入單位名稱" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={unitForm.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>會址 <span className="text-red-500">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="輸入單位會址" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+        <UserFormDialog
+          userDialogOpen={userDialogOpen}
+          setUserDialogOpen={setUserDialogOpen}
+          editingUser={editingUser}
+          userForm={userForm}
+          onUserSubmit={onUserSubmit}
+          units={units}
+        />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={unitForm.control}
-                    name="registrationNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>立案字號</FormLabel>
-                        <FormControl>
-                          <Input placeholder="輸入立案字號" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={unitForm.control}
-                    name="taxId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>統一編號 <span className="text-red-500">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="輸入8位數字統一編號" maxLength={8} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={unitForm.control}
-                    name="representative"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>負責人 <span className="text-red-500">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="輸入負責人姓名" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={unitForm.control}
-                    name="contact"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>聯絡人</FormLabel>
-                        <FormControl>
-                          <Input placeholder="輸入聯絡人姓名" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={unitForm.control}
-                    name="bankName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>銀行名稱</FormLabel>
-                        <FormControl>
-                          <Input placeholder="銀行名稱" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={unitForm.control}
-                    name="bankAccount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>銀行帳號</FormLabel>
-                        <FormControl>
-                          <Input placeholder="銀行帳號" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={unitForm.control}
-                    name="accountName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>戶名</FormLabel>
-                        <FormControl>
-                          <Input placeholder="戶名" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={unitForm.control}
-                    name="manager"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>承辦人</FormLabel>
-                        <FormControl>
-                          <Input placeholder="輸入承辦人姓名" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={unitForm.control}
-                    name="accountant"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>會計</FormLabel>
-                        <FormControl>
-                          <Input placeholder="輸入會計姓名" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={unitForm.control}
-                    name="cashier"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>出納</FormLabel>
-                        <FormControl>
-                          <Input placeholder="輸入出納姓名" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setUnitDialogOpen(false)}>
-                    取消
-                  </Button>
-                  <Button type="submit">
-                    {editingUnit ? "更新" : "建立"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-
-        {/* User Form Dialog */}
-        <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>{editingUser ? "編輯用戶" : "新增用戶"}</DialogTitle>
-              <DialogDescription>
-                {editingUser ? "更新用戶資訊" : "填寫新用戶的詳細資料"}
-              </DialogDescription>
-            </DialogHeader>
-
-            <Form {...userForm}>
-              <form onSubmit={userForm.handleSubmit(onUserSubmit)} className="space-y-6">
-                <FormField
-                  control={userForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>用戶名稱</FormLabel>
-                      <FormControl>
-                        <Input placeholder="輸入用戶名稱" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={userForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>電子郵件</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="example@mail.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={userForm.control}
-                  name="unitId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>所屬單位</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="選擇單位" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {units.map(unit => (
-                            <SelectItem key={unit.id} value={unit.id.toString()}>
-                              {unit.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={userForm.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>角色</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="admin">系統管理員</SelectItem>
-                            <SelectItem value="manager">部門管理員</SelectItem>
-                            <SelectItem value="user">一般用戶</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={userForm.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>狀態</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="active">啟用</SelectItem>
-                            <SelectItem value="inactive">停用</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setUserDialogOpen(false)}>
-                    取消
-                  </Button>
-                  <Button type="submit">
-                    {editingUser ? "保存修改" : "新增用戶"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={isDeleting} onOpenChange={setIsDeleting}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>確認刪除</DialogTitle>
-              <DialogDescription>
-                您確定要刪除此{deleteTarget?.type === 'unit' ? '單位' : '用戶'}嗎？此操作無法撤銷。
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleting(false)}>
-                取消
-              </Button>
-              <Button variant="destructive" onClick={handleDelete}>
-                確認刪除
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <DeleteConfirmDialog
+          isDeleting={isDeleting}
+          setIsDeleting={setIsDeleting}
+          deleteTarget={deleteTarget}
+          handleDelete={handleDelete}
+        />
       </div>
     </MainLayout>
   );
