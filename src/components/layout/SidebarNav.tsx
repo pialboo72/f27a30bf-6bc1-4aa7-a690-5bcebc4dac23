@@ -13,7 +13,8 @@ import {
   Info,
   Folder,
   Users,
-  Building
+  Building,
+  Receipt
 } from "lucide-react";
 
 // Define the NavItem interface that was missing
@@ -58,6 +59,11 @@ const adminNavItems: NavItem[] = [
     icon: BarChart,
   },
   {
+    title: "補助管理",
+    href: "/admin/subsidies",
+    icon: Receipt,
+  },
+  {
     title: "單位管理",
     href: "/admin/units",
     icon: Building,
@@ -68,11 +74,6 @@ const adminNavItems: NavItem[] = [
     icon: FileText,
   },
   {
-    title: "管理員設定",
-    href: "/admin",
-    icon: Settings,
-  },
-  {
     title: "系統日誌",
     href: "/logs",
     icon: Database,
@@ -81,6 +82,11 @@ const adminNavItems: NavItem[] = [
     title: "用戶管理",
     href: "/users",
     icon: Users,
+  },
+  {
+    title: "系統設定",
+    href: "/settings",
+    icon: Settings,
   }
 ];
 

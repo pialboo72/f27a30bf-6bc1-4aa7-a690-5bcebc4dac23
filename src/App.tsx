@@ -22,6 +22,7 @@ import ApplicationTracking from "@/pages/ApplicationTracking";
 import UserManagement from "@/pages/UserManagement";
 import UnitManagement from "@/pages/UnitManagement";
 import SystemLogs from "@/pages/SystemLogs";
+import SubsidyManagement from "@/pages/SubsidyManagement";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ function App() {
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/programs" element={<ProgramManagement />} />
               <Route path="/admin/activities" element={<ActivityManagement />} />
+              <Route path="/admin/subsidies" element={<SubsidyManagement />} />
               <Route path="/programs" element={<Programs />} />
               <Route path="/activities" element={<ActivityList />} />
               <Route path="/activity/:id?" element={<Activity />} />
