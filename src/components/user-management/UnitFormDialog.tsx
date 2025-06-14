@@ -1,4 +1,6 @@
+
 import React from "react";
+import * as z from "zod";
 import {
   Dialog,
   DialogContent,
@@ -20,23 +22,6 @@ import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { Unit } from "@/types/user-management";
 import { UnitFormValues } from "@/schemas/user-management-schemas";
-
-const unitFormSchema = z.object({
-  name: z.string().min(2, { message: "單位名稱至少需要2個字元" }),
-  address: z.string().min(1, { message: "請輸入會址" }),
-  registrationNumber: z.string().regex(/^\S*$/, { message: "請輸入立案字號" }).optional(),
-  representative: z.string().min(1, { message: "請輸入負責人" }),
-  contact: z.string().optional(),
-  taxId: z.string().regex(/^\d{8}$/, { message: "統一編號必須為8位數字" }),
-  bankName: z.string().optional(),
-  bankAccount: z.string().optional(),
-  accountName: z.string().optional(),
-  manager: z.string().optional(),
-  accountant: z.string().optional(),
-  cashier: z.string().optional(),
-});
-
-type UnitFormValues = z.infer<typeof unitFormSchema>;
 
 interface UnitFormDialogProps {
   unitDialogOpen: boolean;
