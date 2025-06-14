@@ -32,7 +32,7 @@ interface Unit {
 interface UnitsTableProps {
   filteredUnits: Unit[];
   getUserCountByUnit: (unitId: number) => number;
-  handleAddUser: (unitId?: number) => void;
+  handleViewUsers: (unitId: number) => void;
   handleEditUnit: (unit: Unit) => void;
   handleDeleteConfirm: (type: 'unit' | 'user', id: number) => void;
 }
@@ -40,7 +40,7 @@ interface UnitsTableProps {
 const UnitsTable: React.FC<UnitsTableProps> = ({
   filteredUnits,
   getUserCountByUnit,
-  handleAddUser,
+  handleViewUsers,
   handleEditUnit,
   handleDeleteConfirm
 }) => {
@@ -77,7 +77,7 @@ const UnitsTable: React.FC<UnitsTableProps> = ({
                 </TableCell>
                 <TableCell>{unit.bankName} {unit.bankAccount}</TableCell>
                 <TableCell className="text-right space-x-2">
-                  <Button variant="outline" size="sm" onClick={() => handleAddUser(unit.id)}>
+                  <Button variant="outline" size="sm" onClick={() => handleViewUsers(unit.id)} title="查看該單位用戶">
                     <Users className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => handleEditUnit(unit)}>

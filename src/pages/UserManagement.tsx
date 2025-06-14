@@ -226,12 +226,9 @@ const UserManagement: React.FC = () => {
     } else {
       const newUnit: Unit = {
         id: Date.now(),
-        name: data.name,
-        address: data.address,
+        ...data,
         registrationNumber: data.registrationNumber || "",
-        representative: data.representative,
         contact: data.contact || "",
-        taxId: data.taxId,
         bankName: data.bankName || "",
         bankAccount: data.bankAccount || "",
         accountName: data.accountName || "",
@@ -256,6 +253,11 @@ const UserManagement: React.FC = () => {
       status: "active"
     });
     setUserDialogOpen(true);
+  };
+
+  const handleViewUsers = (unitId: number) => {
+    setSelectedUnitId(unitId);
+    toast.success(`已篩選顯示 ${getUnitName(unitId)} 的用戶列表`);
   };
 
   const handleEditUser = (user: User) => {
@@ -353,7 +355,7 @@ const UserManagement: React.FC = () => {
         <UnitsTable
           filteredUnits={filteredUnits}
           getUserCountByUnit={getUserCountByUnit}
-          handleAddUser={handleAddUser}
+          handleViewUsers={handleViewUsers}
           handleEditUnit={handleEditUnit}
           handleDeleteConfirm={handleDeleteConfirm}
         />
