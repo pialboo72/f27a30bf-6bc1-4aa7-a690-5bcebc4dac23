@@ -2,7 +2,6 @@
 import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import AdminStats from "@/components/admin/AdminStats";
-import AdminNavigation from "@/components/admin/AdminNavigation";
 import AdminQuickSettings from "@/components/admin/AdminQuickSettings";
 
 const Admin: React.FC = () => {
@@ -17,7 +16,6 @@ const Admin: React.FC = () => {
         </div>
 
         <AdminStats />
-        <AdminNavigation />
         <AdminQuickSettings />
       </div>
     </MainLayout>
