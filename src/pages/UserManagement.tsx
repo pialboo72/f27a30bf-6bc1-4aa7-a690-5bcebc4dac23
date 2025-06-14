@@ -226,9 +226,12 @@ const UserManagement: React.FC = () => {
     } else {
       const newUnit: Unit = {
         id: Date.now(),
-        ...data,
+        name: data.name,
+        address: data.address,
         registrationNumber: data.registrationNumber || "",
+        representative: data.representative,
         contact: data.contact || "",
+        taxId: data.taxId,
         bankName: data.bankName || "",
         bankAccount: data.bankAccount || "",
         accountName: data.accountName || "",
