@@ -9,7 +9,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import ApplicationStatus from "@/components/application/ApplicationStatus";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { Settings, Users, FileText, Copy, FolderOpen, Shield, Activity } from "lucide-react";
+import { Settings, Users, FileText, Copy, FolderOpen, Shield, Activity, Calendar } from "lucide-react";
 
 const Admin: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -99,6 +99,18 @@ const Admin: React.FC = () => {
                 <h3 className="text-lg font-medium">補助計劃管理</h3>
                 <p className="text-sm text-muted-foreground text-center mt-2">
                   新增、編輯和管理補助計劃
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/admin/activities">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full border">
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <Calendar className="h-12 w-12 text-primary mb-4" />
+                <h3 className="text-lg font-medium">活動管理</h3>
+                <p className="text-sm text-muted-foreground text-center mt-2">
+                  管理活動資料與補助申請
                 </p>
               </CardContent>
             </Card>
