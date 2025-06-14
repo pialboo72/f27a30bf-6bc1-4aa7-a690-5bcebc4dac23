@@ -7,8 +7,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText, Upload, Calendar, DollarSign, Building } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plus, FileText, Upload, Calendar, DollarSign, Building, X, Link, File, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
+interface Attachment {
+  id: number;
+  name: string;
+  originalName: string;
+  size: number;
+  uploadDate: string;
+}
+
+interface DocumentLink {
+  id: number;
+  name: string;
+  url: string;
+}
+
+interface SubsidyDocument {
+  id: number;
+  name: string;
+  type: 'application' | 'reimbursement';
+  uploadDate: string;
+  size: number;
+}
 
 interface SubsidyCase {
   id: number;
@@ -18,7 +42,10 @@ interface SubsidyCase {
   deadline: string;
   status: string;
   description: string;
-  documents: string[];
+  attachments: Attachment[];
+  links: DocumentLink[];
+  applicationDocuments: SubsidyDocument[];
+  reimbursementDocuments: SubsidyDocument[];
 }
 
 const SubsidyManagement: React.FC = () => {
@@ -31,7 +58,10 @@ const SubsidyManagement: React.FC = () => {
       deadline: "2025-05-20",
       status: "進行中",
       description: "支持藝術創作與文化發展",
-      documents: ["申請書範本.docx", "預算表.xlsx"]
+      attachments: [],
+      links: [],
+      applicationDocuments: [],
+      reimbursementDocuments: []
     },
     {
       id: 2,
@@ -41,11 +71,15 @@ const SubsidyManagement: React.FC = () => {
       deadline: "2025-06-15",
       status: "即將截止",
       description: "促進社區服務與志工參與",
-      documents: ["計劃書範本.docx"]
+      attachments: [],
+      links: [],
+      applicationDocuments: [],
+      reimbursementDocuments: []
     }
   ]);
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedCase, setSelectedCase] = useState<SubsidyCase | null>(null);
   const [newCase, setNewCase] = useState({
     title: "",
     organization: "",
@@ -53,6 +87,12 @@ const SubsidyManagement: React.FC = () => {
     deadline: "",
     description: ""
   });
+
+  // 附件管理
+  const [newAttachmentName, setNewAttachmentName] = useState("");
+
+  // 連結管理
+  const [newLink, setNewLink] = useState({ name: "", url: "" });
 
   const handleAddCase = () => {
     if (!newCase.title || !newCase.organization || !newCase.amount) {
@@ -68,13 +108,87 @@ const SubsidyManagement: React.FC = () => {
       deadline: newCase.deadline,
       status: "進行中",
       description: newCase.description,
-      documents: []
+      attachments: [],
+      links: [],
+      applicationDocuments: [],
+      reimbursementDocuments: []
     };
 
     setSubsidyCases([...subsidyCases, subsidyCase]);
     setNewCase({ title: "", organization: "", amount: "", deadline: "", description: "" });
     setShowAddForm(false);
     toast.success("補助案新增成功");
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, caseId: number, type: 'attachment' | 'application' | 'reimbursement') => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const newItem = {
+      id: Date.now(),
+      name: type === 'attachment' ? (newAttachmentName || file.name) : file.name,
+      originalName: file.name,
+      size: file.size,
+      uploadDate: new Date().toISOString().split('T')[0],
+      type: type === 'application' ? 'application' as const : type === 'reimbursement' ? 'reimbursement' as const : undefined
+    };
+
+    setSubsidyCases(cases => cases.map(c => {
+      if (c.id === caseId) {
+        if (type === 'attachment') {
+          return { ...c, attachments: [...c.attachments, newItem as Attachment] };
+        } else if (type === 'application') {
+          return { ...c, applicationDocuments: [...c.applicationDocuments, newItem as SubsidyDocument] };
+        } else if (type === 'reimbursement') {
+          return { ...c, reimbursementDocuments: [...c.reimbursementDocuments, newItem as SubsidyDocument] };
+        }
+      }
+      return c;
+    }));
+
+    if (type === 'attachment') {
+      setNewAttachmentName("");
+    }
+    toast.success("檔案上傳成功");
+  };
+
+  const handleAddLink = (caseId: number) => {
+    if (!newLink.name || !newLink.url) {
+      toast.error("請填寫連結名稱和網址");
+      return;
+    }
+
+    const link: DocumentLink = {
+      id: Date.now(),
+      name: newLink.name,
+      url: newLink.url
+    };
+
+    setSubsidyCases(cases => cases.map(c => 
+      c.id === caseId ? { ...c, links: [...c.links, link] } : c
+    ));
+
+    setNewLink({ name: "", url: "" });
+    toast.success("連結新增成功");
+  };
+
+  const handleRemoveItem = (caseId: number, itemId: number, type: 'attachment' | 'link' | 'application' | 'reimbursement') => {
+    setSubsidyCases(cases => cases.map(c => {
+      if (c.id === caseId) {
+        if (type === 'attachment') {
+          return { ...c, attachments: c.attachments.filter(a => a.id !== itemId) };
+        } else if (type === 'link') {
+          return { ...c, links: c.links.filter(l => l.id !== itemId) };
+        } else if (type === 'application') {
+          return { ...c, applicationDocuments: c.applicationDocuments.filter(d => d.id !== itemId) };
+        } else if (type === 'reimbursement') {
+          return { ...c, reimbursementDocuments: c.reimbursementDocuments.filter(d => d.id !== itemId) };
+        }
+      }
+      return c;
+    }));
+    toast.success("項目已刪除");
   };
 
   return (
@@ -229,36 +343,160 @@ const SubsidyManagement: React.FC = () => {
                     <p className="font-medium">{subsidyCase.deadline || "未設定"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">相關文件</p>
-                    <p className="font-medium">{subsidyCase.documents.length} 個檔案</p>
+                    <p className="text-sm text-muted-foreground">總檔案數</p>
+                    <p className="font-medium">
+                      {subsidyCase.attachments.length + subsidyCase.applicationDocuments.length + subsidyCase.reimbursementDocuments.length} 個檔案
+                    </p>
                   </div>
                 </div>
                 
                 <p className="text-sm mb-4">{subsidyCase.description}</p>
                 
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <FileText className="h-4 w-4 mr-1" />
-                    查看詳情
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Upload className="h-4 w-4 mr-1" />
-                    上傳文件
-                  </Button>
-                </div>
-                
-                {subsidyCase.documents.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm font-medium mb-2">相關文件：</p>
-                    <div className="flex flex-wrap gap-2">
-                      {subsidyCase.documents.map((doc, index) => (
-                        <Badge key={index} variant="outline">
-                          {doc}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setSelectedCase(subsidyCase)}>
+                      <FileText className="h-4 w-4 mr-1" />
+                      管理文件
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>{subsidyCase.title} - 文件管理</DialogTitle>
+                    </DialogHeader>
+                    
+                    <Tabs defaultValue="attachments">
+                      <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="attachments">附件</TabsTrigger>
+                        <TabsTrigger value="links">連結</TabsTrigger>
+                        <TabsTrigger value="application">申請文件</TabsTrigger>
+                        <TabsTrigger value="reimbursement">核銷文件</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="attachments" className="space-y-4">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="附件名稱"
+                            value={newAttachmentName}
+                            onChange={(e) => setNewAttachmentName(e.target.value)}
+                          />
+                          <Input
+                            type="file"
+                            onChange={(e) => handleFileUpload(e, subsidyCase.id, 'attachment')}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          {subsidyCase.attachments.map((attachment) => (
+                            <div key={attachment.id} className="flex items-center justify-between p-2 border rounded">
+                              <div className="flex items-center gap-2">
+                                <File className="h-4 w-4" />
+                                <span>{attachment.name}</span>
+                                <Badge variant="outline">{(attachment.size / 1024).toFixed(2)} KB</Badge>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveItem(subsidyCase.id, attachment.id, 'attachment')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="links" className="space-y-4">
+                        <div className="grid gap-2 md:grid-cols-3">
+                          <Input
+                            placeholder="連結名稱"
+                            value={newLink.name}
+                            onChange={(e) => setNewLink({...newLink, name: e.target.value})}
+                          />
+                          <Input
+                            placeholder="連結網址"
+                            value={newLink.url}
+                            onChange={(e) => setNewLink({...newLink, url: e.target.value})}
+                          />
+                          <Button onClick={() => handleAddLink(subsidyCase.id)}>
+                            <Plus className="h-4 w-4 mr-1" />
+                            新增連結
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {subsidyCase.links.map((link) => (
+                            <div key={link.id} className="flex items-center justify-between p-2 border rounded">
+                              <div className="flex items-center gap-2">
+                                <Link className="h-4 w-4" />
+                                <span>{link.name}</span>
+                                <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                  {link.url}
+                                </a>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveItem(subsidyCase.id, link.id, 'link')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="application" className="space-y-4">
+                        <Input
+                          type="file"
+                          onChange={(e) => handleFileUpload(e, subsidyCase.id, 'application')}
+                        />
+                        <div className="space-y-2">
+                          {subsidyCase.applicationDocuments.map((doc) => (
+                            <div key={doc.id} className="flex items-center justify-between p-2 border rounded">
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4" />
+                                <span>{doc.name}</span>
+                                <Badge variant="outline">{(doc.size / 1024).toFixed(2)} KB</Badge>
+                                <Badge>{doc.uploadDate}</Badge>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveItem(subsidyCase.id, doc.id, 'application')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="reimbursement" className="space-y-4">
+                        <Input
+                          type="file"
+                          onChange={(e) => handleFileUpload(e, subsidyCase.id, 'reimbursement')}
+                        />
+                        <div className="space-y-2">
+                          {subsidyCase.reimbursementDocuments.map((doc) => (
+                            <div key={doc.id} className="flex items-center justify-between p-2 border rounded">
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4" />
+                                <span>{doc.name}</span>
+                                <Badge variant="outline">{(doc.size / 1024).toFixed(2)} KB</Badge>
+                                <Badge>{doc.uploadDate}</Badge>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveItem(subsidyCase.id, doc.id, 'reimbursement')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
           ))}
