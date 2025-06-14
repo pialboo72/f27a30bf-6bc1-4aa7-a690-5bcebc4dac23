@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -40,6 +41,7 @@ function App() {
               <Route path="/admin/subsidies" element={<SubsidyManagement />} />
               <Route path="/admin/subsidies/create" element={<SubsidyCreate />} />
               <Route path="/admin/subsidies/edit/:id" element={<SubsidyCreate />} />
+              <Route path="/admin/units" element={<UserManagement />} />
               <Route path="/programs" element={<Programs />} />
               <Route path="/activities" element={<ActivityList />} />
               <Route path="/activity/:id?" element={<Activity />} />
