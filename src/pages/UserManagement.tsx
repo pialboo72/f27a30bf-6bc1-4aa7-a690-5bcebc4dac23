@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Card,
@@ -153,7 +152,7 @@ const mockUsers: User[] = [
 const unitFormSchema = z.object({
   name: z.string().min(2, { message: "單位名稱至少需要2個字元" }),
   address: z.string().min(1, { message: "請輸入會址" }),
-  registrationNumber: z.string().optional(),
+  registrationNumber: z.string().regex(/^\S*$/, { message: "請輸入立案字號" }).optional(),
   representative: z.string().min(1, { message: "請輸入負責人" }),
   contact: z.string().optional(),
   taxId: z.string().regex(/^\d{8}$/, { message: "統一編號必須為8位數字" }),
@@ -258,7 +257,18 @@ const UserManagement: React.FC = () => {
     } else {
       const newUnit: Unit = {
         id: Date.now(),
-        ...data
+        name: data.name,
+        address: data.address,
+        registrationNumber: data.registrationNumber || "",
+        representative: data.representative,
+        contact: data.contact || "",
+        taxId: data.taxId,
+        bankName: data.bankName || "",
+        bankAccount: data.bankAccount || "",
+        accountName: data.accountName || "",
+        manager: data.manager || "",
+        accountant: data.accountant || "",
+        cashier: data.cashier || "",
       };
       setUnits([...units, newUnit]);
       toast.success("成功新增單位");
