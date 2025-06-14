@@ -6,16 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, FileText, Calendar, DollarSign, Building, Edit } from "lucide-react";
+import { Plus, FileText, Calendar, DollarSign, Building, Edit, Clock, Users } from "lucide-react";
 
 interface SubsidyCase {
   id: number;
   title: string;
   organization: string;
   amount: number;
+  startDate: string;
   deadline: string;
   status: string;
   description: string;
+  category: string;
+  eligibleApplicants: string;
+  subsidyScope: string;
+  contactPerson: string;
+  contactPhone: string;
+  contactEmail: string;
 }
 
 const SubsidyManagement: React.FC = () => {
@@ -26,18 +33,32 @@ const SubsidyManagement: React.FC = () => {
       title: "文化藝術發展補助",
       organization: "文化部",
       amount: 500000,
+      startDate: "2025-04-01",
       deadline: "2025-05-20",
       status: "進行中",
-      description: "支持藝術創作與文化發展"
+      description: "支持藝術創作與文化發展",
+      category: "文化藝術",
+      eligibleApplicants: "非營利組織、藝術團體",
+      subsidyScope: "活動費用、設備採購",
+      contactPerson: "王承辦",
+      contactPhone: "02-1234-5678",
+      contactEmail: "contact@culture.gov.tw"
     },
     {
       id: 2,
       title: "社區服務計劃補助",
       organization: "社會局",
       amount: 300000,
+      startDate: "2025-05-01",
       deadline: "2025-06-15",
       status: "即將截止",
-      description: "促進社區服務與志工參與"
+      description: "促進社區服務與志工參與",
+      category: "社會福利",
+      eligibleApplicants: "社區發展協會、志工團體",
+      subsidyScope: "人事費用、活動材料",
+      contactPerson: "李承辦",
+      contactPhone: "02-2345-6789",
+      contactEmail: "service@social.gov.tw"
     }
   ]);
 
@@ -116,24 +137,31 @@ const SubsidyManagement: React.FC = () => {
                     <CardTitle className="text-xl">{subsidyCase.title}</CardTitle>
                     <p className="text-muted-foreground">{subsidyCase.organization}</p>
                   </div>
-                  <Badge variant={subsidyCase.status === "進行中" ? "default" : "secondary"}>
-                    {subsidyCase.status}
-                  </Badge>
+                  <div className="flex gap-2">
+                    <Badge variant="outline">{subsidyCase.category}</Badge>
+                    <Badge variant={subsidyCase.status === "進行中" ? "default" : "secondary"}>
+                      {subsidyCase.status}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-3 mb-4">
+                <div className="grid gap-4 md:grid-cols-4 mb-4">
                   <div>
                     <p className="text-sm text-muted-foreground">補助金額</p>
                     <p className="font-medium">NT$ {subsidyCase.amount.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">申請開始</p>
+                    <p className="font-medium">{subsidyCase.startDate || "未設定"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">申請截止</p>
                     <p className="font-medium">{subsidyCase.deadline || "未設定"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">狀態</p>
-                    <p className="font-medium">{subsidyCase.status}</p>
+                    <p className="text-sm text-muted-foreground">聯絡人</p>
+                    <p className="font-medium">{subsidyCase.contactPerson || "未設定"}</p>
                   </div>
                 </div>
                 
@@ -154,31 +182,72 @@ const SubsidyManagement: React.FC = () => {
                         查看詳情
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-w-3xl">
                       <DialogHeader>
                         <DialogTitle>{subsidyCase.title} - 詳細資訊</DialogTitle>
                       </DialogHeader>
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <div className="grid gap-4 md:grid-cols-2">
                           <div>
                             <p className="text-sm text-muted-foreground">主辦機關</p>
                             <p className="font-medium">{subsidyCase.organization}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">補助金額</p>
-                            <p className="font-medium">NT$ {subsidyCase.amount.toLocaleString()}</p>
+                            <p className="text-sm text-muted-foreground">補助類別</p>
+                            <Badge variant="outline">{subsidyCase.category}</Badge>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">申請截止</p>
-                            <p className="font-medium">{subsidyCase.deadline}</p>
+                            <p className="text-sm text-muted-foreground">補助金額</p>
+                            <p className="font-medium">NT$ {subsidyCase.amount.toLocaleString()}</p>
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">狀態</p>
                             <Badge>{subsidyCase.status}</Badge>
                           </div>
                         </div>
+                        
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div>
+                            <p className="text-sm text-muted-foreground">申請開始日期</p>
+                            <p className="font-medium">{subsidyCase.startDate}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">申請截止日期</p>
+                            <p className="font-medium">{subsidyCase.deadline}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div>
+                            <p className="text-sm text-muted-foreground">申請資格對象</p>
+                            <p className="font-medium">{subsidyCase.eligibleApplicants}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">補助範圍</p>
+                            <p className="font-medium">{subsidyCase.subsidyScope}</p>
+                          </div>
+                        </div>
+
+                        <div className="border-t pt-4">
+                          <p className="text-sm text-muted-foreground mb-2">聯絡資訊</p>
+                          <div className="grid gap-2 md:grid-cols-3">
+                            <div>
+                              <p className="text-xs text-muted-foreground">聯絡人</p>
+                              <p className="text-sm font-medium">{subsidyCase.contactPerson}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">電話</p>
+                              <p className="text-sm font-medium">{subsidyCase.contactPhone}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">信箱</p>
+                              <p className="text-sm font-medium">{subsidyCase.contactEmail}</p>
+                            </div>
+                          </div>
+                        </div>
+
                         <div>
-                          <p className="text-sm text-muted-foreground">說明</p>
+                          <p className="text-sm text-muted-foreground">補助說明</p>
                           <p className="mt-1">{subsidyCase.description}</p>
                         </div>
                       </div>

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Save, ArrowLeft, File, Link, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,6 +30,7 @@ interface DocumentLink {
 interface SubsidyDocument {
   id: number;
   name: string;
+  originalName: string;
   type: 'application' | 'reimbursement';
   uploadDate: string;
   size: number;
@@ -41,8 +43,17 @@ const SubsidyCreate: React.FC = () => {
     title: "",
     organization: "",
     amount: "",
+    startDate: "",
     deadline: "",
-    description: ""
+    description: "",
+    category: "",
+    eligibleApplicants: "",
+    subsidyScope: "",
+    contactPerson: "",
+    contactPhone: "",
+    contactEmail: "",
+    reviewCriteria: "",
+    status: "籌備中"
   });
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -56,6 +67,10 @@ const SubsidyCreate: React.FC = () => {
   // 連結管理
   const [newLink, setNewLink] = useState({ name: "", url: "" });
 
+  // 文件命名
+  const [newApplicationDocName, setNewApplicationDocName] = useState("");
+  const [newReimbursementDocName, setNewReimbursementDocName] = useState("");
+
   const handleInputChange = (field: string, value: string) => {
     setSubsidyData(prev => ({ ...prev, [field]: value }));
   };
@@ -65,9 +80,19 @@ const SubsidyCreate: React.FC = () => {
     if (!files || files.length === 0) return;
 
     const file = files[0];
+    
+    let customName = file.name;
+    if (type === 'attachment' && newAttachmentName) {
+      customName = newAttachmentName;
+    } else if (type === 'application' && newApplicationDocName) {
+      customName = newApplicationDocName;
+    } else if (type === 'reimbursement' && newReimbursementDocName) {
+      customName = newReimbursementDocName;
+    }
+
     const newItem = {
       id: Date.now(),
-      name: type === 'attachment' ? (newAttachmentName || file.name) : file.name,
+      name: customName,
       originalName: file.name,
       size: file.size,
       uploadDate: new Date().toISOString().split('T')[0],
@@ -79,10 +104,14 @@ const SubsidyCreate: React.FC = () => {
       setNewAttachmentName("");
     } else if (type === 'application') {
       setApplicationDocuments(prev => [...prev, newItem as SubsidyDocument]);
+      setNewApplicationDocName("");
     } else if (type === 'reimbursement') {
       setReimbursementDocuments(prev => [...prev, newItem as SubsidyDocument]);
+      setNewReimbursementDocName("");
     }
 
+    // 清空文件輸入框
+    event.target.value = '';
     toast.success("檔案上傳成功");
   };
 
@@ -183,6 +212,30 @@ const SubsidyCreate: React.FC = () => {
                   />
                 </div>
                 <div>
+                  <Label>補助類別</Label>
+                  <Select value={subsidyData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="選擇補助類別" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="文化藝術">文化藝術</SelectItem>
+                      <SelectItem value="社會福利">社會福利</SelectItem>
+                      <SelectItem value="教育研究">教育研究</SelectItem>
+                      <SelectItem value="環保永續">環保永續</SelectItem>
+                      <SelectItem value="科技創新">科技創新</SelectItem>
+                      <SelectItem value="其他">其他</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>申請開始日期</Label>
+                  <Input
+                    type="date"
+                    value={subsidyData.startDate}
+                    onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  />
+                </div>
+                <div>
                   <Label>申請截止日期</Label>
                   <Input
                     type="date"
@@ -191,14 +244,73 @@ const SubsidyCreate: React.FC = () => {
                   />
                 </div>
               </div>
-              <div>
-                <Label>補助說明</Label>
-                <Textarea
-                  value={subsidyData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="請輸入補助說明"
-                  rows={4}
-                />
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label>申請資格對象</Label>
+                  <Input
+                    value={subsidyData.eligibleApplicants}
+                    onChange={(e) => handleInputChange('eligibleApplicants', e.target.value)}
+                    placeholder="如：非營利組織、學校、個人等"
+                  />
+                </div>
+                <div>
+                  <Label>補助範圍</Label>
+                  <Input
+                    value={subsidyData.subsidyScope}
+                    onChange={(e) => handleInputChange('subsidyScope', e.target.value)}
+                    placeholder="如：活動費用、設備採購、人事費用等"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <Label>聯絡人</Label>
+                  <Input
+                    value={subsidyData.contactPerson}
+                    onChange={(e) => handleInputChange('contactPerson', e.target.value)}
+                    placeholder="承辦人姓名"
+                  />
+                </div>
+                <div>
+                  <Label>聯絡電話</Label>
+                  <Input
+                    value={subsidyData.contactPhone}
+                    onChange={(e) => handleInputChange('contactPhone', e.target.value)}
+                    placeholder="連絡電話"
+                  />
+                </div>
+                <div>
+                  <Label>聯絡信箱</Label>
+                  <Input
+                    type="email"
+                    value={subsidyData.contactEmail}
+                    onChange={(e) => handleInputChange('contactEmail', e.target.value)}
+                    placeholder="聯絡信箱"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label>補助說明</Label>
+                  <Textarea
+                    value={subsidyData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="請輸入補助說明"
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <Label>審查標準</Label>
+                  <Textarea
+                    value={subsidyData.reviewCriteria}
+                    onChange={(e) => handleInputChange('reviewCriteria', e.target.value)}
+                    placeholder="請輸入審查標準與評分方式"
+                    rows={4}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -289,10 +401,17 @@ const SubsidyCreate: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="application" className="space-y-4">
-                  <Input
-                    type="file"
-                    onChange={(e) => handleFileUpload(e, 'application')}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="申請文件名稱"
+                      value={newApplicationDocName}
+                      onChange={(e) => setNewApplicationDocName(e.target.value)}
+                    />
+                    <Input
+                      type="file"
+                      onChange={(e) => handleFileUpload(e, 'application')}
+                    />
+                  </div>
                   <div className="space-y-2">
                     {applicationDocuments.map((doc) => (
                       <div key={doc.id} className="flex items-center justify-between p-2 border rounded">
@@ -315,10 +434,17 @@ const SubsidyCreate: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="reimbursement" className="space-y-4">
-                  <Input
-                    type="file"
-                    onChange={(e) => handleFileUpload(e, 'reimbursement')}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="核銷文件名稱"
+                      value={newReimbursementDocName}
+                      onChange={(e) => setNewReimbursementDocName(e.target.value)}
+                    />
+                    <Input
+                      type="file"
+                      onChange={(e) => handleFileUpload(e, 'reimbursement')}
+                    />
+                  </div>
                   <div className="space-y-2">
                     {reimbursementDocuments.map((doc) => (
                       <div key={doc.id} className="flex items-center justify-between p-2 border rounded">
