@@ -93,7 +93,7 @@ const SidebarNav: React.FC = () => {
   };
 
   return (
-    <div className="w-64 bg-sidebar border-r border-border h-full flex flex-col overflow-y-auto">
+    <div className="fixed left-0 top-0 w-64 bg-sidebar border-r border-border h-screen flex flex-col overflow-y-auto z-40">
       <div className="p-6">
         <Link to="/" className="flex items-center space-x-2">
           <div className="bg-brand-600 text-white rounded p-1">

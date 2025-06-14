@@ -13,7 +13,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <SidebarNav />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col ml-64">
           <PageHeader />
           <main className="flex-1 p-6 overflow-y-auto">
             {children}
