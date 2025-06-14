@@ -10,13 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Tag, Clock, Info } from "lucide-react";
+import { Search, Tag, Clock, Info, FileText, Settings } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import ApplicationForm from "@/components/application/ApplicationForm";
+import ProgramTemplateManager from "@/components/program/ProgramTemplateManager";
 
-// 模擬補助計劃數據
+// 模擬補助計劃數據（增加模板資訊）
 const subsidyPrograms = [
   {
     id: 1,
@@ -27,7 +28,22 @@ const subsidyPrograms = [
     category: "文化藝術",
     tags: ["展演活動", "藝術創作", "人才培育"],
     maxAmount: 500000,
-    applyUrl: "#"
+    applyUrl: "#",
+    applicationTemplate: {
+      id: 101,
+      name: "文化部藝術發展補助申請書.docx",
+      path: "/templates/culture-art-application.docx",
+      size: 45678,
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      tags: [
+        { id: 1, name: "申請單位" },
+        { id: 2, name: "活動名稱" },
+        { id: 3, name: "申請日期" },
+        { id: 4, name: "活動目的" },
+        { id: 5, name: "預計參與人數" }
+      ]
+    },
+    requiredDocuments: ["活動企劃書", "預算表", "團體證明文件"]
   },
   {
     id: 2,
@@ -38,7 +54,21 @@ const subsidyPrograms = [
     category: "體育",
     tags: ["運動賽事", "場地設備", "教練培訓"],
     maxAmount: 300000,
-    applyUrl: "#"
+    applyUrl: "#",
+    applicationTemplate: {
+      id: 102,
+      name: "體育署運動補助申請表.docx",
+      path: "/templates/sports-application.docx",
+      size: 38456,
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      tags: [
+        { id: 6, name: "申請單位" },
+        { id: 7, name: "運動項目" },
+        { id: 8, name: "活動地點" },
+        { id: 9, name: "預計效益" }
+      ]
+    },
+    requiredDocuments: ["活動計劃書", "場地使用證明", "安全保險證明"]
   },
   {
     id: 3,
@@ -84,6 +114,7 @@ const Programs: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const showApplicationForm = searchParams.get('apply');
+  const manageTemplates = searchParams.get('manage');
 
   // 處理搜索和過濾
   const filteredPrograms = subsidyPrograms.filter((program) => {
@@ -101,6 +132,11 @@ const Programs: React.FC = () => {
     navigate(`/programs?apply=${programId}`);
   };
 
+  // 處理模板管理
+  const handleManageTemplate = (programId: number) => {
+    navigate(`/programs?manage=${programId}`);
+  };
+
   if (showApplicationForm) {
     return (
       <MainLayout>
@@ -110,6 +146,21 @@ const Programs: React.FC = () => {
             <p className="text-muted-foreground mt-1">選擇活動並提交申請</p>
           </div>
           <ApplicationForm programId={showApplicationForm} />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (manageTemplates) {
+    const program = subsidyPrograms.find(p => p.id === parseInt(manageTemplates));
+    return (
+      <MainLayout>
+        <div className="fade-in">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold">模板管理</h1>
+            <p className="text-muted-foreground mt-1">{program?.title} - 申請文件模板設定</p>
+          </div>
+          <ProgramTemplateManager program={program} />
         </div>
       </MainLayout>
     );
@@ -163,9 +214,17 @@ const Programs: React.FC = () => {
                       <CardTitle>{program.title}</CardTitle>
                       <CardDescription className="mt-1">{program.organization}</CardDescription>
                     </div>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-800 hover:bg-blue-100">
-                      {program.category}
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-800 hover:bg-blue-100">
+                        {program.category}
+                      </Badge>
+                      {program.applicationTemplate && (
+                        <Badge variant="outline" className="bg-green-50 text-green-800 hover:bg-green-100">
+                          <FileText className="h-3 w-3 mr-1" />
+                          已設定模板
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -178,6 +237,21 @@ const Programs: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                  
+                  {/* 顯示模板資訊 */}
+                  {program.applicationTemplate && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-800">申請模板已設定</span>
+                      </div>
+                      <p className="text-xs text-green-700">{program.applicationTemplate.name}</p>
+                      <p className="text-xs text-green-600 mt-1">
+                        包含 {program.applicationTemplate.tags.length} 個填寫欄位
+                      </p>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -196,9 +270,20 @@ const Programs: React.FC = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="bg-muted/50 flex justify-between">
-                  <Button variant="ghost" size="sm" asChild>
-                    <a href="#" className="text-muted-foreground">查看詳情</a>
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href="#" className="text-muted-foreground">查看詳情</a>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleManageTemplate(program.id)}
+                      className="text-muted-foreground"
+                    >
+                      <Settings className="h-4 w-4 mr-1" />
+                      模板設定
+                    </Button>
+                  </div>
                   <Button size="sm" onClick={() => handleApply(program.id)}>
                     開始申請
                   </Button>

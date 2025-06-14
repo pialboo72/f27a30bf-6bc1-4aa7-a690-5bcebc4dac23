@@ -1,3 +1,4 @@
+
 export interface FileTag {
   id: number;
   name: string;
@@ -28,6 +29,27 @@ export interface Program {
   description: string;
   documents: SystemFile[];
   links: string;
+  // 新增模板相關欄位
+  applicationTemplate?: SystemFile;
+  budgetTemplate?: SystemFile;
+  requiredDocuments?: string[];
+}
+
+// 新增補助計劃資料結構，與現有的補助計劃列表整合
+export interface SubsidyProgram {
+  id: number;
+  title: string;
+  organization: string;
+  description: string;
+  deadline: string;
+  category: string;
+  tags: string[];
+  maxAmount: number;
+  applyUrl: string;
+  // 模板相關
+  applicationTemplate?: SystemFile;
+  budgetTemplate?: SystemFile;
+  requiredDocuments?: string[];
 }
 
 export const FILE_CATEGORIES = {
