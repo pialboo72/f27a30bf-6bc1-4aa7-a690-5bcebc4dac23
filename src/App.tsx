@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -20,7 +19,6 @@ import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
 import ApplicationTracking from "@/pages/ApplicationTracking";
 import UserManagement from "@/pages/UserManagement";
-import UnitManagement from "@/pages/UnitManagement";
 import SystemLogs from "@/pages/SystemLogs";
 import SubsidyManagement from "@/pages/SubsidyManagement";
 import SubsidyCreate from "@/pages/SubsidyCreate";
@@ -51,7 +49,6 @@ function App() {
               <Route path="/statistics" element={<Statistics />} />
               <Route path="/tracking" element={<ApplicationTracking />} />
               <Route path="/users" element={<UserManagement />} />
-              <Route path="/admin/units" element={<UnitManagement />} />
               <Route path="/logs" element={<SystemLogs />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
