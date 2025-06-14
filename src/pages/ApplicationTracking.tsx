@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -30,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import MainLayout from "@/components/layout/MainLayout";
 import ApplicationHistory from "@/components/application/ApplicationHistory";
 import { toast } from "sonner";
-import { Trash, Eye, Filter, Plus, MessageSquare } from "lucide-react";
+import { Trash, Eye, Filter, Plus, MessageSquare, Edit, Clock } from "lucide-react";
 
 interface Application {
   id: number;
@@ -48,6 +47,7 @@ interface ProgressRecord {
   id: number;
   applicationId: number;
   date: string;
+  time: string;
   status: string;
   notes: string;
   updatedBy: string;
@@ -59,8 +59,11 @@ const ApplicationTracking: React.FC = () => {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [progressRecords, setProgressRecords] = useState<ProgressRecord[]>([]);
   const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<ProgressRecord | null>(null);
   const [newProgressStatus, setNewProgressStatus] = useState('');
   const [newProgressNotes, setNewProgressNotes] = useState('');
+  const [newProgressTime, setNewProgressTime] = useState('');
   const [filters, setFilters] = useState({
     status: 'all',
     agency: 'all',
@@ -149,26 +152,50 @@ const ApplicationTracking: React.FC = () => {
       return;
     }
 
+    const now = new Date();
+    const currentTime = newProgressTime || now.toTimeString().split(' ')[0].substring(0, 5);
+
     const newRecord: ProgressRecord = {
       id: Date.now(),
       applicationId: selectedApplication.id,
-      date: new Date().toISOString().split('T')[0],
+      date: now.toISOString().split('T')[0],
+      time: currentTime,
       status: newProgressStatus,
       notes: newProgressNotes,
-      updatedBy: "當前用戶" // 實際應用中應該是登入用戶
+      updatedBy: "當前用戶"
     };
 
     const updatedRecords = [...progressRecords, newRecord];
     setProgressRecords(updatedRecords);
     localStorage.setItem('progressRecords', JSON.stringify(updatedRecords));
 
-    // 同時更新申請案的狀態
     handleStatusChange(selectedApplication.id, newProgressStatus);
 
     setNewProgressStatus('');
     setNewProgressNotes('');
+    setNewProgressTime('');
     setIsProgressDialogOpen(false);
     toast.success("進度記錄已新增");
+  };
+
+  const handleEditProgressRecord = () => {
+    if (!editingRecord) return;
+
+    const updatedRecords = progressRecords.map(record =>
+      record.id === editingRecord.id ? editingRecord : record
+    );
+    
+    setProgressRecords(updatedRecords);
+    localStorage.setItem('progressRecords', JSON.stringify(updatedRecords));
+    
+    setIsEditDialogOpen(false);
+    setEditingRecord(null);
+    toast.success("進度記錄已更新");
+  };
+
+  const openEditDialog = (record: ProgressRecord) => {
+    setEditingRecord({ ...record });
+    setIsEditDialogOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -302,6 +329,18 @@ const ApplicationTracking: React.FC = () => {
                           </Select>
                         </div>
                         <div>
+                          <label className="text-sm font-medium flex items-center">
+                            <Clock className="mr-1 h-4 w-4" />
+                            記錄時間
+                          </label>
+                          <Input
+                            type="time"
+                            value={newProgressTime}
+                            onChange={(e) => setNewProgressTime(e.target.value)}
+                            placeholder="選擇時間"
+                          />
+                        </div>
+                        <div>
                           <label className="text-sm font-medium">備註</label>
                           <Textarea
                             value={newProgressNotes}
@@ -409,7 +448,19 @@ const ApplicationTracking: React.FC = () => {
                           <div key={record.id} className="border-l-2 border-blue-200 pl-4 pb-3">
                             <div className="flex justify-between items-center mb-1">
                               <span className="font-medium">{record.status}</span>
-                              <span className="text-sm text-muted-foreground">{record.date}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">
+                                  {record.date} {record.time && `${record.time}`}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => openEditDialog(record)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
                             {record.notes && (
                               <p className="text-sm text-gray-600 mb-1">{record.notes}</p>
@@ -434,6 +485,72 @@ const ApplicationTracking: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* 編輯進度記錄對話框 */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>編輯進度記錄</DialogTitle>
+            </DialogHeader>
+            {editingRecord && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">進度狀態</label>
+                  <Select 
+                    value={editingRecord.status} 
+                    onValueChange={(value) => setEditingRecord(prev => prev ? {...prev, status: value} : null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="待審核">待審核</SelectItem>
+                      <SelectItem value="審核中">審核中</SelectItem>
+                      <SelectItem value="補件中">補件中</SelectItem>
+                      <SelectItem value="已核准">已核准</SelectItem>
+                      <SelectItem value="已駁回">已駁回</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">日期</label>
+                  <Input
+                    type="date"
+                    value={editingRecord.date}
+                    onChange={(e) => setEditingRecord(prev => prev ? {...prev, date: e.target.value} : null)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium flex items-center">
+                    <Clock className="mr-1 h-4 w-4" />
+                    時間
+                  </label>
+                  <Input
+                    type="time"
+                    value={editingRecord.time}
+                    onChange={(e) => setEditingRecord(prev => prev ? {...prev, time: e.target.value} : null)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">備註</label>
+                  <Textarea
+                    value={editingRecord.notes}
+                    onChange={(e) => setEditingRecord(prev => prev ? {...prev, notes: e.target.value} : null)}
+                    rows={3}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    取消
+                  </Button>
+                  <Button onClick={handleEditProgressRecord}>
+                    更新記錄
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground mb-2">共 {filteredApplications.length} 筆申請案</p>
