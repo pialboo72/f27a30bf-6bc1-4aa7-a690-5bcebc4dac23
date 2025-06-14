@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { DateRangeSelector } from "@/components/DateRangeSelector";
 import SubsidyUnit, { SubsidyUnitData } from "@/components/activity/SubsidyUnit";
 import BudgetExport from "@/components/activity/BudgetExport";
+import ActivityFormEnhanced from "@/components/activity/ActivityFormEnhanced";
+import ActivityApplicationIntegration from "@/components/activity/ActivityApplicationIntegration";
 
 // 補助計畫選項
 const subsidyPrograms = [
@@ -24,297 +26,6 @@ const subsidyPrograms = [
   { id: 4, name: "衛生福利部社區健康促進補助" },
   { id: 5, name: "環保署環境教育活動補助" },
 ];
-
-const ActivityForm: React.FC<{ initialData?: any; isNew: boolean }> = ({ initialData, isNew }) => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    title: '',
-    category: '',
-    date: null as Date | null,
-    dateRange: null as { start: Date; end: Date } | null,
-    location: '',
-    purpose: '',
-    content: '',
-    target: '',
-    participants: '',
-    unit: '',
-    subsidyUnits: [] as SubsidyUnitData[],
-    selectedProgram: '', // 新增補助計畫選擇
-  });
-
-  // 當 initialData 變更時更新表單資料
-  useEffect(() => {
-    if (initialData) {
-      console.log("正在載入活動資料到表單", initialData);
-      setFormData({
-        title: initialData.title || initialData.name || '',
-        category: initialData.category || '',
-        date: initialData.date ? new Date(initialData.date) : null,
-        dateRange: null,
-        location: initialData.location || '',
-        purpose: initialData.purpose || '',
-        content: initialData.content || '',
-        target: initialData.target || '',
-        participants: initialData.participants || '',
-        unit: initialData.unit || '',
-        subsidyUnits: initialData.subsidyUnits || [],
-        selectedProgram: initialData.selectedProgram || '',
-      });
-    } else if (isNew) {
-      // 新增活動時重置表單
-      setFormData({
-        title: '',
-        category: '',
-        date: null,
-        dateRange: null,
-        location: '',
-        purpose: '',
-        content: '',
-        target: '',
-        participants: '',
-        unit: '',
-        subsidyUnits: [],
-        selectedProgram: '',
-      });
-    }
-  }, [initialData, isNew]);
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleDateChange = (dates: Date[] | { start: Date; end: Date } | null) => {
-    if (!dates) {
-      handleInputChange('date', null);
-      return;
-    }
-
-    if (Array.isArray(dates)) {
-      handleInputChange('date', dates);
-    } else {
-      handleInputChange('dateRange', dates);
-    }
-  };
-
-  const handleSubsidyUnitsChange = (units: SubsidyUnitData[]) => {
-    handleInputChange('subsidyUnits', units);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.title || !formData.category || !formData.date || !formData.location) {
-      toast.error("請填寫所有必填欄位");
-      return;
-    }
-    
-    const activities = JSON.parse(localStorage.getItem('activities') || '[]');
-    
-    if (isNew) {
-      const activityId = new Date().getTime();
-      const newActivity = {
-        id: activityId,
-        name: formData.title,
-        category: formData.category,
-        date: formData.date ? format(formData.date, 'yyyy-MM-dd') : '',
-        status: '已提交',
-        hasDocument: true, // 標記已生成文件
-        ...formData
-      };
-      
-      activities.push(newActivity);
-      localStorage.setItem('activities', JSON.stringify(activities));
-      toast.success("活動資料已送出，申請文件已生成");
-    } else {
-      // 更新現有活動
-      const activityIndex = activities.findIndex((a: any) => a.id === initialData?.id);
-      if (activityIndex !== -1) {
-        activities[activityIndex] = {
-          ...activities[activityIndex],
-          name: formData.title,
-          hasDocument: true, // 標記已生成文件
-          ...formData
-        };
-        localStorage.setItem('activities', JSON.stringify(activities));
-        toast.success("活動資料已更新，申請文件已重新生成");
-      }
-    }
-    
-    navigate('/activities');
-  };
-
-  return (
-    <div className="space-y-8">
-      <div className="border-b pb-6">
-        <h2 className="text-lg font-semibold mb-4">基本資料</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <Label htmlFor="activity-title">活動名稱 <span className="text-red-500">*</span></Label>
-            <Input 
-              id="activity-title" 
-              placeholder="請輸入活動名稱" 
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="activity-category">活動類別 <span className="text-red-500">*</span></Label>
-            <Select 
-              value={formData.category} 
-              onValueChange={(value) => handleInputChange('category', value)}
-            >
-              <SelectTrigger id="activity-category">
-                <SelectValue placeholder="請選擇活動類別" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="文化藝術">文化藝術</SelectItem>
-                <SelectItem value="體育活動">體育活動</SelectItem>
-                <SelectItem value="教育學習">教育學習</SelectItem>
-                <SelectItem value="社區服務">社區服務</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="activity-date">活動日期 <span className="text-red-500">*</span></Label>
-            <DateRangeSelector onDateChange={handleDateChange} />
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="activity-location">活動地點 <span className="text-red-500">*</span></Label>
-            <Input 
-              id="activity-location" 
-              placeholder="請輸入活動地點" 
-              value={formData.location}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-3 md:col-span-2">
-            <Label htmlFor="selected-program">預定申請補助計畫</Label>
-            <Select 
-              value={formData.selectedProgram} 
-              onValueChange={(value) => handleInputChange('selectedProgram', value)}
-            >
-              <SelectTrigger id="selected-program">
-                <SelectValue placeholder="請選擇預定申請的補助計畫（可選）" />
-              </SelectTrigger>
-              <SelectContent>
-                {subsidyPrograms.map((program) => (
-                  <SelectItem key={program.id} value={program.id.toString()}>
-                    {program.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      <SubsidyUnit 
-        subsidyUnits={formData.subsidyUnits}
-        onUnitsChange={handleSubsidyUnitsChange}
-      />
-
-      <div className="border-b pb-6">
-        <h2 className="text-lg font-semibold mb-4">活動內容</h2>
-        <div className="space-y-4">
-          <div className="space-y-3">
-            <Label htmlFor="activity-purpose">活動目的</Label>
-            <Textarea 
-              id="activity-purpose" 
-              placeholder="請詳述活動目的" 
-              rows={3} 
-              value={formData.purpose}
-              onChange={(e) => handleInputChange('purpose', e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="activity-content">活動內容</Label>
-            <Textarea 
-              id="activity-content" 
-              placeholder="請詳述活動內容" 
-              rows={5}
-              value={formData.content}
-              onChange={(e) => handleInputChange('content', e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="activity-target">參與對象</Label>
-            <Input 
-              id="activity-target" 
-              placeholder="請輸入參與對象"
-              value={formData.target}
-              onChange={(e) => handleInputChange('target', e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label htmlFor="activity-participants">預計參與人數</Label>
-              <Input 
-                id="activity-participants" 
-                type="number" 
-                placeholder="請輸入預計人數" 
-                min="0"
-                value={formData.participants}
-                onChange={(e) => handleInputChange('participants', e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="activity-unit">主辦單位</Label>
-              <Input 
-                id="activity-unit" 
-                placeholder="請輸入主辦單位"
-                value={formData.unit}
-                onChange={(e) => handleInputChange('unit', e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-semibold mb-4">附件上傳</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <Label htmlFor="attachment1">活動企劃書</Label>
-            <div className="flex items-center space-x-2">
-              <Input id="attachment1" type="file" className="flex-1" />
-              <Button variant="outline" size="icon">
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="attachment2">預算表</Label>
-            <div className="flex items-center space-x-2">
-              <Input id="attachment2" type="file" className="flex-1" />
-              <Button variant="outline" size="icon">
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-end space-x-4 pt-4">
-        <Button variant="outline" onClick={handleSubmit}>
-          <Save className="mr-2 h-4 w-4" />
-          儲存草稿
-        </Button>
-        <Button onClick={handleSubmit}>
-          送出
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 interface BudgetItem {
   id: number;
@@ -541,6 +252,7 @@ const Activity: React.FC = () => {
   const isNew = id === "new";
   const [activityData, setActivityData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedProgram, setSelectedProgram] = useState<string>('');
 
   useEffect(() => {
     const loadActivityData = () => {
@@ -550,16 +262,26 @@ const Activity: React.FC = () => {
         if (activity) {
           console.log("載入活動資料", activity);
           setActivityData(activity);
+          setSelectedProgram(activity.selectedProgram || '');
         }
       } else if (isNew) {
         // 新增活動時清空相關資料
         setActivityData(null);
+        setSelectedProgram('');
       }
       setIsLoading(false);
     };
 
     loadActivityData();
   }, [id, isNew]);
+
+  const handleProgramSelect = (programId: string) => {
+    setSelectedProgram(programId);
+    // 同時更新活動資料中的選擇
+    if (activityData) {
+      setActivityData(prev => ({ ...prev, selectedProgram: programId }));
+    }
+  };
 
   if (isLoading) {
     return (
@@ -591,15 +313,63 @@ const Activity: React.FC = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="activity" className="w-full">
-              <TabsList>
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="activity">活動資料</TabsTrigger>
                 <TabsTrigger value="budget">預算表</TabsTrigger>
+                <TabsTrigger value="application">申請文件</TabsTrigger>
+                <TabsTrigger value="preview" disabled={!selectedProgram}>預覽送件</TabsTrigger>
               </TabsList>
               <TabsContent value="activity" className="mt-6">
-                <ActivityForm initialData={activityData} isNew={isNew} />
+                <ActivityFormEnhanced 
+                  initialData={activityData} 
+                  isNew={isNew}
+                  selectedProgram={selectedProgram}
+                  onProgramSelect={handleProgramSelect}
+                />
               </TabsContent>
               <TabsContent value="budget" className="mt-6">
                 <BudgetForm activityData={activityData} isNew={isNew} />
+              </TabsContent>
+              <TabsContent value="application" className="mt-6">
+                <ActivityApplicationIntegration 
+                  activityData={activityData}
+                  selectedProgram={selectedProgram}
+                  onProgramSelect={handleProgramSelect}
+                />
+              </TabsContent>
+              <TabsContent value="preview" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>申請資料預覽</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedProgram ? (
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          請確認所有資料無誤後，即可正式提交申請。
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="font-medium">活動名稱</Label>
+                            <p className="text-sm">{activityData?.title}</p>
+                          </div>
+                          <div>
+                            <Label className="font-medium">申請補助計劃</Label>
+                            <p className="text-sm">
+                              {subsidyPrograms.find(p => p.id.toString() === selectedProgram)?.name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-4">
+                          <Button>正式提交申請</Button>
+                          <Button variant="outline">儲存草稿</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">請先在「申請文件」頁籤中選擇補助計劃</p>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </CardContent>
