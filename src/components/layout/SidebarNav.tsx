@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
@@ -14,8 +14,10 @@ import {
   Folder,
   Users,
   Building,
-  Receipt
+  Receipt,
+  // 保留已用的 icon
 } from "lucide-react";
+import { ZoomIn, ZoomOut } from "lucide-react";
 
 interface NavItem {
   title: string;
@@ -91,6 +93,8 @@ const adminNavItems: NavItem[] = [
 
 const SidebarNav: React.FC = () => {
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+
   const isActive = (href: string) => {
     if (href === "/" && location.pathname === "/") return true;
     if (href === "/admin") {
@@ -100,67 +104,142 @@ const SidebarNav: React.FC = () => {
     return false;
   };
 
+  // 只要文字折疊都用 collapsed 控制
   return (
-    <div className="fixed left-0 top-0 w-72 bg-sidebar/90 border-r border-border h-screen flex flex-col overflow-y-auto z-40 shadow-2xl animate-fade-in">
-      <div className="p-7">
-        <Link to="/" className="flex items-center space-x-3">
+    <div
+      className={cn(
+        "fixed left-0 top-0 h-screen flex flex-col overflow-y-auto z-40 shadow-2xl animate-fade-in bg-sidebar/90 border-r border-border",
+        collapsed ? "w-24" : "w-72",
+        "transition-all duration-300"
+      )}
+    >
+      {/* Header / Logo + Zoom 按鈕 */}
+      <div className={cn(
+        "flex items-center px-2 py-7 gap-2",
+        collapsed ? "justify-center" : "justify-between"
+      )}>
+        <Link to="/" className={cn(
+          "flex items-center transition-all duration-300",
+          collapsed ? "justify-center" : "space-x-3"
+        )}>
           <div className="bg-brand-600 text-white rounded-lg p-2 shadow hover:scale-110 transition-transform duration-200">
-            <FileText size={36} />
+            <FileText size={collapsed ? 32 : 36} />
           </div>
-          <span className="font-extrabold text-2xl tracking-wide text-brand-800 drop-shadow">補助申請系統</span>
+          {!collapsed && 
+            <span className="font-extrabold text-2xl tracking-wide text-brand-800 drop-shadow">
+              補助申請系統
+            </span>
+          }
         </Link>
+        {/* Zoom 按鈕，永遠顯示（縮小時置中顯示） */}
+        <button
+          aria-label={collapsed ? "展開側欄" : "收合側欄"}
+          className={cn(
+            "rounded-full p-2 bg-brand-100 text-brand-700 hover:bg-brand-200 shadow border transition-all duration-300 focus:outline-none",
+            collapsed ? "" : "ml-2"
+          )}
+          onClick={() => setCollapsed(v => !v)}
+        >
+          {collapsed ? <ZoomIn size={26} /> : <ZoomOut size={26} />}
+        </button>
       </div>
 
-      <div className="flex-1 px-4 py-2">
+      {/* 功能列表 */}
+      <div className={cn(
+        "flex-1 px-2 py-2",
+        collapsed ? "px-0 py-2" : "px-4 py-2"
+      )}>
+        {/* 主要功能 */}
         <div className="space-y-2">
-          <p className="text-base font-semibold text-muted-foreground/90 px-3 py-1.5">
-            主要功能
-          </p>
+          {!collapsed && (
+            <p className="text-lg font-bold text-muted-foreground/90 px-3 py-2">
+              主要功能
+            </p>
+          )}
           {mainNavItems.map((item) => (
-            <Link
+            <SidebarNavItem
               key={item.href}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-4 rounded-xl px-3 py-3 text-lg font-semibold transition-all duration-200 hover:bg-brand-100 hover:text-brand-900 focus-visible:ring-2 focus-visible:ring-ring shadow hover:shadow-lg",
-                isActive(item.href) ? "bg-brand-200 text-brand-900 shadow-xl" : "bg-sidebar"
-              )}
-              style={{ minHeight: 54 }}
-            >
-              <item.icon className="h-7 w-7 mr-2 text-brand-700 drop-shadow" />
-              {item.title}
-            </Link>
+              item={item}
+              active={isActive(item.href)}
+              collapsed={collapsed}
+            />
           ))}
         </div>
 
+        {/* 管理員功能 */}
         <div className="mt-8 space-y-2">
-          <p className="text-base font-semibold text-muted-foreground/90 px-3 py-1.5">
-            管理員功能
-          </p>
+          {!collapsed && (
+            <p className="text-lg font-bold text-muted-foreground/90 px-3 py-2">
+              管理員功能
+            </p>
+          )}
           {adminNavItems.map((item) => (
-            <Link
+            <SidebarNavItem
               key={item.href}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-4 rounded-xl px-3 py-3 text-lg font-semibold transition-all duration-200 hover:bg-brand-100 hover:text-brand-900 focus-visible:ring-2 focus-visible:ring-ring shadow hover:shadow-lg",
-                isActive(item.href) ? "bg-brand-200 text-brand-900 shadow-xl" : "bg-sidebar"
-              )}
-              style={{ minHeight: 54 }}
-            >
-              <item.icon className="h-7 w-7 mr-2 text-brand-700 drop-shadow" />
-              {item.title}
-            </Link>
+              item={item}
+              active={isActive(item.href)}
+              collapsed={collapsed}
+            />
           ))}
         </div>
       </div>
 
-      <div className="p-6 border-t border-border">
-        <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-3 text-brand-800 shadow animate-fade-in">
+      {/* 版本資訊 */}
+      <div className={cn(
+        "p-6 border-t border-border transition-all duration-300",
+        collapsed ? "flex justify-center p-3" : ""
+      )}>
+        <div className={cn(
+          "flex items-center gap-2 bg-blue-50 rounded-lg p-3 text-brand-800 shadow animate-fade-in",
+          collapsed && "justify-center p-3 bg-blue-100"
+        )}>
           <Info className="h-5 w-5" />
-          <span className="text-base font-bold">版本 1.0.0</span>
+          {!collapsed && (
+            <span className="text-base font-bold">版本 1.0.0</span>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
+// SidebarNavItem 加入 Tooltip（縮小時顯示）並美化
+const SidebarNavItem: React.FC<{
+  item: NavItem;
+  active: boolean;
+  collapsed: boolean;
+}> = ({ item, active, collapsed }) => {
+  return (
+    <div className="relative group">
+      <Link
+        to={item.href}
+        className={cn(
+          "flex items-center gap-4 rounded-xl px-3 py-4 text-xl font-semibold transition-all duration-200",
+          "hover:bg-brand-100 hover:text-brand-900 focus-visible:ring-2 focus-visible:ring-ring shadow hover:shadow-lg",
+          active ? "bg-brand-200 text-brand-900 shadow-xl" : "bg-sidebar",
+          collapsed ? "justify-center px-0 py-3" : ""
+        )}
+        style={{ minHeight: 54 }}
+      >
+        <item.icon
+          className={cn(
+            "drop-shadow",
+            active ? "text-brand-800" : "text-brand-700",
+            collapsed ? "h-8 w-8" : "h-7 w-7",
+            "transition-all duration-200"
+          )}
+        />
+        {!collapsed && <span className="truncate">{item.title}</span>}
+      </Link>
+      {/* Tooltip：側欄縮小時顯示標題 */}
+      {collapsed && (
+        <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap rounded px-3 py-1 bg-gray-900 text-white text-base font-bold shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity duration-200">
+          {item.title}
+        </span>
+      )}
+    </div>
+  );
+};
+
 export default SidebarNav;
+
