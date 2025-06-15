@@ -1,47 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import { 
-  Tabs, 
-  TabsList, 
-  TabsTrigger, 
-  TabsContent 
-} from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { toast } from "sonner";
-import { File, Folder, Upload, Plus, X, FileText, Download, CheckSquare } from "lucide-react";
-import { useFiles } from '@/contexts/FileContext';
-import { SystemFile, FileTag } from '@/types/program';
-import DeleteFileConfirmDialog from "@/components/files/DeleteFileConfirmDialog";
+import { useFileManagementState } from "@/hooks/useFileManagementState";
 import FolderSidebar from "@/components/files/FolderSidebar";
-import FileList, { FileForList } from "@/components/files/FileList";
+import FileList from "@/components/files/FileList";
 import UploadDialog from "@/components/files/UploadDialog";
 import AddFolderDialog from "@/components/files/AddFolderDialog";
 import FolderSelectDialog from "@/components/files/FolderSelectDialog";
+import DeleteFileConfirmDialog from "@/components/files/DeleteFileConfirmDialog";
+import { Button } from "@/components/ui/button";
+import { Folder, Upload } from "lucide-react";
 
 // 模擬文件數據
 const mockFolders = [
@@ -137,235 +104,8 @@ const fileConversions: {[key: string]: string[]} = {
 };
 
 const FileManagement: React.FC = () => {
-  const { setSystemFiles } = useFiles();
-  const [activeTab, setActiveTab] = useState("all");
-  const [folders, setFolders] = useState(mockFolders);
-  const [files, setFiles] = useState<Array<SystemFile & {
-    originalType: string;
-    size: string;
-    uploaded: string;
-    folders: string[];
-    availableFormats: string[];
-  }>>(mockFiles as any);
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [folderDialogOpen, setFolderDialogOpen] = useState(false);
-  const [folderSelectDialogOpen, setFolderSelectDialogOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [newFolderName, setNewFolderName] = useState("");
-  const [selectedFolder, setSelectedFolder] = useState<string>("全部");
-  const [fileInProcess, setFileInProcess] = useState<any | null>(null);
-  const [selectedFolders, setSelectedFolders] = useState<{[key: string]: boolean}>({});
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteTargetFile, setDeleteTargetFile] = useState<null | { id: number, name: string }>(null);
-  
-  useEffect(() => {
-    setSystemFiles(files as any);
-  }, []);
-  
-  // Calculate file count for folders for sidebar rendering
-  const folderList = folders.map(folder => ({
-    ...folder,
-    fileCount: files.filter(file => file.folders.includes(folder.name)).length
-  }));
-  
-  // Compose filteredFiles FIRST, so it can be used below
-  const filteredFiles = files.filter(file => {
-    const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFolder = selectedFolder === "全部" || file.folders.includes(selectedFolder);
-    return matchesSearch && matchesFolder;
-  });
-  
-  // Ensure that each file type always has uploadDate (not optional).
-  // This fixes the type issue when passing to FileList.
-  const filesWithUploadDate: FileForList[] = files.map(f => ({
-    ...f,
-    uploadDate: f.uploadDate || f.uploaded || "",
-  }));
-  
-  const filteredFilesWithUploadDate: FileForList[] = filteredFiles.map(f => ({
-    ...f,
-    uploadDate: f.uploadDate || f.uploaded || "",
-  }));
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-  
-  const handleFileUpload = () => {
-    if (selectedFile) {
-      const fileType = selectedFile.name.split('.').pop() || "unknown";
-      const fileName = selectedFile.name.split('.')[0];
-      
-      const supportsConversion = fileType in fileConversions;
-      
-      const filesToUpload = [
-        {
-          id: Date.now(),
-          name: fileName,
-          path: `/files/${fileName.toLowerCase().replace(/\s+/g, '-')}.${fileType}`,
-          tags: [{ id: Date.now(), name: selectedFolder === "全部" ? "未分類" : selectedFolder }],
-          type: getMimeType(fileType),
-          size: selectedFile.size,
-          uploadDate: new Date().toISOString().split('T')[0],
-          originalType: fileType,
-          uploaded: new Date().toISOString().split('T')[0],
-          folders: selectedFolder === "全部" ? ["未分類"] : [selectedFolder],
-          availableFormats: supportsConversion ? fileConversions[fileType] : [fileType]
-        }
-      ];
+  const state = useFileManagementState();
 
-      if (supportsConversion) {
-        fileConversions[fileType]?.forEach((format, index) => {
-          if (format !== fileType) {
-            filesToUpload.push({
-              id: Date.now() + index + 1,
-              name: fileName,
-              path: `/files/${fileName.toLowerCase().replace(/\s+/g, '-')}.${format}`,
-              tags: [{ id: Date.now() + index + 1, name: selectedFolder === "全部" ? "未分類" : selectedFolder }],
-              type: getMimeType(format),
-              size: selectedFile.size,
-              uploadDate: new Date().toISOString().split('T')[0],
-              originalType: format,
-              uploaded: new Date().toISOString().split('T')[0],
-              folders: selectedFolder === "全部" ? ["未分類"] : [selectedFolder],
-              availableFormats: [format]
-            });
-          }
-        });
-      }
-      
-      const updatedFiles = [...files, ...filesToUpload as any];
-      setFiles(updatedFiles);
-      setSystemFiles(updatedFiles as any);
-      
-      let successMessage = `成功上傳檔案: ${fileName}.${fileType}`;
-      if (supportsConversion) {
-        successMessage += `\n並自動轉換為 ${fileConversions[fileType].filter(f => f !== fileType).join(', ')} 格式`;
-      }
-      
-      toast.success(successMessage);
-      setUploadDialogOpen(false);
-      setSelectedFile(null);
-    } else {
-      toast.error("請先選擇檔案");
-    }
-  };
-  
-  const handleAddFolder = () => {
-    if (newFolderName.trim()) {
-      const newFolder = {
-        id: Date.now(),
-        name: newFolderName.trim(),
-        created: new Date().toISOString().split('T')[0],
-        fileCount: 0
-      };
-      
-      setFolders([...folders, newFolder]);
-      toast.success(`已新增資料夾: ${newFolderName}`);
-      setFolderDialogOpen(false);
-      setNewFolderName("");
-    } else {
-      toast.error("資料夾名稱不能為空");
-    }
-  };
-  
-  const handleAskDeleteFile = (id: number, name: string) => {
-    setDeleteTargetFile({ id, name });
-    setDeleteDialogOpen(true);
-  };
-  
-  const handleConfirmDeleteFile = () => {
-    if (deleteTargetFile) {
-      const updatedFiles = files.filter(file => file.id !== deleteTargetFile.id);
-      setFiles(updatedFiles);
-      setSystemFiles(updatedFiles);
-      toast.success("已刪除檔案");
-    }
-    setDeleteDialogOpen(false);
-    setDeleteTargetFile(null);
-  };
-  
-  const handleDeleteFile = (id: number) => {
-    const updatedFiles = files.filter(file => file.id !== id);
-    setFiles(updatedFiles);
-    setSystemFiles(updatedFiles);
-    toast.success("已刪除檔案");
-  };
-  
-  const handleOpenFolderSelect = (file: any) => {
-    setFileInProcess(file);
-    
-    const initialSelection: {[key: string]: boolean} = {};
-    folders.forEach(folder => {
-      initialSelection[folder.name] = file.folders.includes(folder.name);
-    });
-    setSelectedFolders(initialSelection);
-    
-    setFolderSelectDialogOpen(true);
-  };
-  
-  const toggleFolderSelection = (folderName: string) => {
-    setSelectedFolders({
-      ...selectedFolders,
-      [folderName]: !selectedFolders[folderName]
-    });
-  };
-  
-  const saveFileFolders = () => {
-    if (!fileInProcess) return;
-    
-    const selectedFolderNames = Object.keys(selectedFolders).filter(
-      folderName => selectedFolders[folderName]
-    );
-    
-    if (selectedFolderNames.length === 0) {
-      selectedFolderNames.push("未分類");
-    }
-    
-    const updatedFiles = files.map(file => {
-      if (file.id === fileInProcess.id) {
-        return {
-          ...file,
-          folders: selectedFolderNames,
-          tags: [...file.tags, ...selectedFolderNames.map((name, index) => ({
-            id: file.id * 100 + index,
-            name
-          }))].slice(0, selectedFolderNames.length)
-        };
-      }
-      return file;
-    });
-    
-    setFiles(updatedFiles);
-    setSystemFiles(updatedFiles);
-    setFolderSelectDialogOpen(false);
-    setFileInProcess(null);
-    toast.success("檔案資料夾已更新");
-  };
-  
-  const downloadFile = (fileName: string, fileType: string) => {
-    toast.success(`開始下載 ${fileName}.${fileType}`);
-  };
-  
-  const getMimeType = (extension: string): string => {
-    const mimeTypes: {[key: string]: string} = {
-      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      pdf: "application/pdf",
-      jpg: "image/jpeg",
-      jpeg: "image/jpeg",
-      png: "image/png",
-      odt: "application/vnd.oasis.opendocument.text",
-      ods: "application/vnd.oasis.opendocument.spreadsheet",
-      txt: "text/plain"
-    };
-    return mimeTypes[extension.toLowerCase()] || "application/octet-stream";
-  };
-  
   return (
     <MainLayout>
       <div className="fade-in space-y-6">
@@ -375,11 +115,11 @@ const FileManagement: React.FC = () => {
             <p className="text-muted-foreground mt-1">管理系統中的各類文件和檔案</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setFolderDialogOpen(true)}>
+            <Button variant="outline" onClick={() => state.setFolderDialogOpen(true)}>
               <Folder className="mr-1 h-4 w-4" />
               新增資料夾
             </Button>
-            <Button onClick={() => setUploadDialogOpen(true)}>
+            <Button onClick={() => state.setUploadDialogOpen(true)}>
               <Upload className="mr-1 h-4 w-4" />
               上傳檔案
             </Button>
@@ -389,62 +129,62 @@ const FileManagement: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Sidebar */}
           <FolderSidebar
-            folders={folderList}
-            selectedFolder={selectedFolder}
-            setSelectedFolder={setSelectedFolder}
+            folders={state.folderList}
+            selectedFolder={state.selectedFolder}
+            setSelectedFolder={state.setSelectedFolder}
           />
           {/* File List */}
           <FileList
-            files={filesWithUploadDate}
-            filteredFiles={filteredFilesWithUploadDate}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            handleAskDeleteFile={handleAskDeleteFile}
-            handleOpenFolderSelect={handleOpenFolderSelect}
-            downloadFile={downloadFile}
-            folders={folders}
+            files={state.filesWithUploadDate}
+            filteredFiles={state.filteredFilesWithUploadDate}
+            activeTab={state.activeTab}
+            setActiveTab={state.setActiveTab}
+            searchTerm={state.searchTerm}
+            setSearchTerm={state.setSearchTerm}
+            handleAskDeleteFile={state.handleAskDeleteFile}
+            handleOpenFolderSelect={state.handleOpenFolderSelect}
+            downloadFile={state.downloadFile}
+            folders={state.folders}
           />
         </div>
         
         {/* Dialogs */}
         <UploadDialog
-          open={uploadDialogOpen}
-          onOpenChange={setUploadDialogOpen}
-          folders={folders}
-          selectedFolder={selectedFolder}
-          setSelectedFolder={setSelectedFolder}
-          selectedFile={selectedFile}
-          setSelectedFile={setSelectedFile}
-          handleFileChange={handleFileChange}
-          handleFileUpload={handleFileUpload}
-          fileConversions={fileConversions}
+          open={state.uploadDialogOpen}
+          onOpenChange={state.setUploadDialogOpen}
+          folders={state.folders}
+          selectedFolder={state.selectedFolder}
+          setSelectedFolder={state.setSelectedFolder}
+          selectedFile={state.selectedFile}
+          setSelectedFile={state.setSelectedFile}
+          handleFileChange={state.handleFileChange}
+          handleFileUpload={state.handleFileUpload}
+          fileConversions={state.fileConversions}
         />
         <AddFolderDialog
-          open={folderDialogOpen}
-          onOpenChange={setFolderDialogOpen}
-          newFolderName={newFolderName}
-          setNewFolderName={setNewFolderName}
-          handleAddFolder={handleAddFolder}
+          open={state.folderDialogOpen}
+          onOpenChange={state.setFolderDialogOpen}
+          newFolderName={state.newFolderName}
+          setNewFolderName={state.setNewFolderName}
+          handleAddFolder={state.handleAddFolder}
         />
         <FolderSelectDialog
-          open={folderSelectDialogOpen}
-          onOpenChange={setFolderSelectDialogOpen}
-          folders={folders}
-          fileInProcess={fileInProcess}
-          selectedFolders={selectedFolders}
-          toggleFolderSelection={toggleFolderSelection}
-          saveFileFolders={saveFileFolders}
+          open={state.folderSelectDialogOpen}
+          onOpenChange={state.setFolderSelectDialogOpen}
+          folders={state.folders}
+          fileInProcess={state.fileInProcess}
+          selectedFolders={state.selectedFolders}
+          toggleFolderSelection={state.toggleFolderSelection}
+          saveFileFolders={state.saveFileFolders}
         />
         <DeleteFileConfirmDialog
-          open={deleteDialogOpen}
+          open={state.deleteDialogOpen}
           onOpenChange={(open) => {
-            setDeleteDialogOpen(open);
-            if (!open) setDeleteTargetFile(null);
+            state.setDeleteDialogOpen(open);
+            if (!open) state.setDeleteTargetFile(null);
           }}
-          onConfirm={handleConfirmDeleteFile}
-          fileName={deleteTargetFile?.name}
+          onConfirm={state.handleConfirmDeleteFile}
+          fileName={state.deleteTargetFile?.name}
         />
       </div>
     </MainLayout>
