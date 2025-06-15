@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -42,7 +41,7 @@ const mainNavItems: NavItem[] = [
   },
   {
     title: "申請進度追蹤",
-    href: "/applications",
+    href: "/tracking",
     icon: FileCheck,
   },
   {
