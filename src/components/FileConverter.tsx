@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Download } from "lucide-react";
 import { toast } from "sonner";
-import { useFiles } from "@/contexts/FileContext";
+import { useFileUpload } from "@/hooks/useFileUpload";
 
 interface FileConverterProps {
   onFileConverted?: (file: File) => void;
@@ -17,30 +17,30 @@ export const FileConverter = ({ onFileConverted }: FileConverterProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [targetFormat, setTargetFormat] = useState<string>("docx");
   const [isConverting, setIsConverting] = useState(false);
-  
-  const { convertFile } = useFiles();
-  
+
+  const { convertFile } = useFileUpload();
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
   };
-  
+
   const handleConvert = async () => {
     if (!file) {
       toast.error("請先選擇檔案");
       return;
     }
-    
+
     setIsConverting(true);
-    
+
     try {
       const convertedFile = await convertFile(file, targetFormat);
-      
+
       if (convertedFile && onFileConverted) {
         onFileConverted(convertedFile);
       }
-      
+
       if (convertedFile) {
         // 建立下載連結
         const url = URL.createObjectURL(convertedFile);
@@ -50,7 +50,7 @@ export const FileConverter = ({ onFileConverted }: FileConverterProps) => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         toast.success(`檔案已轉換為 ${targetFormat} 格式並下載`);
       }
     } catch (error) {
@@ -60,7 +60,7 @@ export const FileConverter = ({ onFileConverted }: FileConverterProps) => {
       setIsConverting(false);
     }
   };
-  
+
   return (
     <Card>
       <CardHeader>

@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { toast } from "sonner";
+import { SystemFile } from "@/types/program";
 
 interface TemplateUploaderProps {
   tab: string;
-  onUploadSuccess: (file: File) => void;
+  onUploadSuccess: (file: SystemFile) => void;
   acceptedFormats: string[];
 }
 

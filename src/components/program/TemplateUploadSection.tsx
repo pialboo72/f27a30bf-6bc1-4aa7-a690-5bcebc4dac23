@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useFiles } from "@/contexts/FileContext";
+import { useFileUpload } from "@/hooks/useFileUpload";
 import { FileText, Upload, Download, X } from 'lucide-react';
 import { toast } from "sonner";
 import { SystemFile } from "@/types/program";
@@ -19,7 +19,7 @@ const TemplateUploadSection: React.FC<TemplateUploadSectionProps> = ({
   selectedTemplate,
   onTemplateChange
 }) => {
-  const { uploadFileWithConversion } = useFiles();
+  const { uploadFileWithConversion } = useFileUpload();
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

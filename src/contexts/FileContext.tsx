@@ -6,7 +6,7 @@ import { Document, Packer, Paragraph, TextRun } from 'docx';
 
 interface FileContextType {
   systemFiles: SystemFile[];
-  setSystemFiles: (files: SystemFile[]) => void;
+  setSystemFiles: React.Dispatch<React.SetStateAction<SystemFile[]>>;
   downloadFile: (fileId: number) => void;
   generateDocxFromTemplate: (templateId: number, data: Record<string, string>) => Promise<Blob | null>;
 }
