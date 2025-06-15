@@ -37,6 +37,11 @@ import { File, Folder, Upload, Plus, X, FileText, Download, CheckSquare } from "
 import { useFiles } from '@/contexts/FileContext';
 import { SystemFile, FileTag } from '@/types/program';
 import DeleteFileConfirmDialog from "@/components/files/DeleteFileConfirmDialog";
+import FolderSidebar from "@/components/files/FolderSidebar";
+import FileList from "@/components/files/FileList";
+import UploadDialog from "@/components/files/UploadDialog";
+import AddFolderDialog from "@/components/files/AddFolderDialog";
+import FolderSelectDialog from "@/components/files/FolderSelectDialog";
 
 // 模擬文件數據
 const mockFolders = [
@@ -158,6 +163,12 @@ const FileManagement: React.FC = () => {
   useEffect(() => {
     setSystemFiles(files as any);
   }, []);
+  
+  // Calculate file count for folders for sidebar rendering
+  const folderList = folders.map(folder => ({
+    ...folder,
+    fileCount: files.filter(file => file.folders.includes(folder.name)).length
+  }));
   
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -363,272 +374,56 @@ const FileManagement: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-lg">資料夾</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="space-y-1 p-2">
-                <Button 
-                  variant={selectedFolder === "全部" ? "default" : "ghost"}
-                  className="w-full justify-start"
-                  onClick={() => setSelectedFolder("全部")}
-                >
-                  <Folder className="mr-2 h-4 w-4" />
-                  全部檔案
-                </Button>
-                {folders.map(folder => (
-                  <Button
-                    key={folder.id}
-                    variant={selectedFolder === folder.name ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setSelectedFolder(folder.name)}
-                  >
-                    <Folder className="mr-2 h-4 w-4" />
-                    {folder.name}
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {files.filter(file => file.folders.includes(folder.name)).length}
-                    </span>
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="md:col-span-3">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">檔案列表</CardTitle>
-                <div className="relative w-64">
-                  <Input
-                    placeholder="搜尋檔案..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pr-8"
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <div className="px-6">
-                  <TabsList className="w-full justify-start border-b rounded-none">
-                    <TabsTrigger value="all">全部</TabsTrigger>
-                    <TabsTrigger value="docs">文件</TabsTrigger>
-                    <TabsTrigger value="images">圖片</TabsTrigger>
-                    <TabsTrigger value="others">其他</TabsTrigger>
-                  </TabsList>
-                </div>
-                
-                <TabsContent value="all" className="m-0">
-                  {filteredFiles.length > 0 ? (
-                    <div className="divide-y">
-                      {filteredFiles.map(file => (
-                        <div key={file.id} className="p-4 hover:bg-muted/50">
-                          <div className="flex items-center mb-2">
-                            <div className="mr-4">
-                              <File className={`h-8 w-8 ${fileTypeColors[file.originalType] || "text-gray-500"}`} />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium">{file.name}</p>
-                              <div className="flex flex-wrap text-xs text-muted-foreground mt-1">
-                                <span className="mr-3">大小: {formatFileSize(file.size)}</span>
-                                <span className="mr-3">上傳於: {file.uploaded}</span>
-                                <span className="mr-3">原始格式: {file.originalType}</span>
-                                <span 
-                                  className="cursor-pointer text-primary"
-                                  onClick={() => handleOpenFolderSelect(file)}
-                                >
-                                  資料夾: {file.folders.join(", ")}
-                                </span>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-500 hover:text-red-700"
-                              onClick={() => handleAskDeleteFile(file.id, file.name)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {file.availableFormats.map(format => (
-                              <Button 
-                                key={format} 
-                                variant="outline" 
-                                size="sm"
-                                className="flex items-center"
-                                onClick={() => downloadFile(file.name, format)}
-                              >
-                                <Download className="mr-1 h-4 w-4" />
-                                <span>下載 {format.toUpperCase()}</span>
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12">
-                      <File className="h-16 w-16 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium">沒有找到檔案</h3>
-                      <p className="text-sm text-muted-foreground">
-                        上傳新檔案或嘗試其他搜索條件
-                      </p>
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="docs" className="m-0 py-4 px-6">
-                  <div className="text-center p-8">
-                    <p>文件分類檢視</p>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="images" className="m-0 py-4 px-6">
-                  <div className="text-center p-8">
-                    <p>圖片分類檢視</p>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="others" className="m-0 py-4 px-6">
-                  <div className="text-center p-8">
-                    <p>其他檔案分類檢視</p>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+          {/* Sidebar */}
+          <FolderSidebar
+            folders={folderList}
+            selectedFolder={selectedFolder}
+            setSelectedFolder={setSelectedFolder}
+          />
+          {/* File List */}
+          <FileList
+            files={files}
+            filteredFiles={filteredFiles}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            handleAskDeleteFile={handleAskDeleteFile}
+            handleOpenFolderSelect={handleOpenFolderSelect}
+            downloadFile={downloadFile}
+            folders={folders}
+          />
         </div>
         
-        <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>上傳檔案</DialogTitle>
-              <DialogDescription>
-                選擇要上傳的檔案並指定資料夾，系統將自動轉換支援的格式
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="folder-select" className="text-sm font-medium">
-                  選擇資料夾
-                </label>
-                <select
-                  id="folder-select"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={selectedFolder}
-                  onChange={(e) => setSelectedFolder(e.target.value)}
-                >
-                  <option value="未分類">未分類</option>
-                  {folders.map(folder => (
-                    <option key={folder.id} value={folder.name}>{folder.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="file-upload" className="text-sm font-medium">
-                  選擇檔案
-                </label>
-                <Input 
-                  id="file-upload" 
-                  type="file" 
-                  onChange={handleFileChange} 
-                />
-              </div>
-              
-              {selectedFile && (
-                <div className="text-sm p-3 bg-muted rounded-md">
-                  <p className="mb-1">已選擇: {selectedFile.name} ({formatFileSize(selectedFile.size)})</p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedFile.name.split('.').pop() in fileConversions ? 
-                      `此檔案格式將自動轉換為相容的其他格式 (${fileConversions[selectedFile.name.split('.').pop() || ""].join(', ')})` : 
-                      '此檔案格式不支援自動轉換'
-                    }
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>取消</Button>
-              <Button onClick={handleFileUpload} disabled={!selectedFile}>
-                上傳
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        <Dialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>新增資料夾</DialogTitle>
-              <DialogDescription>
-                建立新資料夾以組織您的檔案
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-2">
-              <label htmlFor="folder-name" className="text-sm font-medium">
-                資料夾名稱
-              </label>
-              <Input 
-                id="folder-name" 
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder="輸入資料夾名稱"
-              />
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setFolderDialogOpen(false)}>取消</Button>
-              <Button onClick={handleAddFolder}>建立</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        <Dialog open={folderSelectDialogOpen} onOpenChange={setFolderSelectDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>選擇檔案資料夾</DialogTitle>
-              <DialogDescription>
-                檔案可以同時存在於多個資料夾中
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-2">
-              <p className="text-sm font-medium">檔案: {fileInProcess?.name}</p>
-              
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {folders.map(folder => (
-                  <div key={folder.id} className="flex items-center space-x-2">
-                    <Button
-                      variant={selectedFolders[folder.name] ? "default" : "outline"}
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => toggleFolderSelection(folder.name)}
-                    >
-                      {selectedFolders[folder.name] && <CheckSquare className="mr-2 h-4 w-4" />}
-                      {!selectedFolders[folder.name] && <Folder className="mr-2 h-4 w-4" />}
-                      {folder.name}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setFolderSelectDialogOpen(false)}>取消</Button>
-              <Button onClick={saveFileFolders}>儲存</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        {/* 刪除確認對話框 */}
+        {/* Dialogs */}
+        <UploadDialog
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          folders={folders}
+          selectedFolder={selectedFolder}
+          setSelectedFolder={setSelectedFolder}
+          selectedFile={selectedFile}
+          setSelectedFile={setSelectedFile}
+          handleFileChange={handleFileChange}
+          handleFileUpload={handleFileUpload}
+          fileConversions={fileConversions}
+        />
+        <AddFolderDialog
+          open={folderDialogOpen}
+          onOpenChange={setFolderDialogOpen}
+          newFolderName={newFolderName}
+          setNewFolderName={setNewFolderName}
+          handleAddFolder={handleAddFolder}
+        />
+        <FolderSelectDialog
+          open={folderSelectDialogOpen}
+          onOpenChange={setFolderSelectDialogOpen}
+          folders={folders}
+          fileInProcess={fileInProcess}
+          selectedFolders={selectedFolders}
+          toggleFolderSelection={toggleFolderSelection}
+          saveFileFolders={saveFileFolders}
+        />
         <DeleteFileConfirmDialog
           open={deleteDialogOpen}
           onOpenChange={(open) => {
