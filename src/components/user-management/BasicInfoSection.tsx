@@ -107,6 +107,50 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ unitForm }) => {
           )}
         />
       </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <FormField
+          control={unitForm.control}
+          name="contactPhone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>聯絡電話</FormLabel>
+              <FormControl>
+                <Input placeholder="輸入聯絡電話" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={unitForm.control}
+          name="postalCode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>郵遞區號</FormLabel>
+              <FormControl>
+                <Input placeholder="輸入郵遞區號" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={unitForm.control}
+          name="contactAddress"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>聯絡地址</FormLabel>
+              <FormControl>
+                <Input placeholder="輸入聯絡地址" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </div>
   );
 };

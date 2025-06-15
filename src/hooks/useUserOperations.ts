@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Unit, User } from "@/types/user-management";
 import { userFormSchema, UserFormValues } from "@/schemas/user-management-schemas";
+import { generateRandomPassword, sendPasswordEmail } from "@/utils/passwordUtils";
 
 export const useUserOperations = (
   units: Unit[],
@@ -51,24 +52,39 @@ export const useUserOperations = (
     setUserDialogOpen(true);
   };
 
-  const onUserSubmit = (data: UserFormValues, editingUser: User | null) => {
+  const onUserSubmit = async (data: UserFormValues, editingUser: User | null) => {
     if (editingUser) {
       setUsers(users.map(user => 
         user.id === editingUser.id ? { ...user, ...data } : user
       ));
       toast.success("成功更新使用者資料");
     } else {
-      const newUser: User = {
-        id: Date.now(),
-        name: data.name,
-        email: data.email,
-        role: data.role,
-        unitId: data.unitId,
-        status: data.status,
-        lastLogin: "尚未登入"
-      };
-      setUsers([...users, newUser]);
-      toast.success("成功新增使用者");
+      try {
+        // 生成隨機密碼
+        const randomPassword = generateRandomPassword();
+        
+        // 取得單位名稱
+        const unitName = getUnitName(data.unitId);
+        
+        // 發送密碼通知郵件
+        await sendPasswordEmail(data.email, data.name, randomPassword, unitName);
+        
+        const newUser: User = {
+          id: Date.now(),
+          name: data.name,
+          email: data.email,
+          role: data.role,
+          unitId: data.unitId,
+          status: data.status,
+          lastLogin: "尚未登入"
+        };
+        
+        setUsers([...users, newUser]);
+        toast.success(`成功新增使用者，初始密碼已發送至 ${data.email}`);
+      } catch (error) {
+        toast.error("郵件發送失敗，請檢查郵件設定");
+        console.error("Email sending failed:", error);
+      }
     }
     setUserDialogOpen(false);
   };

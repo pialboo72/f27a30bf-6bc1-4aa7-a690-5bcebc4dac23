@@ -15,6 +15,9 @@ export interface Unit {
   registrationNumber: string;
   representative: string;
   contact: string;
+  contactPhone: string;
+  contactAddress: string;
+  postalCode: string;
   taxId: string;
   bankName: string;
   bankAccount: string;
