@@ -1,4 +1,3 @@
-
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { FileText, Trash, Folder } from "lucide-react";
@@ -29,7 +28,6 @@ function groupByFolder(templates: SystemFile[]) {
         folderMap[folder].push(template);
       });
     } else {
-      // 無 folders 屬性的歸類到未分類
       if (!folderMap[UNCATEGORIZED_KEY]) folderMap[UNCATEGORIZED_KEY] = [];
       folderMap[UNCATEGORIZED_KEY].push(template);
     }
@@ -61,7 +59,12 @@ const TemplateTabs = ({
 
   // 分組
   const folderMap = groupByFolder(templates);
-  const folderOrder = Object.keys(folderMap);
+  // folderOrder 修正排序（預設未分類在最後）
+  const folderOrder = Object.keys(folderMap).sort((a, b) => {
+    if (a === "未分類") return 1;
+    if (b === "未分類") return -1;
+    return a.localeCompare(b, 'zh-Hant');
+  });
 
   return (
     <div>
@@ -99,7 +102,7 @@ const TemplateTabs = ({
                           className={`border rounded-lg p-4 transition-colors cursor-pointer hover:border-primary ${
                             selectedTemplate?.id === template.id ? 'border-primary bg-primary/5' : ''
                           }`}
-                          onClick={() => handleSelectTemplate(template)}
+                          onClick={() => setSelectedTemplate(template)}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -111,6 +114,7 @@ const TemplateTabs = ({
                               size="icon"
                               onClick={e => {
                                 e.stopPropagation();
+                                if (selectedTemplate?.id === template.id) setSelectedTemplate(null);
                                 handleDeleteTemplate(template.id);
                               }}
                             >
