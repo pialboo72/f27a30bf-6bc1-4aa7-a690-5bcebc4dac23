@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { SystemFile } from '@/types/program';
 import { toast } from 'sonner';
@@ -10,6 +9,7 @@ interface FileContextType {
   downloadFile: (fileId: number) => void;
   generateDocxFromTemplate: (templateId: number, data: Record<string, string>) => Promise<Blob | null>;
   deleteSystemFile: (fileId: number) => void;
+  addSystemFile: (newFile: SystemFile) => void;
 }
 
 const FileContext = createContext<FileContextType | undefined>(undefined);
@@ -146,13 +146,24 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
     toast.success("模板已刪除");
   };
 
+  // 新增：提供 addSystemFile 方法
+  const addSystemFile = (newFile: SystemFile) => {
+    setSystemFiles((prev) => {
+      // 防止重複加入相同 id
+      if (prev.some(f => f.id === newFile.id)) return prev;
+      return [...prev, newFile];
+    });
+    toast.success("模板已加入文件庫");
+  };
+
   return (
     <FileContext.Provider value={{
       systemFiles,
       setSystemFiles,
       downloadFile,
       generateDocxFromTemplate,
-      deleteSystemFile
+      deleteSystemFile,
+      addSystemFile // 新增
     }}>
       {children}
     </FileContext.Provider>
@@ -166,6 +177,3 @@ export const useFiles = () => {
   }
   return context;
 };
-
-// ... 其餘內容維持不變
-
