@@ -38,7 +38,7 @@ import { useFiles } from '@/contexts/FileContext';
 import { SystemFile, FileTag } from '@/types/program';
 import DeleteFileConfirmDialog from "@/components/files/DeleteFileConfirmDialog";
 import FolderSidebar from "@/components/files/FolderSidebar";
-import FileList from "@/components/files/FileList";
+import FileList, { FileForList } from "@/components/files/FileList";
 import UploadDialog from "@/components/files/UploadDialog";
 import AddFolderDialog from "@/components/files/AddFolderDialog";
 import FolderSelectDialog from "@/components/files/FolderSelectDialog";
@@ -168,6 +168,18 @@ const FileManagement: React.FC = () => {
   const folderList = folders.map(folder => ({
     ...folder,
     fileCount: files.filter(file => file.folders.includes(folder.name)).length
+  }));
+  
+  // Ensure that each file type always has uploadDate (not optional).
+  // This fixes the type issue when passing to FileList.
+  const filesWithUploadDate: FileWithRequiredUploadDate[] = files.map(f => ({
+    ...f,
+    uploadDate: f.uploadDate || f.uploaded || "", // fallback if needed
+  }));
+  
+  const filteredFilesWithUploadDate: FileWithRequiredUploadDate[] = filteredFiles.map(f => ({
+    ...f,
+    uploadDate: f.uploadDate || f.uploaded || "",
   }));
   
   const filteredFiles = files.filter(file => {
@@ -382,8 +394,8 @@ const FileManagement: React.FC = () => {
           />
           {/* File List */}
           <FileList
-            files={files}
-            filteredFiles={filteredFiles}
+            files={filesWithUploadDate}
+            filteredFiles={filteredFilesWithUploadDate}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             searchTerm={searchTerm}
