@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { SystemFile } from '@/types/program';
 import { toast } from 'sonner';
@@ -13,8 +14,58 @@ interface FileContextType {
 
 const FileContext = createContext<FileContextType | undefined>(undefined);
 
+// ====== 預設三組範例模板（供參考）======
+const nowStr = new Date().toISOString();
+const EXAMPLE_FILES: SystemFile[] = [
+  {
+    id: 1001,
+    name: "單位申請書範例.docx",
+    path: "", // 實際應用會在 upload 時加 URL，可留空
+    size: 12345,
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    uploadDate: nowStr,
+    folders: ["已上傳"],
+    tags: [
+      { id: 1, name: "{{單位名稱}}" },
+      { id: 2, name: "{{申請日期}}" },
+    ],
+    category: "unit"
+  },
+  {
+    id: 1002,
+    name: "共通項目範例.docx",
+    path: "",
+    size: 23456,
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    uploadDate: nowStr,
+    folders: ["已上傳"],
+    tags: [
+      { id: 3, name: "{{負責人}}" },
+      { id: 4, name: "{{聯絡電話}}" },
+    ],
+    category: "common"
+  },
+  {
+    id: 1003,
+    name: "個別補助案範本.docx",
+    path: "",
+    size: 34567,
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    uploadDate: nowStr,
+    folders: ["已上傳"],
+    tags: [
+      { id: 5, name: "{{申請單位}}" },
+      { id: 6, name: "{{案號}}" },
+      { id: 7, name: "{{專案名稱}}" },
+    ],
+    category: "program"
+  }
+];
+// =======================================
+
 export const FileProvider = ({ children }: { children: ReactNode }) => {
-  const [systemFiles, setSystemFiles] = useState<SystemFile[]>([]);
+  // 在初始狀態加入範例模板
+  const [systemFiles, setSystemFiles] = useState<SystemFile[]>(EXAMPLE_FILES);
 
   const downloadFile = (fileId: number) => {
     const file = systemFiles.find(f => f.id === fileId);
@@ -115,3 +166,6 @@ export const useFiles = () => {
   }
   return context;
 };
+
+// ... 其餘內容維持不變
+
