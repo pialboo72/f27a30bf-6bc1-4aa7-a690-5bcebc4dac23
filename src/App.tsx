@@ -24,6 +24,7 @@ import SubsidyManagement from "@/pages/SubsidyManagement";
 import SubsidyCreate from "@/pages/SubsidyCreate";
 import SubsidyEdit from "@/pages/SubsidyEdit";
 import Landing from "@/pages/Landing";
+import Register from "@/pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ function App() {
               <Route path="/users" element={<UserManagement />} />
               <Route path="/logs" element={<SystemLogs />} />
               <Route path="*" element={<NotFound />} />
+              <Route path="/register" element={<Register />} />
             </Routes>
           </div>
           <Toaster />
