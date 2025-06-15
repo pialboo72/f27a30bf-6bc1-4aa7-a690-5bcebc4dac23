@@ -1,11 +1,11 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FileText, Trash } from "lucide-react";
+import { FileText, Trash, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { SystemFile } from "@/types/program";
-import { useFiles } from "@/contexts/FileContext"; // (新增) 用於呼叫 delete
+import { useFiles } from "@/contexts/FileContext";
 
 interface TemplateTabsProps {
   tab: string;
@@ -14,7 +14,27 @@ interface TemplateTabsProps {
   templates: SystemFile[];
   selectedTemplate: SystemFile | null;
   setSelectedTemplate: (t: SystemFile | null) => void;
-  children?: React.ReactNode; // uploader
+  children?: React.ReactNode;
+}
+
+// Helper to group templates by folder
+function groupByFolder(templates: SystemFile[]) {
+  const folderMap: Record<string, SystemFile[]> = {};
+  const UNCATEGORIZED_KEY = "未分類";
+
+  templates.forEach((template) => {
+    if (template.folders && template.folders.length > 0) {
+      template.folders.forEach(folder => {
+        if (!folderMap[folder]) folderMap[folder] = [];
+        folderMap[folder].push(template);
+      });
+    } else {
+      // 無 folders 屬性的歸類到未分類
+      if (!folderMap[UNCATEGORIZED_KEY]) folderMap[UNCATEGORIZED_KEY] = [];
+      folderMap[UNCATEGORIZED_KEY].push(template);
+    }
+  });
+  return folderMap;
 }
 
 const TemplateTabs = ({
@@ -33,12 +53,15 @@ const TemplateTabs = ({
   };
 
   const handleDeleteTemplate = (templateId: number) => {
-    // 若目前選中的被刪除，將其取消選取
     if (selectedTemplate?.id === templateId) {
       setSelectedTemplate(null);
     }
     deleteSystemFile(templateId);
   };
+
+  // 分組
+  const folderMap = groupByFolder(templates);
+  const folderOrder = Object.keys(folderMap);
 
   return (
     <div>
@@ -53,7 +76,6 @@ const TemplateTabs = ({
           </TabsList>
         </Tabs>
       </div>
-      {/* 將卡片寬度撐滿外層，保持一致 */}
       <div className="space-y-6 w-full">
         {children}
         {templates.length > 0 && (
@@ -62,43 +84,54 @@ const TemplateTabs = ({
               <CardTitle>已上傳的模板</CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Tree/hierachical folder display */}
               <div className="space-y-4">
-                {templates.map((template) => (
-                  <div
-                    key={template.id}
-                    className={`border rounded-lg p-4 transition-colors cursor-pointer hover:border-primary ${
-                      selectedTemplate?.id === template.id ? 'border-primary bg-primary/5' : ''
-                    }`}
-                    onClick={() => handleSelectTemplate(template)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" />
-                        <span className="font-medium">{template.name}</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteTemplate(template.id);
-                        }}
-                      >
-                        <Trash className="h-4 w-4 text-destructive" />
-                      </Button>
+                {folderOrder.map(folder => (
+                  <div key={folder}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Folder className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-base">{folder}</span>
                     </div>
-                    <div className="bg-muted p-3 rounded-md">
-                      <p className="text-sm font-medium mb-2">已識別的標記：</p>
-                      <div className="flex flex-wrap gap-2">
-                        {template.tags.map((tag) => (
-                          <span
-                            key={tag.id}
-                            className="bg-primary/10 text-primary px-2 py-1 rounded text-sm"
-                          >
-                            {tag.name}
-                          </span>
-                        ))}
-                      </div>
+                    <div className="space-y-4 pl-6">
+                      {folderMap[folder].map((template) => (
+                        <div
+                          key={template.id}
+                          className={`border rounded-lg p-4 transition-colors cursor-pointer hover:border-primary ${
+                            selectedTemplate?.id === template.id ? 'border-primary bg-primary/5' : ''
+                          }`}
+                          onClick={() => handleSelectTemplate(template)}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-5 w-5 text-primary" />
+                              <span className="font-medium">{template.name}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleDeleteTemplate(template.id);
+                              }}
+                            >
+                              <Trash className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                          <div className="bg-muted p-3 rounded-md">
+                            <p className="text-sm font-medium mb-2">已識別的標記：</p>
+                            <div className="flex flex-wrap gap-2">
+                              {template.tags.map((tag) => (
+                                <span
+                                  key={tag.id}
+                                  className="bg-primary/10 text-primary px-2 py-1 rounded text-sm"
+                                >
+                                  {tag.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -107,7 +140,6 @@ const TemplateTabs = ({
           </Card>
         )}
       </div>
-      {/* 右側詳細資訊仍置於原處 */}
       <div className="mt-6">
         {selectedTemplate && (
           <Card>
@@ -115,7 +147,6 @@ const TemplateTabs = ({
               <CardTitle>生成文件</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* 這邊可插入 TemplateForm */}
               {/* <TemplateForm template={selectedTemplate} /> */}
             </CardContent>
           </Card>
@@ -126,4 +157,3 @@ const TemplateTabs = ({
 };
 
 export default TemplateTabs;
-
