@@ -8,8 +8,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
 import { UnitFormValues } from "@/schemas/user-management-schemas";
+import { ExternalLink } from "lucide-react";
 
 interface BasicInfoSectionProps {
   unitForm: UseFormReturn<UnitFormValues>;
@@ -128,7 +130,18 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ unitForm }) => {
           name="postalCode"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>郵遞區號</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                郵遞區號
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-1 text-blue-600 hover:text-blue-800"
+                  onClick={() => window.open('https://www.post.gov.tw/post/internet/SearchZone/index.jsp?ID=130107', '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              </FormLabel>
               <FormControl>
                 <Input placeholder="6碼郵遞區號" maxLength={6} {...field} />
               </FormControl>
