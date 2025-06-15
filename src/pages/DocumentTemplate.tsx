@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,7 @@ const DocumentTemplate = () => {
     }
 
     try {
-      // 模擬文件類型
+      // 傳入 category
       const uploadedFile = await uploadFileWithConversion(file, tab);
       if (uploadedFile) {
         toast.success("模板上傳成功");
@@ -60,10 +59,10 @@ const DocumentTemplate = () => {
     setSelectedTemplate(template);
   };
 
-  // 假設有 category 屬性用來分群
+  // 有 category 屬性用來分群
   const templates = systemFiles.filter(file => {
     const ext = file.name.split('.').pop()?.toLowerCase();
-    const matchCategory = file.category ? file.category === tab : true; // 預設所有
+    const matchCategory = file.category ? file.category === tab : true;
     return (
       ext && acceptedFormats.some(format => format.includes(ext)) && matchCategory
     );
@@ -214,4 +213,3 @@ const DocumentTemplate = () => {
 };
 
 export default DocumentTemplate;
-

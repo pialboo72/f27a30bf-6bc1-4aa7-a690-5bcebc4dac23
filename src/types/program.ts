@@ -1,4 +1,3 @@
-
 export interface FileTag {
   id: number;
   name: string;
@@ -13,6 +12,7 @@ export interface SystemFile {
   uploadDate?: string;
   tags: FileTag[];
   folders?: string[];
+  category?: string; // 新增 category 屬性
 }
 
 export interface Program {

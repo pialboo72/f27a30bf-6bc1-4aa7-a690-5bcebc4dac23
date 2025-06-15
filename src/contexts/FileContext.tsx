@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { SystemFile, FileTag } from '@/types/program';
 import { toast } from 'sonner';
@@ -10,7 +9,7 @@ interface FileContextType {
   setSystemFiles: (files: SystemFile[]) => void;
   downloadFile: (fileId: number) => void;
   convertFile: (file: File, targetFormat: string) => Promise<File | null>;
-  uploadFileWithConversion: (file: File, targetFormat?: string) => Promise<SystemFile | null>;
+  uploadFileWithConversion: (file: File, targetFormat?: string, category?: string) => Promise<SystemFile | null>;
   generateDocxFromTemplate: (templateId: number, data: Record<string, string>) => Promise<Blob | null>;
 }
 
@@ -83,7 +82,7 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const uploadFileWithConversion = async (file: File, targetFormat?: string): Promise<SystemFile | null> => {
+  const uploadFileWithConversion = async (file: File, targetFormat?: string, category?: string): Promise<SystemFile | null> => {
     try {
       let fileToUpload = file;
       
@@ -116,7 +115,8 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
         type: fileToUpload.type,
         uploadDate: new Date().toISOString(),
         folders: ['已上傳'],
-        tags: fileTags
+        tags: fileTags,
+        category: category // 設定分群
       };
       
       setSystemFiles(prevFiles => [...prevFiles, newFile]);
