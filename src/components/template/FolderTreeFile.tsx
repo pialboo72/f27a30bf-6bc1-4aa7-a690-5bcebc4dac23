@@ -35,12 +35,15 @@ const FolderTreeFile: React.FC<FolderTreeFileProps> = ({
     e.dataTransfer.setData("text/plain", String(fileId));
   };
 
+  // 標記正被拖曳的檔案外觀
+  const isDragging = dragFileId === file.id;
+
   return (
     <>
       <div
         className={`border rounded p-2 mt-1 flex items-center justify-between cursor-pointer ml-8 group
           ${selectedFile?.id === file.id ? "border-primary bg-primary/10" : "border-gray-200 bg-white"}
-          ${dragFileId === file.id ? "opacity-60 border-dashed border-2 border-primary" : ""}
+          ${isDragging ? "opacity-60 border-dashed border-2 border-primary" : ""}
         `}
         onClick={() => onSelectFile(file)}
         draggable

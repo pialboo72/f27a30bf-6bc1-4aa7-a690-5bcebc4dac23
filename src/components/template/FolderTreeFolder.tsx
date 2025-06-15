@@ -17,6 +17,10 @@ interface FolderTreeFolderProps {
   expanded: Record<string, boolean>;
   setExpanded: (exp: Record<string, boolean>) => void;
   parentId?: string | null;
+
+  // 新增拖曳控制來自 root
+  dragFileId: number | null;
+  setDragFileId: (id: number | null) => void;
 }
 
 const FolderTreeFolder: React.FC<FolderTreeFolderProps> = ({
@@ -30,10 +34,11 @@ const FolderTreeFolder: React.FC<FolderTreeFolderProps> = ({
   expanded,
   setExpanded,
   parentId,
+  dragFileId,
+  setDragFileId,
 }) => {
   const [creatingFolderId, setCreatingFolderId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
-  const [dragFileId, setDragFileId] = useState<number | null>(null);
 
   // 處理「檔案拖曳」事件
   const handleDragOver = (e: React.DragEvent) => {
@@ -43,18 +48,24 @@ const FolderTreeFolder: React.FC<FolderTreeFolderProps> = ({
   const handleDrop = (e: React.DragEvent, folderId: string) => {
     e.preventDefault();
     const fileId = Number(e.dataTransfer.getData("text/plain"));
-    if (fileId && folderId) {
+    // 只允許移動到不同目前所在資料夾
+    const file = files.find(f => f.id === fileId);
+    if (fileId && folderId && file && file.folders?.[0] !== folderId) {
       onMoveFile(fileId, folderId);
     }
     setDragFileId(null);
   };
 
+  // 強調目標資料夾外觀
+  const isDropTarget = dragFileId != null && expanded[folder.id];
+
   return (
     <div
       style={{ marginLeft: parentId ? 20 : 0 }}
-      className="mb-1"
+      className={`mb-1 ${isDropTarget ? "bg-primary/10" : ""}`}
       onDragOver={handleDragOver}
       onDrop={e => handleDrop(e, folder.id)}
+      // highlight 目標 folder
     >
       <div className="flex items-center group gap-1">
         <Button
@@ -125,6 +136,8 @@ const FolderTreeFolder: React.FC<FolderTreeFolderProps> = ({
               expanded={expanded}
               setExpanded={setExpanded}
               parentId={folder.id}
+              dragFileId={dragFileId}
+              setDragFileId={setDragFileId}
             />
           ))}
           {/* 檔案列表 */}
