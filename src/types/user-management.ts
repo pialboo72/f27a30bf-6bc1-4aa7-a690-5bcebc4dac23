@@ -1,4 +1,13 @@
+
 // Type definitions for user management
+export interface UnitDocument {
+  id: string;
+  name: string;
+  type: 'establishment' | 'bankbook' | 'certificate';
+  url: string;
+  uploadedAt: string;
+}
+
 export interface Unit {
   id: number;
   name: string;
@@ -18,6 +27,7 @@ export interface Unit {
   accountantTitle: string;
   cashierTitle: string;
   supervisorTitle: string;
+  documents?: UnitDocument[];
 }
 
 export interface User {

@@ -17,6 +17,7 @@ import BasicInfoSection from "./BasicInfoSection";
 import BankInfoSection from "./BankInfoSection";
 import PositionTitlesSection from "./PositionTitlesSection";
 import PersonnelNamesSection from "./PersonnelNamesSection";
+import DocumentUploadSection from "./DocumentUploadSection";
 
 interface UnitFormDialogProps {
   unitDialogOpen: boolean;
@@ -35,7 +36,7 @@ const UnitFormDialog: React.FC<UnitFormDialogProps> = ({
 }) => {
   return (
     <Dialog open={unitDialogOpen} onOpenChange={setUnitDialogOpen}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingUnit ? "編輯單位" : "新增單位"}</DialogTitle>
           <DialogDescription>
@@ -49,6 +50,7 @@ const UnitFormDialog: React.FC<UnitFormDialogProps> = ({
             <BankInfoSection unitForm={unitForm} />
             <PositionTitlesSection unitForm={unitForm} />
             <PersonnelNamesSection unitForm={unitForm} />
+            <DocumentUploadSection unitForm={unitForm} />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setUnitDialogOpen(false)}>

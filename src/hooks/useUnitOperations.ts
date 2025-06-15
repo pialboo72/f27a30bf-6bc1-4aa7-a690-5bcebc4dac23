@@ -36,25 +36,48 @@ export const useUnitOperations = (
       accountantTitle: "會計",
       cashierTitle: "出納",
       supervisorTitle: "負責人",
+      documents: [],
     }
   });
 
   const handleAddUnit = () => {
     setEditingUnit(null);
-    unitForm.reset();
+    unitForm.reset({
+      name: "",
+      address: "",
+      registrationNumber: "",
+      representative: "",
+      contact: "",
+      taxId: "",
+      bankName: "",
+      bankAccount: "",
+      accountName: "",
+      manager: "",
+      accountant: "",
+      cashier: "",
+      supervisor: "",
+      managerTitle: "承辦人",
+      accountantTitle: "會計",
+      cashierTitle: "出納",
+      supervisorTitle: "負責人",
+      documents: [],
+    });
     setUnitDialogOpen(true);
   };
 
   const handleEditUnit = (unit: Unit) => {
     setEditingUnit(unit);
-    unitForm.reset(unit);
+    unitForm.reset({
+      ...unit,
+      documents: unit.documents || [],
+    });
     setUnitDialogOpen(true);
   };
 
   const onUnitSubmit = (data: UnitFormValues, editingUnit: Unit | null) => {
     if (editingUnit) {
       setUnits(units.map(unit => 
-        unit.id === editingUnit.id ? { ...unit, ...data } : unit
+        unit.id === editingUnit.id ? { ...unit, ...data, documents: data.documents || [] } : unit
       ));
       toast.success("成功更新單位資料");
     } else {
@@ -77,6 +100,7 @@ export const useUnitOperations = (
         accountantTitle: data.accountantTitle,
         cashierTitle: data.cashierTitle,
         supervisorTitle: data.supervisorTitle,
+        documents: data.documents || [],
       };
       setUnits([...units, newUnit]);
       toast.success("成功新增單位");
