@@ -1,4 +1,3 @@
-
 import { Unit, User } from "@/types/user-management";
 
 // Mock data for units and users
@@ -16,7 +15,8 @@ export const mockUnits: Unit[] = [
     accountName: "系統管理部",
     manager: "技術經理",
     accountant: "系統會計",
-    cashier: "系統出納"
+    cashier: "系統出納",
+    supervisor: "系統負責人"
   },
   {
     id: 2,
@@ -31,7 +31,8 @@ export const mockUnits: Unit[] = [
     accountName: "台北市文化基金會",
     manager: "林經理",
     accountant: "陳會計",
-    cashier: "李出納"
+    cashier: "李出納",
+    supervisor: "主任"
   },
   {
     id: 3,
@@ -46,7 +47,8 @@ export const mockUnits: Unit[] = [
     accountName: "高雄市藝術發展協會",
     manager: "陳經理",
     accountant: "林會計",
-    cashier: "王出納"
+    cashier: "王出納",
+    supervisor: "理事長"
   }
 ];
 

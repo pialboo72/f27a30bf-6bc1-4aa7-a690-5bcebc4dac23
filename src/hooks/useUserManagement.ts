@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +36,7 @@ export const useUserManagement = () => {
       manager: "",
       accountant: "",
       cashier: "",
+      supervisor: "", // 新增負責人欄位預設值
     }
   });
 
@@ -101,6 +101,7 @@ export const useUserManagement = () => {
         manager: data.manager || "",
         accountant: data.accountant || "",
         cashier: data.cashier || "",
+        supervisor: data.supervisor || "", // 新增負責人欄位
       };
       setUnits([...units, newUnit]);
       toast.success("成功新增單位");

@@ -15,6 +15,7 @@ export const unitFormSchema = z.object({
   manager: z.string().optional(),
   accountant: z.string().optional(),
   cashier: z.string().optional(),
+  supervisor: z.string().optional(), // 新增負責人欄位
 });
 
 export const userFormSchema = z.object({

@@ -14,6 +14,7 @@ export interface Unit {
   manager: string;
   accountant: string;
   cashier: string;
+  supervisor: string; // 新增負責人欄位
 }
 
 export interface User {

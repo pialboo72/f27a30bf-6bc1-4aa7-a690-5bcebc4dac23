@@ -1,4 +1,3 @@
-
 import React from "react";
 import * as z from "zod";
 import {
@@ -184,7 +183,21 @@ const UnitFormDialog: React.FC<UnitFormDialogProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
+              <FormField
+                control={unitForm.control}
+                name="supervisor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>負責人</FormLabel>
+                    <FormControl>
+                      <Input placeholder="輸入負責人姓名" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
               <FormField
                 control={unitForm.control}
                 name="manager"
