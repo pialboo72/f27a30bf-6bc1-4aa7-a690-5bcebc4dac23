@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -90,9 +91,18 @@ const adminNavItems: NavItem[] = [
   },
 ];
 
-const SidebarNav: React.FC = () => {
+type SidebarNavProps = {
+  collapsed: boolean;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+};
+
+const SidebarNav: React.FC<SidebarNavProps> = ({
+  collapsed,
+  onMouseEnter,
+  onMouseLeave,
+}) => {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(true);
 
   const isActive = (href: string) => {
     if (href === "/" && location.pathname === "/") return true;
@@ -103,10 +113,6 @@ const SidebarNav: React.FC = () => {
     return false;
   };
 
-  // 滑鼠進入時展開，離開時縮小（縮小時 collapsed 為 true）
-  const handleMouseEnter = () => setCollapsed(false);
-  const handleMouseLeave = () => setCollapsed(true);
-
   return (
     <div
       className={cn(
@@ -114,8 +120,8 @@ const SidebarNav: React.FC = () => {
         collapsed ? "w-24" : "w-72",
         "transition-all duration-300"
       )}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       style={{ minWidth: collapsed ? "6rem" : "18rem" }}
     >
       {/* Header / Logo */}
@@ -141,7 +147,6 @@ const SidebarNav: React.FC = () => {
             </span>
           )}
         </Link>
-        {/* 移除縮放按鈕 */}
       </div>
 
       {/* 功能列表 */}
