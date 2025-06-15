@@ -17,7 +17,7 @@ export const unitFormSchema = z.object({
   contact: z.string().optional(),
   contactPhone: z.string().optional(),
   contactAddress: z.string().optional(),
-  postalCode: z.string().optional(),
+  postalCode: z.string().max(6, "郵遞區號最多6碼").optional(),
   taxId: z.string().min(1, "統一編號為必填項目"),
   bankName: z.string().optional(),
   bankAccount: z.string().optional(),

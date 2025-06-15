@@ -108,7 +108,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ unitForm }) => {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <FormField
           control={unitForm.control}
           name="contactPhone"
@@ -130,7 +130,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ unitForm }) => {
             <FormItem>
               <FormLabel>郵遞區號</FormLabel>
               <FormControl>
-                <Input placeholder="輸入郵遞區號" {...field} />
+                <Input placeholder="6碼郵遞區號" maxLength={6} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -141,7 +141,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ unitForm }) => {
           control={unitForm.control}
           name="contactAddress"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="col-span-2">
               <FormLabel>聯絡地址</FormLabel>
               <FormControl>
                 <Input placeholder="輸入聯絡地址" {...field} />
