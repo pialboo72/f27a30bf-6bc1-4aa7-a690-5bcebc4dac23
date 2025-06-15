@@ -5,6 +5,7 @@ import { FileText, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { SystemFile } from "@/types/program";
+import { useFiles } from "@/contexts/FileContext"; // (新增) 用於呼叫 delete
 
 interface TemplateTabsProps {
   tab: string;
@@ -25,15 +26,18 @@ const TemplateTabs = ({
   setSelectedTemplate,
   children
 }: TemplateTabsProps) => {
+  const { deleteSystemFile } = useFiles();
+
   const handleSelectTemplate = (template: SystemFile) => {
     setSelectedTemplate(template);
   };
 
   const handleDeleteTemplate = (templateId: number) => {
+    // 若目前選中的被刪除，將其取消選取
     if (selectedTemplate?.id === templateId) {
       setSelectedTemplate(null);
     }
-    // TODO: implement actual delete logic
+    deleteSystemFile(templateId);
   };
 
   return (

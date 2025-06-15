@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { SystemFile } from '@/types/program';
 import { toast } from 'sonner';
@@ -9,6 +8,7 @@ interface FileContextType {
   setSystemFiles: React.Dispatch<React.SetStateAction<SystemFile[]>>;
   downloadFile: (fileId: number) => void;
   generateDocxFromTemplate: (templateId: number, data: Record<string, string>) => Promise<Blob | null>;
+  deleteSystemFile: (fileId: number) => void;
 }
 
 const FileContext = createContext<FileContextType | undefined>(undefined);
@@ -90,12 +90,18 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const deleteSystemFile = (fileId: number) => {
+    setSystemFiles((prev) => prev.filter(f => f.id !== fileId));
+    toast.success("模板已刪除");
+  };
+
   return (
     <FileContext.Provider value={{
       systemFiles,
       setSystemFiles,
       downloadFile,
-      generateDocxFromTemplate
+      generateDocxFromTemplate,
+      deleteSystemFile
     }}>
       {children}
     </FileContext.Provider>
