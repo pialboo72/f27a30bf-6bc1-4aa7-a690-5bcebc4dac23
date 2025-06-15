@@ -1,12 +1,5 @@
 
 import React, { useState } from "react";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -164,19 +157,6 @@ const DocumentUploadSection: React.FC<DocumentUploadSectionProps> = ({ unitForm 
         {renderUploadButton('establishment', '立案證書')}
         {renderUploadButton('bankbook', '存摺', true)}
         {renderUploadButton('certificate', '負責人當選證書')}
-        
-        <FormField
-          control={unitForm.control}
-          name="documents"
-          render={({ field }) => (
-            <FormItem className="hidden">
-              <FormControl>
-                <Input {...field} type="hidden" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </CardContent>
     </Card>
   );

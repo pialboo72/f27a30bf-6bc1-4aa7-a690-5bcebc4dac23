@@ -77,7 +77,17 @@ export const useUnitOperations = (
   const onUnitSubmit = (data: UnitFormValues, editingUnit: Unit | null) => {
     if (editingUnit) {
       setUnits(units.map(unit => 
-        unit.id === editingUnit.id ? { ...unit, ...data, documents: data.documents || [] } : unit
+        unit.id === editingUnit.id ? { 
+          ...unit, 
+          ...data, 
+          documents: (data.documents || []).map(doc => ({
+            id: doc.id,
+            name: doc.name,
+            type: doc.type,
+            url: doc.url,
+            uploadedAt: doc.uploadedAt,
+          }))
+        } : unit
       ));
       toast.success("成功更新單位資料");
     } else {
@@ -100,7 +110,13 @@ export const useUnitOperations = (
         accountantTitle: data.accountantTitle,
         cashierTitle: data.cashierTitle,
         supervisorTitle: data.supervisorTitle,
-        documents: data.documents || [],
+        documents: (data.documents || []).map(doc => ({
+          id: doc.id,
+          name: doc.name,
+          type: doc.type,
+          url: doc.url,
+          uploadedAt: doc.uploadedAt,
+        })),
       };
       setUnits([...units, newUnit]);
       toast.success("成功新增單位");
