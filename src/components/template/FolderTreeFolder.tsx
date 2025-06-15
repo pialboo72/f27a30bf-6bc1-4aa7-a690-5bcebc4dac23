@@ -17,8 +17,6 @@ interface FolderTreeFolderProps {
   expanded: Record<string, boolean>;
   setExpanded: (exp: Record<string, boolean>) => void;
   parentId?: string | null;
-
-  // 新增拖曳控制來自 root
   dragFileId: number | null;
   setDragFileId: (id: number | null) => void;
 }
@@ -140,8 +138,8 @@ const FolderTreeFolder: React.FC<FolderTreeFolderProps> = ({
               setDragFileId={setDragFileId}
             />
           ))}
-          {/* 檔案列表 */}
-          {files.filter(f => f.folders?.[0] === folder.id).map(file => (
+          {/* 檔案列表：可顯示同時屬於多資料夾 */}
+          {files.filter(f => Array.isArray(f.folders) && f.folders.includes(folder.id)).map(file => (
             <FolderTreeFile
               key={file.id}
               file={file}
