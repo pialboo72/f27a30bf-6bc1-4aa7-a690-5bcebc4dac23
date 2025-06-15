@@ -10,6 +10,7 @@ interface FileContextType {
   generateDocxFromTemplate: (templateId: number, data: Record<string, string>) => Promise<Blob | null>;
   deleteSystemFile: (fileId: number) => void;
   addSystemFile: (newFile: SystemFile) => void;
+  updateSystemFile: (fileId: number, newFile: SystemFile) => void;
 }
 
 const FileContext = createContext<FileContextType | undefined>(undefined);
@@ -146,14 +147,19 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
     toast.success("模板已刪除");
   };
 
-  // 新增：提供 addSystemFile 方法
   const addSystemFile = (newFile: SystemFile) => {
     setSystemFiles((prev) => {
-      // 防止重複加入相同 id
       if (prev.some(f => f.id === newFile.id)) return prev;
       return [...prev, newFile];
     });
     toast.success("模板已加入文件庫");
+  };
+
+  const updateSystemFile = (fileId: number, newFile: SystemFile) => {
+    setSystemFiles(prev =>
+      prev.map(f => (f.id === fileId ? { ...f, ...newFile } : f))
+    );
+    toast.success("模板已更新");
   };
 
   return (
@@ -163,7 +169,8 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
       downloadFile,
       generateDocxFromTemplate,
       deleteSystemFile,
-      addSystemFile // 新增
+      addSystemFile,
+      updateSystemFile
     }}>
       {children}
     </FileContext.Provider>
