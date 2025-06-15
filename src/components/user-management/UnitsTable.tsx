@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,15 +56,18 @@ const UnitsTable: React.FC<UnitsTableProps> = ({
                 <TableCell>{unit.representative}</TableCell>
                 <TableCell>{unit.taxId}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">
+                  <Badge 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-blue-50 hover:border-blue-300"
+                    onClick={() => handleViewUsers(unit.id)}
+                    title="點擊查看該單位用戶"
+                  >
+                    <Users className="h-3 w-3 mr-1" />
                     {getUserCountByUnit(unit.id)} 人
                   </Badge>
                 </TableCell>
                 <TableCell>{unit.bankName} {unit.bankAccount}</TableCell>
                 <TableCell className="text-right space-x-2">
-                  <Button variant="outline" size="sm" onClick={() => handleViewUsers(unit.id)} title="查看該單位用戶">
-                    <Users className="h-4 w-4" />
-                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleEditUnit(unit)}>
                     <Edit className="h-4 w-4" />
                   </Button>
