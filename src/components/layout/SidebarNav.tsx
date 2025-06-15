@@ -2,12 +2,12 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { 
-  FileCheck, 
-  FileText, 
-  Home, 
-  BarChart, 
-  Settings, 
+import {
+  FileCheck,
+  FileText,
+  Home,
+  BarChart,
+  Settings,
   Database,
   Tag,
   Info,
@@ -17,7 +17,6 @@ import {
   Receipt,
   // 保留已用的 icon
 } from "lucide-react";
-import { ZoomIn, ZoomOut } from "lucide-react";
 
 interface NavItem {
   title: string;
@@ -50,7 +49,7 @@ const mainNavItems: NavItem[] = [
     title: "附件與檔案",
     href: "/files",
     icon: Folder,
-  }
+  },
 ];
 
 const adminNavItems: NavItem[] = [
@@ -88,12 +87,12 @@ const adminNavItems: NavItem[] = [
     title: "系統設定",
     href: "/settings",
     icon: Settings,
-  }
+  },
 ];
 
 const SidebarNav: React.FC = () => {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   const isActive = (href: string) => {
     if (href === "/" && location.pathname === "/") return true;
@@ -104,7 +103,10 @@ const SidebarNav: React.FC = () => {
     return false;
   };
 
-  // 只要文字折疊都用 collapsed 控制
+  // 滑鼠進入時展開，離開時縮小（縮小時 collapsed 為 true）
+  const handleMouseEnter = () => setCollapsed(false);
+  const handleMouseLeave = () => setCollapsed(true);
+
   return (
     <div
       className={cn(
@@ -112,43 +114,43 @@ const SidebarNav: React.FC = () => {
         collapsed ? "w-24" : "w-72",
         "transition-all duration-300"
       )}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={{ minWidth: collapsed ? "6rem" : "18rem" }}
     >
-      {/* Header / Logo + Zoom 按鈕 */}
-      <div className={cn(
-        "flex items-center px-2 py-7 gap-2",
-        collapsed ? "justify-center" : "justify-between"
-      )}>
-        <Link to="/" className={cn(
-          "flex items-center transition-all duration-300",
-          collapsed ? "justify-center" : "space-x-3"
-        )}>
+      {/* Header / Logo */}
+      <div
+        className={cn(
+          "flex items-center px-2 py-7 gap-2",
+          collapsed ? "justify-center" : "justify-between"
+        )}
+      >
+        <Link
+          to="/"
+          className={cn(
+            "flex items-center transition-all duration-300",
+            collapsed ? "justify-center" : "space-x-3"
+          )}
+        >
           <div className="bg-brand-600 text-white rounded-lg p-2 shadow hover:scale-110 transition-transform duration-200">
             <FileText size={collapsed ? 32 : 36} />
           </div>
-          {!collapsed && 
+          {!collapsed && (
             <span className="font-extrabold text-2xl tracking-wide text-brand-800 drop-shadow">
               補助申請系統
             </span>
-          }
-        </Link>
-        {/* Zoom 按鈕，永遠顯示（縮小時置中顯示） */}
-        <button
-          aria-label={collapsed ? "展開側欄" : "收合側欄"}
-          className={cn(
-            "rounded-full p-2 bg-brand-100 text-brand-700 hover:bg-brand-200 shadow border transition-all duration-300 focus:outline-none",
-            collapsed ? "" : "ml-2"
           )}
-          onClick={() => setCollapsed(v => !v)}
-        >
-          {collapsed ? <ZoomIn size={26} /> : <ZoomOut size={26} />}
-        </button>
+        </Link>
+        {/* 移除縮放按鈕 */}
       </div>
 
       {/* 功能列表 */}
-      <div className={cn(
-        "flex-1 px-2 py-2",
-        collapsed ? "px-0 py-2" : "px-4 py-2"
-      )}>
+      <div
+        className={cn(
+          "flex-1 px-2 py-2",
+          collapsed ? "px-0 py-2" : "px-4 py-2"
+        )}
+      >
         {/* 主要功能 */}
         <div className="space-y-2">
           {!collapsed && (
@@ -185,14 +187,18 @@ const SidebarNav: React.FC = () => {
       </div>
 
       {/* 版本資訊 */}
-      <div className={cn(
-        "p-6 border-t border-border transition-all duration-300",
-        collapsed ? "flex justify-center p-3" : ""
-      )}>
-        <div className={cn(
-          "flex items-center gap-2 bg-blue-50 rounded-lg p-3 text-brand-800 shadow animate-fade-in",
-          collapsed && "justify-center p-3 bg-blue-100"
-        )}>
+      <div
+        className={cn(
+          "p-6 border-t border-border transition-all duration-300",
+          collapsed ? "flex justify-center p-3" : ""
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center gap-2 bg-blue-50 rounded-lg p-3 text-brand-800 shadow animate-fade-in",
+            collapsed && "justify-center p-3 bg-blue-100"
+          )}
+        >
           <Info className="h-5 w-5" />
           {!collapsed && (
             <span className="text-base font-bold">版本 1.0.0</span>
@@ -203,7 +209,7 @@ const SidebarNav: React.FC = () => {
   );
 };
 
-// SidebarNavItem 加入 Tooltip（縮小時顯示）並美化
+// SidebarNavItem 加入 Tooltip（縮小時顯示標題）並美化
 const SidebarNavItem: React.FC<{
   item: NavItem;
   active: boolean;
@@ -242,4 +248,3 @@ const SidebarNavItem: React.FC<{
 };
 
 export default SidebarNav;
-
