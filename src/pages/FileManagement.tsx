@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { File, Folder, Upload, Plus, X, FileText, Download, CheckSquare } from "lucide-react";
 import { useFiles } from '@/contexts/FileContext';
 import { SystemFile, FileTag } from '@/types/program';
+import DeleteFileConfirmDialog from "@/components/files/DeleteFileConfirmDialog";
 
 // 模擬文件數據
 const mockFolders = [
@@ -151,6 +152,8 @@ const FileManagement: React.FC = () => {
   const [selectedFolder, setSelectedFolder] = useState<string>("全部");
   const [fileInProcess, setFileInProcess] = useState<any | null>(null);
   const [selectedFolders, setSelectedFolders] = useState<{[key: string]: boolean}>({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetFile, setDeleteTargetFile] = useState<null | { id: number, name: string }>(null);
   
   useEffect(() => {
     setSystemFiles(files as any);
@@ -244,6 +247,22 @@ const FileManagement: React.FC = () => {
     } else {
       toast.error("資料夾名稱不能為空");
     }
+  };
+  
+  const handleAskDeleteFile = (id: number, name: string) => {
+    setDeleteTargetFile({ id, name });
+    setDeleteDialogOpen(true);
+  };
+  
+  const handleConfirmDeleteFile = () => {
+    if (deleteTargetFile) {
+      const updatedFiles = files.filter(file => file.id !== deleteTargetFile.id);
+      setFiles(updatedFiles);
+      setSystemFiles(updatedFiles);
+      toast.success("已刪除檔案");
+    }
+    setDeleteDialogOpen(false);
+    setDeleteTargetFile(null);
   };
   
   const handleDeleteFile = (id: number) => {
@@ -428,7 +447,7 @@ const FileManagement: React.FC = () => {
                               variant="ghost"
                               size="sm"
                               className="text-red-500 hover:text-red-700"
-                              onClick={() => handleDeleteFile(file.id)}
+                              onClick={() => handleAskDeleteFile(file.id, file.name)}
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -608,6 +627,17 @@ const FileManagement: React.FC = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        {/* 刪除確認對話框 */}
+        <DeleteFileConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={(open) => {
+            setDeleteDialogOpen(open);
+            if (!open) setDeleteTargetFile(null);
+          }}
+          onConfirm={handleConfirmDeleteFile}
+          fileName={deleteTargetFile?.name}
+        />
       </div>
     </MainLayout>
   );
