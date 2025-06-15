@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import GrantCloudLogo from "@/components/branding/GrantCloudLogo";
 
 // 頁面主色調 & 各區適用圖片
 const features = [
@@ -45,11 +44,11 @@ const Landing: React.FC = () => (
       {/* Logo & 標題 */}
       <div className="flex justify-center mb-6">
         <span className="bg-gradient-to-br from-brand-600 to-indigo-500 text-white rounded-full p-4 shadow-xl animate-scale-in">
-          <FileText size={48} />
+          <GrantCloudLogo size={64} className="drop-shadow" />
         </span>
       </div>
-      <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-br from-brand-700 via-brand-500 to-indigo-700 bg-clip-text text-transparent mb-3 leading-tight drop-shadow-lg select-none tracking-wider">
-        補助申請管理系統
+      <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-br from-brand-700 via-brand-500 to-indigo-700 bg-clip-text text-transparent mb-2 leading-tight drop-shadow-lg select-none tracking-wider">
+        補助雲管理系統 <span className="text-3xl font-bold ml-3 text-brand-600">GrantCloud</span>
       </h1>
       <p className="text-2xl text-gray-800 font-bold mb-8 drop-shadow-sm">
         一站式雲端管理平台，專為機關團體打造的數位補助全流程新標竿

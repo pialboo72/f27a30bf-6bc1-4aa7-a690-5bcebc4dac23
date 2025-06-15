@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  FileCheck,
   FileText,
+  FileCheck,
   Home,
   BarChart,
   Settings,
@@ -15,9 +14,9 @@ import {
   Users,
   Building,
   Receipt,
-  // 保留已用的 icon
 } from "lucide-react";
 import SidebarNavItem from "./SidebarNavItem";
+import GrantCloudLogo from "@/components/branding/GrantCloudLogo";
 
 interface NavItem {
   title: string;
@@ -138,12 +137,13 @@ const SidebarNav: React.FC<SidebarNavProps> = ({
             collapsed ? "justify-center" : "space-x-3"
           )}
         >
-          <div className="bg-brand-600 text-white rounded-lg p-2 shadow hover:scale-110 transition-transform duration-200">
-            <FileText size={collapsed ? 32 : 36} />
+          <div className="bg-brand-600 text-white rounded-lg p-2 shadow hover:scale-110 transition-transform duration-200 flex items-center justify-center">
+            <GrantCloudLogo size={collapsed ? 32 : 40} className="drop-shadow" />
           </div>
           {!collapsed && (
             <span className="font-extrabold text-2xl tracking-wide text-brand-800 drop-shadow">
-              補助申請系統
+              補助雲管理系統
+              <span className="text-lg font-bold ml-4 text-brand-600">GrantCloud</span>
             </span>
           )}
         </Link>
