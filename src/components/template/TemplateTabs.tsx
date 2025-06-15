@@ -1,10 +1,12 @@
+
+import React from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FileText, Trash, Folder } from "lucide-react";
+import { FileText, Trash, Folder as FolderIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React from "react";
 import { SystemFile } from "@/types/program";
 import { useFiles } from "@/contexts/FileContext";
+import FolderTree, { buildFolderTree } from "./FolderTree";
 
 interface TemplateTabsProps {
   tab: string;
@@ -14,25 +16,6 @@ interface TemplateTabsProps {
   selectedTemplate: SystemFile | null;
   setSelectedTemplate: (t: SystemFile | null) => void;
   children?: React.ReactNode;
-}
-
-// Helper to group templates by folder
-function groupByFolder(templates: SystemFile[]) {
-  const folderMap: Record<string, SystemFile[]> = {};
-  const UNCATEGORIZED_KEY = "未分類";
-
-  templates.forEach((template) => {
-    if (template.folders && template.folders.length > 0) {
-      template.folders.forEach(folder => {
-        if (!folderMap[folder]) folderMap[folder] = [];
-        folderMap[folder].push(template);
-      });
-    } else {
-      if (!folderMap[UNCATEGORIZED_KEY]) folderMap[UNCATEGORIZED_KEY] = [];
-      folderMap[UNCATEGORIZED_KEY].push(template);
-    }
-  });
-  return folderMap;
 }
 
 const TemplateTabs = ({
@@ -50,21 +33,23 @@ const TemplateTabs = ({
     setSelectedTemplate(template);
   };
 
-  const handleDeleteTemplate = (templateId: number) => {
-    if (selectedTemplate?.id === templateId) {
+  const handleDeleteTemplate = (template: SystemFile) => {
+    if (selectedTemplate?.id === template.id) {
       setSelectedTemplate(null);
     }
-    deleteSystemFile(templateId);
+    deleteSystemFile(template.id);
   };
 
-  // 分組
-  const folderMap = groupByFolder(templates);
-  // folderOrder 修正排序（預設未分類在最後）
-  const folderOrder = Object.keys(folderMap).sort((a, b) => {
-    if (a === "未分類") return 1;
-    if (b === "未分類") return -1;
-    return a.localeCompare(b, 'zh-Hant');
-  });
+  // 架構 folder tree
+  const folderTree = buildFolderTree(templates);
+
+  // 專門找出「未分類」的檔案
+  const uncategorizedFiles = templates.filter(
+    file =>
+      !file.folders ||
+      file.folders.length === 0 ||
+      file.folders.includes("未分類")
+  );
 
   return (
     <div>
@@ -87,22 +72,30 @@ const TemplateTabs = ({
               <CardTitle>已上傳的模板</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Tree/hierachical folder display */}
-              <div className="space-y-4">
-                {folderOrder.map(folder => (
-                  <div key={folder}>
+              <div>
+                {/* 階層式資料夾樹： */}
+                <FolderTree
+                  nodes={folderTree}
+                  selectedTemplate={selectedTemplate}
+                  onSelectTemplate={handleSelectTemplate}
+                  onDeleteTemplate={handleDeleteTemplate}
+                />
+
+                {/* 「未分類」置底 */}
+                {uncategorizedFiles.length > 0 && (
+                  <div className="mt-6">
                     <div className="flex items-center gap-2 mb-2">
-                      <Folder className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-base">{folder}</span>
+                      <FolderIcon className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-base">未分類</span>
                     </div>
-                    <div className="space-y-4 pl-6">
-                      {folderMap[folder].map((template) => (
+                    <div className="space-y-2 pl-6">
+                      {uncategorizedFiles.map((template) => (
                         <div
                           key={template.id}
-                          className={`border rounded-lg p-4 transition-colors cursor-pointer hover:border-primary ${
-                            selectedTemplate?.id === template.id ? 'border-primary bg-primary/5' : ''
+                          className={`border rounded-lg p-3 transition-colors cursor-pointer hover:border-primary ${
+                            selectedTemplate?.id === template.id ? 'border-primary bg-primary/5' : 'border-gray-200'
                           }`}
-                          onClick={() => setSelectedTemplate(template)}
+                          onClick={() => handleSelectTemplate(template)}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -114,8 +107,7 @@ const TemplateTabs = ({
                               size="icon"
                               onClick={e => {
                                 e.stopPropagation();
-                                if (selectedTemplate?.id === template.id) setSelectedTemplate(null);
-                                handleDeleteTemplate(template.id);
+                                handleDeleteTemplate(template);
                               }}
                             >
                               <Trash className="h-4 w-4 text-destructive" />
@@ -138,7 +130,7 @@ const TemplateTabs = ({
                       ))}
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
