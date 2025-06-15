@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,13 +10,22 @@ import { Upload, FileText, AlertCircle, Trash } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SystemFile } from "@/types/program";
 import TemplateForm from "@/components/template/TemplateForm";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; // 假設有 shadcn/ui Tabs
+
+const TABS = [
+  { key: "unit", label: "補助單位文件" },
+  { key: "common", label: "共通項目文件" },
+  { key: "program", label: "個別補助案文件" },
+];
 
 const DocumentTemplate = () => {
   const { uploadFileWithConversion, systemFiles } = useFiles();
   const [selectedTemplate, setSelectedTemplate] = useState<SystemFile | null>(null);
+  const [tab, setTab] = useState("unit");
 
   const acceptedFormats = [".docx", ".doc", ".odt", ".odf", ".xls", ".xlsx"];
 
+  // 控制各分類的上傳與 filter
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -27,7 +37,8 @@ const DocumentTemplate = () => {
     }
 
     try {
-      const uploadedFile = await uploadFileWithConversion(file);
+      // 模擬文件類型
+      const uploadedFile = await uploadFileWithConversion(file, tab);
       if (uploadedFile) {
         toast.success("模板上傳成功");
         setSelectedTemplate(uploadedFile);
@@ -42,8 +53,6 @@ const DocumentTemplate = () => {
     if (selectedTemplate?.id === templateId) {
       setSelectedTemplate(null);
     }
-    // Filter out the deleted template from systemFiles
-    // Note: In a real application, you would call an API to delete the template
     toast.success("模板已刪除");
   };
 
@@ -51,10 +60,13 @@ const DocumentTemplate = () => {
     setSelectedTemplate(template);
   };
 
-  // Filter templates based on accepted formats
+  // 假設有 category 屬性用來分群
   const templates = systemFiles.filter(file => {
     const ext = file.name.split('.').pop()?.toLowerCase();
-    return ext && acceptedFormats.some(format => format.includes(ext));
+    const matchCategory = file.category ? file.category === tab : true; // 預設所有
+    return (
+      ext && acceptedFormats.some(format => format.includes(ext)) && matchCategory
+    );
   });
 
   return (
@@ -63,20 +75,39 @@ const DocumentTemplate = () => {
         <div>
           <h1 className="text-3xl font-bold">文件模板管理</h1>
           <p className="text-muted-foreground mt-1">
-            上傳和管理可用於自動填充的文件模板
+            上傳和管理每種文件模板，支援以補助單位、共通項目或個別補助案類別區分
           </p>
+        </div>
+
+        {/* Tabs 控制：切換分類 */}
+        <div className="mb-6">
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList className="flex gap-2">
+              {TABS.map(({ key, label }) => (
+                <TabsTrigger key={key} value={key}>
+                  {label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
+            {/* 上傳新模板區塊 */}
             <Card>
               <CardHeader>
-                <CardTitle>上傳新模板</CardTitle>
+                <CardTitle>
+                  上傳新模板
+                  <span className="text-base ml-2 text-muted-foreground font-normal">
+                    ({TABS.find(t => t.key === tab)?.label})
+                  </span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <label 
-                    htmlFor="template-upload" 
+                  <label
+                    htmlFor="template-upload"
                     className="cursor-pointer block"
                   >
                     <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:border-primary transition-colors">
@@ -97,7 +128,6 @@ const DocumentTemplate = () => {
                     onChange={handleFileUpload}
                   />
                 </div>
-
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
@@ -121,8 +151,8 @@ const DocumentTemplate = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {templates.map((template) => (
-                      <div 
-                        key={template.id} 
+                      <div
+                        key={template.id}
                         className={`border rounded-lg p-4 transition-colors cursor-pointer hover:border-primary ${
                           selectedTemplate?.id === template.id ? 'border-primary bg-primary/5' : ''
                         }`}
@@ -184,3 +214,4 @@ const DocumentTemplate = () => {
 };
 
 export default DocumentTemplate;
+
