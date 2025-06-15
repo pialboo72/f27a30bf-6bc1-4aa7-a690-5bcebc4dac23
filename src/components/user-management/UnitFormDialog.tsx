@@ -1,3 +1,4 @@
+
 import React from "react";
 import * as z from "zod";
 import {
@@ -39,7 +40,7 @@ const UnitFormDialog: React.FC<UnitFormDialogProps> = ({
 }) => {
   return (
     <Dialog open={unitDialogOpen} onOpenChange={setUnitDialogOpen}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{editingUnit ? "編輯單位" : "新增單位"}</DialogTitle>
           <DialogDescription>
@@ -183,62 +184,136 @@ const UnitFormDialog: React.FC<UnitFormDialogProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-4 gap-4">
-              <FormField
-                control={unitForm.control}
-                name="supervisor"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>負責人</FormLabel>
-                    <FormControl>
-                      <Input placeholder="輸入負責人姓名" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={unitForm.control}
-                name="manager"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>承辦人</FormLabel>
-                    <FormControl>
-                      <Input placeholder="輸入承辦人姓名" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={unitForm.control}
-                name="accountant"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>會計</FormLabel>
-                    <FormControl>
-                      <Input placeholder="輸入會計姓名" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={unitForm.control}
-                name="cashier"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>出納</FormLabel>
-                    <FormControl>
-                      <Input placeholder="輸入出納姓名" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* 職位名稱設定區域 */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">職位名稱設定</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <FormField
+                  control={unitForm.control}
+                  name="managerTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>承辦人職位名稱 <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="承辦人" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={unitForm.control}
+                  name="accountantTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>會計職位名稱 <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="會計" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={unitForm.control}
+                  name="cashierTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>出納職位名稱 <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="出納" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={unitForm.control}
+                  name="supervisorTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>負責人職位名稱 <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="負責人" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* 人員姓名設定區域 */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">人員姓名設定</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <FormField
+                  control={unitForm.control}
+                  name="manager"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {unitForm.watch("managerTitle") || "承辦人"}姓名
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder={`輸入${unitForm.watch("managerTitle") || "承辦人"}姓名`} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={unitForm.control}
+                  name="accountant"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {unitForm.watch("accountantTitle") || "會計"}姓名
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder={`輸入${unitForm.watch("accountantTitle") || "會計"}姓名`} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={unitForm.control}
+                  name="cashier"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {unitForm.watch("cashierTitle") || "出納"}姓名
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder={`輸入${unitForm.watch("cashierTitle") || "出納"}姓名`} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={unitForm.control}
+                  name="supervisor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {unitForm.watch("supervisorTitle") || "負責人"}姓名
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder={`輸入${unitForm.watch("supervisorTitle") || "負責人"}姓名`} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <DialogFooter>

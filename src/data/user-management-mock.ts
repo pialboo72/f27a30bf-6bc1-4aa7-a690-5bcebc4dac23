@@ -16,7 +16,11 @@ export const mockUnits: Unit[] = [
     manager: "技術經理",
     accountant: "系統會計",
     cashier: "系統出納",
-    supervisor: "系統負責人"
+    supervisor: "系統負責人",
+    managerTitle: "承辦人",
+    accountantTitle: "會計",
+    cashierTitle: "出納",
+    supervisorTitle: "負責人"
   },
   {
     id: 2,
@@ -32,7 +36,11 @@ export const mockUnits: Unit[] = [
     manager: "林經理",
     accountant: "陳會計",
     cashier: "李出納",
-    supervisor: "主任"
+    supervisor: "主任",
+    managerTitle: "承辦人",
+    accountantTitle: "會計",
+    cashierTitle: "出納",
+    supervisorTitle: "負責人"
   },
   {
     id: 3,
@@ -48,7 +56,11 @@ export const mockUnits: Unit[] = [
     manager: "陳經理",
     accountant: "林會計",
     cashier: "王出納",
-    supervisor: "理事長"
+    supervisor: "理事長",
+    managerTitle: "承辦人",
+    accountantTitle: "會計",
+    cashierTitle: "出納",
+    supervisorTitle: "負責人"
   }
 ];
 

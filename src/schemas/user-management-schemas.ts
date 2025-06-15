@@ -1,4 +1,3 @@
-
 import * as z from "zod";
 
 // Form validation schemas
@@ -15,7 +14,12 @@ export const unitFormSchema = z.object({
   manager: z.string().optional(),
   accountant: z.string().optional(),
   cashier: z.string().optional(),
-  supervisor: z.string().optional(), // 新增負責人欄位
+  supervisor: z.string().optional(),
+  // 新增職位名稱驗證
+  managerTitle: z.string().min(1, { message: "請輸入承辦人職位名稱" }),
+  accountantTitle: z.string().min(1, { message: "請輸入會計職位名稱" }),
+  cashierTitle: z.string().min(1, { message: "請輸入出納職位名稱" }),
+  supervisorTitle: z.string().min(1, { message: "請輸入負責人職位名稱" }),
 });
 
 export const userFormSchema = z.object({

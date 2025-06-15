@@ -1,4 +1,3 @@
-
 // Type definitions for user management
 export interface Unit {
   id: number;
@@ -14,7 +13,11 @@ export interface Unit {
   manager: string;
   accountant: string;
   cashier: string;
-  supervisor: string; // 新增負責人欄位
+  supervisor: string;
+  managerTitle: string;
+  accountantTitle: string;
+  cashierTitle: string;
+  supervisorTitle: string;
 }
 
 export interface User {

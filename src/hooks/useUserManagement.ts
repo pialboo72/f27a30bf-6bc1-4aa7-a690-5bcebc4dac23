@@ -36,7 +36,11 @@ export const useUserManagement = () => {
       manager: "",
       accountant: "",
       cashier: "",
-      supervisor: "", // 新增負責人欄位預設值
+      supervisor: "",
+      managerTitle: "承辦人",
+      accountantTitle: "會計",
+      cashierTitle: "出納",
+      supervisorTitle: "負責人",
     }
   });
 
@@ -101,7 +105,11 @@ export const useUserManagement = () => {
         manager: data.manager || "",
         accountant: data.accountant || "",
         cashier: data.cashier || "",
-        supervisor: data.supervisor || "", // 新增負責人欄位
+        supervisor: data.supervisor || "",
+        managerTitle: data.managerTitle,
+        accountantTitle: data.accountantTitle,
+        cashierTitle: data.cashierTitle,
+        supervisorTitle: data.supervisorTitle,
       };
       setUnits([...units, newUnit]);
       toast.success("成功新增單位");
