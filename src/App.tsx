@@ -23,6 +23,7 @@ import SystemLogs from "@/pages/SystemLogs";
 import SubsidyManagement from "@/pages/SubsidyManagement";
 import SubsidyCreate from "@/pages/SubsidyCreate";
 import SubsidyEdit from "@/pages/SubsidyEdit";
+import Landing from "@/pages/Landing";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ function App() {
         <Router>
           <div className="min-h-screen bg-background">
             <Routes>
+              <Route path="/landing" element={<Landing />} />
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/admin" element={<Admin />} />
