@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { SystemFile } from "@/types/program";
 import { FolderNode } from "@/hooks/useFolderTree";
 import FolderTreeFolder from "./FolderTreeFolder";
@@ -17,9 +17,6 @@ interface FolderTreeRootProps {
 }
 
 const FolderTreeRoot: React.FC<FolderTreeRootProps> = (props) => {
-  // 新增全域拖曳中的 file id 狀態，from root
-  const [dragFileId, setDragFileId] = useState<number | null>(null);
-
   if (!props.tree.length) return null;
   return (
     <>
@@ -35,8 +32,7 @@ const FolderTreeRoot: React.FC<FolderTreeRootProps> = (props) => {
           onMoveFile={props.onMoveFile}
           expanded={props.expanded}
           setExpanded={props.setExpanded}
-          dragFileId={dragFileId}
-          setDragFileId={setDragFileId}
+          folderTree={props.tree}
         />
       ))}
     </>

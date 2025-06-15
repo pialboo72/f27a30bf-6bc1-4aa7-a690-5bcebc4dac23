@@ -17,8 +17,7 @@ interface FolderTreeFolderProps {
   expanded: Record<string, boolean>;
   setExpanded: (exp: Record<string, boolean>) => void;
   parentId?: string | null;
-  dragFileId: number | null;
-  setDragFileId: (id: number | null) => void;
+  folderTree: FolderNode[]; // 新增: 用於傳遞給File Dialog
 }
 
 const FolderTreeFolder: React.FC<FolderTreeFolderProps> = ({
@@ -32,38 +31,15 @@ const FolderTreeFolder: React.FC<FolderTreeFolderProps> = ({
   expanded,
   setExpanded,
   parentId,
-  dragFileId,
-  setDragFileId,
+  folderTree,
 }) => {
   const [creatingFolderId, setCreatingFolderId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
 
-  // 處理「檔案拖曳」事件
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-  const handleDrop = (e: React.DragEvent, folderId: string) => {
-    e.preventDefault();
-    const fileId = Number(e.dataTransfer.getData("text/plain"));
-    // 只允許移動到不同目前所在資料夾
-    const file = files.find(f => f.id === fileId);
-    if (fileId && folderId && file && file.folders?.[0] !== folderId) {
-      onMoveFile(fileId, folderId);
-    }
-    setDragFileId(null);
-  };
-
-  // 強調目標資料夾外觀
-  const isDropTarget = dragFileId != null && expanded[folder.id];
-
   return (
     <div
       style={{ marginLeft: parentId ? 20 : 0 }}
-      className={`mb-1 ${isDropTarget ? "bg-primary/10" : ""}`}
-      onDragOver={handleDragOver}
-      onDrop={e => handleDrop(e, folder.id)}
-      // highlight 目標 folder
+      className={`mb-1`}
     >
       <div className="flex items-center group gap-1">
         <Button
@@ -134,8 +110,7 @@ const FolderTreeFolder: React.FC<FolderTreeFolderProps> = ({
               expanded={expanded}
               setExpanded={setExpanded}
               parentId={folder.id}
-              dragFileId={dragFileId}
-              setDragFileId={setDragFileId}
+              folderTree={folderTree}
             />
           ))}
           {/* 檔案列表：可顯示同時屬於多資料夾 */}
@@ -147,9 +122,8 @@ const FolderTreeFolder: React.FC<FolderTreeFolderProps> = ({
               onSelectFile={onSelectFile}
               onDeleteFile={onDeleteFile}
               expanded={expanded}
-              setDragFileId={setDragFileId}
-              dragFileId={dragFileId}
               onMoveFile={onMoveFile}
+              folderTree={folderTree}
             />
           ))}
         </div>

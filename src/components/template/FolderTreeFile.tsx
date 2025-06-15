@@ -1,9 +1,11 @@
 
 import React, { useState } from "react";
-import { FileText, Download, Eye, Trash2 } from "lucide-react";
+import { FileText, Download, Eye, Trash2, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SystemFile } from "@/types/program";
 import DeleteFileConfirmDialog from "@/components/files/DeleteFileConfirmDialog";
+import MoveFileDialog from "./MoveFileDialog";
+import { FolderNode } from "@/hooks/useFolderTree";
 
 interface FolderTreeFileProps {
   file: SystemFile;
@@ -11,9 +13,8 @@ interface FolderTreeFileProps {
   onSelectFile: (file: SystemFile) => void;
   onDeleteFile: (file: SystemFile) => void;
   expanded: Record<string, boolean>;
-  setDragFileId: (id: number | null) => void;
-  dragFileId: number | null;
   onMoveFile: (fileId: number, toFolderId: string) => void;
+  folderTree?: FolderNode[]; // 新增: 需要資料夾樹結構給移動 Dialog 用
 }
 
 const FolderTreeFile: React.FC<FolderTreeFileProps> = ({
@@ -22,33 +23,23 @@ const FolderTreeFile: React.FC<FolderTreeFileProps> = ({
   onSelectFile,
   onDeleteFile,
   expanded,
-  setDragFileId,
-  dragFileId,
+  onMoveFile,
+  folderTree,
 }) => {
   const [showTag, setShowTag] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const [openMoveDialog, setOpenMoveDialog] = useState(false);
 
-  // 處理「檔案拖曳」事件
-  const handleDragStart = (e: React.DragEvent, fileId: number) => {
-    setDragFileId(fileId);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", String(fileId));
-  };
-
-  // 標記正被拖曳的檔案外觀
-  const isDragging = dragFileId === file.id;
+  // 找到當前在資料夾面板下顯示的 folder（取第一個為主）
+  const currentFolderId = Array.isArray(file.folders) && file.folders.length > 0 ? file.folders[0] : "root";
 
   return (
     <>
       <div
         className={`border rounded p-2 mt-1 flex items-center justify-between cursor-pointer ml-8 group
           ${selectedFile?.id === file.id ? "border-primary bg-primary/10" : "border-gray-200 bg-white"}
-          ${isDragging ? "opacity-60 border-dashed border-2 border-primary" : ""}
         `}
         onClick={() => onSelectFile(file)}
-        draggable
-        onDragStart={e => handleDragStart(e, file.id)}
-        onDragEnd={() => setDragFileId(null)}
       >
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-primary" />
@@ -90,6 +81,17 @@ const FolderTreeFile: React.FC<FolderTreeFileProps> = ({
             size="icon"
             onClick={e => {
               e.stopPropagation();
+              setOpenMoveDialog(true);
+            }}
+            aria-label="移動"
+          >
+            <Move className="w-4 h-4 text-yellow-600" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={e => {
+              e.stopPropagation();
               setDeleteDialog(true);
             }}
             aria-label="刪除"
@@ -98,7 +100,7 @@ const FolderTreeFile: React.FC<FolderTreeFileProps> = ({
           </Button>
         </div>
       </div>
-      {/* 標記顯示 */}
+      {/* 顯示標記 */}
       {showTag && (
         <div className="ml-12 mt-1 mb-2 p-2 bg-muted rounded border border-gray-200">
           <p className="text-sm font-medium mb-1">已識別的標記：</p>
@@ -120,6 +122,19 @@ const FolderTreeFile: React.FC<FolderTreeFileProps> = ({
         }}
         fileName={file.name}
       />
+      {openMoveDialog && folderTree && (
+        <MoveFileDialog
+          open={openMoveDialog}
+          onOpenChange={setOpenMoveDialog}
+          folderTree={folderTree}
+          currentFolderId={currentFolderId}
+          onMove={targetFolderId => {
+            if (targetFolderId && targetFolderId !== currentFolderId) {
+              onMoveFile(file.id, targetFolderId);
+            }
+          }}
+        />
+      )}
     </>
   );
 };
