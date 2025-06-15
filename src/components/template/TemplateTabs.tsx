@@ -1,15 +1,11 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FileText, Folder as FolderIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SystemFile } from "@/types/program";
-import { useFiles } from "@/contexts/FileContext";
-import FolderTree from "./FolderTree";
-import { useFolderTree, FolderNode } from "@/hooks/useFolderTree";
-import { Eye, Download, Trash2 } from "lucide-react";
 import UploadedTemplateList from "./UploadedTemplateList";
 import SelectedTemplateGenerateCard from "./SelectedTemplateGenerateCard";
+import { SystemFile } from "@/types/program";
+import { useFiles } from "@/contexts/FileContext";
+import { useFolderTree, FolderNode } from "@/hooks/useFolderTree";
 
 interface TemplateTabsProps {
   tab: string;
@@ -20,6 +16,12 @@ interface TemplateTabsProps {
   setSelectedTemplate: (t: SystemFile | null) => void;
   children?: React.ReactNode;
 }
+
+const ROOT_FOLDERS: Record<string, FolderNode[]> = {
+  unit: [{ id: "root-unit", name: "單位模板", parentId: null }],
+  common: [{ id: "root-common", name: "共通模板", parentId: null }],
+  program: [{ id: "root-program", name: "個案模板", parentId: null }],
+};
 
 const TemplateTabs = ({
   tab,
@@ -32,54 +34,81 @@ const TemplateTabs = ({
 }: TemplateTabsProps) => {
   const { deleteSystemFile, updateSystemFile } = useFiles();
 
-  // 根節點
-  const initialFolders: FolderNode[] = [
-    { id: "root", name: "檔案模板", parentId: null }
-  ];
+  // 針對三個分頁分開資料夾樹
+  const [folderStates, setFolderStates] = useState<{
+    [key: string]: ReturnType<typeof useFolderTree>
+  }>({
+    unit: useFolderTree(ROOT_FOLDERS.unit),
+    common: useFolderTree(ROOT_FOLDERS.common),
+    program: useFolderTree(ROOT_FOLDERS.program),
+  });
 
-  // 巢狀資料夾 hook
-  const {
-    folders,
-    setFolders,
-    addFolder,
-    getTree,
-  } = useFolderTree(initialFolders);
+  // 各分類資料夾展開狀態
+  const [expandedByTab, setExpandedByTab] = useState<{
+    [key: string]: { [key: string]: boolean }
+  }>({
+    unit: { "root-unit": true },
+    common: { "root-common": true },
+    program: { "root-program": true },
+  });
 
-  // 展開狀態
-  const [expandedFolders, setExpandedFolders] = useState<{ [key: string]: boolean }>({ root: true });
+  // active folderTree hook for current tab
+  const folderTreeHook = folderStates[tab];
+  const setExpandedFolders = (updater: any) => {
+    setExpandedByTab(prev => ({
+      ...prev,
+      [tab]: typeof updater === "function" ? updater(prev[tab]) : updater,
+    }));
+  };
 
-  // === 修正分派所有無效 folders 的檔案都放到 root ===
+  // 確保 templates 只映射到當前分頁有效資料夾
+  const folders = folderTreeHook.folders;
   const allFolderIds = folders.map(f => f.id);
-
   const validTemplates = templates.map(file => {
     let folderId = file.folders?.[0];
+    // 修正：只配屬於本分類根下的資料夾
+    const categoryRootId =
+      tab === "unit"
+        ? "root-unit"
+        : tab === "common"
+        ? "root-common"
+        : "root-program";
+    // 必須第一層就是自己類別 root
     if (!folderId || !allFolderIds.includes(folderId)) {
-      return { ...file, folders: ["root"] };
+      return { ...file, folders: [categoryRootId] };
     }
     return file;
   });
 
+  // 文件移動
   const moveFileToFolder = (fileId: number, toFolderId: string) => {
     const movedFile = validTemplates.find(f => f.id === fileId);
     if (movedFile) updateSystemFile(fileId, { ...movedFile, folders: [toFolderId] });
   };
 
-  const handleSelectTemplate = (template: SystemFile) => setSelectedTemplate(template);
+  // 資料夾新增
+  const handleAddFolder = (name: string, parentId: string | null) => {
+    folderTreeHook.addFolder(name, parentId);
+    setExpandedFolders(prev => ({
+      ...prev,
+      [parentId || (tab === "unit"
+        ? "root-unit"
+        : tab === "common"
+        ? "root-common"
+        : "root-program"
+      )]: true,
+    }));
+  };
 
+  // select/delete
+  const handleSelectTemplate = (template: SystemFile) => setSelectedTemplate(template);
   const handleDeleteTemplate = (template: SystemFile) => {
     if (selectedTemplate?.id === template.id) setSelectedTemplate(null);
     deleteSystemFile(template.id);
   };
 
-  const handleAddFolder = (name: string, parentId: string | null) => {
-    addFolder(name, parentId);
-    setExpandedFolders(prev => ({
-      ...prev,
-      [parentId || "root"]: true,
-    }));
-  };
-
-  const folderTree = getTree();
+  // 取得樹
+  const folderTree = folderTreeHook.getTree();
 
   return (
     <div>
@@ -105,7 +134,7 @@ const TemplateTabs = ({
           onDeleteFile={handleDeleteTemplate}
           onAddFolder={handleAddFolder}
           onMoveFile={moveFileToFolder}
-          expanded={expandedFolders}
+          expanded={expandedByTab[tab]}
           setExpanded={setExpandedFolders}
         />
       </div>
@@ -119,5 +148,3 @@ const TemplateTabs = ({
 };
 
 export default TemplateTabs;
-
-// 檔案超過 240 行，建議分拆 refactor!
