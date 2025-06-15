@@ -170,23 +170,24 @@ const FileManagement: React.FC = () => {
     fileCount: files.filter(file => file.folders.includes(folder.name)).length
   }));
   
-  // Ensure that each file type always has uploadDate (not optional).
-  // This fixes the type issue when passing to FileList.
-  const filesWithUploadDate: FileWithRequiredUploadDate[] = files.map(f => ({
-    ...f,
-    uploadDate: f.uploadDate || f.uploaded || "", // fallback if needed
-  }));
-  
-  const filteredFilesWithUploadDate: FileWithRequiredUploadDate[] = filteredFiles.map(f => ({
-    ...f,
-    uploadDate: f.uploadDate || f.uploaded || "",
-  }));
-  
+  // Compose filteredFiles FIRST, so it can be used below
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFolder = selectedFolder === "全部" || file.folders.includes(selectedFolder);
     return matchesSearch && matchesFolder;
   });
+  
+  // Ensure that each file type always has uploadDate (not optional).
+  // This fixes the type issue when passing to FileList.
+  const filesWithUploadDate: FileForList[] = files.map(f => ({
+    ...f,
+    uploadDate: f.uploadDate || f.uploaded || "",
+  }));
+  
+  const filteredFilesWithUploadDate: FileForList[] = filteredFiles.map(f => ({
+    ...f,
+    uploadDate: f.uploadDate || f.uploaded || "",
+  }));
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
