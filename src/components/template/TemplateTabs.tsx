@@ -7,6 +7,7 @@ import { SystemFile } from "@/types/program";
 import { useFiles } from "@/contexts/FileContext";
 import FolderTree from "./FolderTree";
 import { useFolderTree, FolderNode } from "@/hooks/useFolderTree";
+import { Eye, Download, Trash2 } from "lucide-react";
 
 interface TemplateTabsProps {
   tab: string;
@@ -27,9 +28,9 @@ const TemplateTabs = ({
   setSelectedTemplate,
   children,
 }: TemplateTabsProps) => {
-  const { deleteSystemFile } = useFiles();
+  const { deleteSystemFile, updateSystemFile } = useFiles();
 
-  // Sample: 根節點只有一個「檔案模板」（id: "root"）
+  // 根節點
   const initialFolders: FolderNode[] = [
     { id: "root", name: "檔案模板", parentId: null },
     // 你可以預設初始資料夾，例如
@@ -59,8 +60,17 @@ const TemplateTabs = ({
       !folders.some(f => f.id === file.folders[0])
   );
 
-  // 上傳文件的資料夾選擇Dialog（省略，僅展示如何取得 folder id）
-  // 實作時應將 TemplateUploader 支援 props: folders/tree, 選擇存放 folderId
+  // 檔案移動到資料夾
+  const moveFileToFolder = (fileId: number, toFolderId: string) => {
+    const updatedFiles = templates.map(file =>
+      file.id === fileId
+        ? { ...file, folders: [toFolderId] }
+        : file
+    );
+    // 注意：此步需呼叫 updateSystemFile 才會同步 context
+    const movedFile = updatedFiles.find(f => f.id === fileId);
+    if (movedFile) updateSystemFile(fileId, movedFile);
+  };
 
   // 選擇檔案
   const handleSelectTemplate = (template: SystemFile) => setSelectedTemplate(template);
@@ -105,7 +115,7 @@ const TemplateTabs = ({
             </CardHeader>
             <CardContent>
               <div>
-                {/* 階層式資料夾樹 */}
+                {/* 階層式資料夾樹 Drag & Drop/操作 */}
                 <FolderTree
                   tree={folderTree}
                   files={templates}
@@ -113,6 +123,7 @@ const TemplateTabs = ({
                   onSelectFile={handleSelectTemplate}
                   onDeleteFile={handleDeleteTemplate}
                   onAddFolder={handleAddFolder}
+                  onMoveFile={moveFileToFolder}
                   expanded={expandedFolders}
                   setExpanded={setExpandedFolders}
                 />
@@ -137,36 +148,68 @@ const TemplateTabs = ({
                               <FileText className="h-5 w-5 text-primary" />
                               <span className="font-medium">{template.name}</span>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={e => {
-                                e.stopPropagation();
-                                handleDeleteTemplate(template);
-                              }}
-                            >
-                              {/* 用紅色 trash icon 省略 */}
-                              <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-destructive">
-                                <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="2"/>
-                                <path d="M10 10v6M14 10v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                <path d="M5 6l1-3h12l1 3" stroke="currentColor" strokeWidth="2"/>
-                              </svg>
-                            </Button>
-                          </div>
-                          <div className="bg-muted p-3 rounded-md">
-                            <p className="text-sm font-medium mb-2">已識別的標記：</p>
-                            <div className="flex flex-wrap gap-2">
-                              {template.tags.map((tag) => (
-                                <span
-                                  key={tag.id}
-                                  className="bg-primary/10 text-primary px-2 py-1 rounded text-sm"
-                                >
-                                  {tag.name}
-                                </span>
-                              ))}
+                            <div className="flex items-center gap-1">
+                              {/* 查看標記 */}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setSelectedTemplate(template);
+                                }}
+                                aria-label="查看"
+                              >
+                                <Eye className="w-4 h-4 text-blue-700" />
+                              </Button>
+                              {/* 下載 */}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  const ext = template.name.split(".").pop() || "docx";
+                                  const downloadName = `${template.name}.${ext}`;
+                                  const link = document.createElement("a");
+                                  link.href = template.path;
+                                  link.download = downloadName;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                }}
+                                aria-label="下載"
+                              >
+                                <Download className="w-4 h-4 text-green-700" />
+                              </Button>
+                              {/* 刪除 */}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleDeleteTemplate(template);
+                                }}
+                                aria-label="刪除"
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
                             </div>
                           </div>
+                          {/* 僅於選取且點選查看時顯示標記 */}
+                          {selectedTemplate?.id === template.id && (
+                            <div className="bg-muted p-3 rounded-md">
+                              <p className="text-sm font-medium mb-2">已識別的標記：</p>
+                              <div className="flex flex-wrap gap-2">
+                                {template.tags.map((tag) => (
+                                  <span
+                                    key={tag.id}
+                                    className="bg-primary/10 text-primary px-2 py-1 rounded text-sm"
+                                  >
+                                    {tag.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

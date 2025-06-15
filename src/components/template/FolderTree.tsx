@@ -1,9 +1,10 @@
 
 import React, { useState } from "react";
-import { Folder as FolderIcon, ChevronDown, ChevronRight, FileText, FolderPlus } from "lucide-react";
+import { Folder as FolderIcon, ChevronDown, ChevronRight, FileText, FolderPlus, Download, Eye, Trash2 } from "lucide-react";
 import { SystemFile } from "@/types/program";
 import { Button } from "@/components/ui/button";
 import { FolderNode } from "@/hooks/useFolderTree";
+import DeleteFileConfirmDialog from "@/components/files/DeleteFileConfirmDialog";
 
 interface FolderTreeProps {
   tree: FolderNode[];
@@ -12,10 +13,10 @@ interface FolderTreeProps {
   onSelectFile: (file: SystemFile) => void;
   onDeleteFile: (file: SystemFile) => void;
   onAddFolder: (name: string, parentId: string | null) => void;
-  onAddFolderClick?: (parentId: string | null) => void;
+  onMoveFile: (fileId: number, toFolderId: string) => void;
   expanded: Record<string, boolean>;
   setExpanded: (exp: Record<string, boolean>) => void;
-  parentId?: string | null; // for recursion
+  parentId?: string | null;
 }
 
 const FolderTree: React.FC<FolderTreeProps> = ({
@@ -25,20 +26,52 @@ const FolderTree: React.FC<FolderTreeProps> = ({
   onSelectFile,
   onDeleteFile,
   onAddFolder,
-  onAddFolderClick,
+  onMoveFile,
   expanded,
   setExpanded,
   parentId = null,
 }) => {
   const [creatingFolderId, setCreatingFolderId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
+  const [showTagId, setShowTagId] = useState<number | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; file?: SystemFile }>({ open: false, file: undefined });
+
+  // 目前被拖曳的檔案 ID
+  const [dragFileId, setDragFileId] = useState<number | null>(null);
 
   if (!tree.length) return null;
+
+  // 處理「檔案拖曳」事件
+  const handleDragStart = (e: React.DragEvent, fileId: number) => {
+    setDragFileId(fileId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(fileId));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    const fileId = Number(e.dataTransfer.getData("text/plain"));
+    if (fileId && folderId) {
+      onMoveFile(fileId, folderId);
+    }
+    setDragFileId(null);
+  };
 
   return (
     <div>
       {tree.map(folder => (
-        <div key={folder.id} style={{ marginLeft: parentId ? 20 : 0 }} className="mb-1">
+        <div
+          key={folder.id}
+          style={{ marginLeft: parentId ? 20 : 0 }}
+          className="mb-1"
+          onDragOver={handleDragOver}
+          onDrop={e => handleDrop(e, folder.id)}
+        >
           <div className="flex items-center group gap-1">
             <Button
               variant="ghost"
@@ -95,7 +128,7 @@ const FolderTree: React.FC<FolderTreeProps> = ({
           )}
           {expanded[folder.id] && (
             <div>
-              {/* 子資料夾 */}
+              {/* 子資料夾（遞迴） */}
               {folder.children && folder.children.length > 0 && (
                 <FolderTree
                   tree={folder.children}
@@ -104,6 +137,7 @@ const FolderTree: React.FC<FolderTreeProps> = ({
                   onSelectFile={onSelectFile}
                   onDeleteFile={onDeleteFile}
                   onAddFolder={onAddFolder}
+                  onMoveFile={onMoveFile}
                   expanded={expanded}
                   setExpanded={setExpanded}
                   parentId={folder.id}
@@ -113,36 +147,96 @@ const FolderTree: React.FC<FolderTreeProps> = ({
               {files.filter(f => f.folders?.[0] === folder.id).map(file => (
                 <div
                   key={file.id}
-                  className={`border rounded p-2 mt-1 flex items-center justify-between cursor-pointer ml-8 ${
-                    selectedFile?.id === file.id ? "border-primary bg-primary/10" : "border-gray-200 bg-white"
-                  }`}
+                  className={`border rounded p-2 mt-1 flex items-center justify-between cursor-pointer ml-8 group
+                    ${selectedFile?.id === file.id ? "border-primary bg-primary/10" : "border-gray-200 bg-white"}
+                    ${dragFileId === file.id ? "opacity-60 border-dashed border-2 border-primary" : ""}
+                  `}
                   onClick={() => onSelectFile(file)}
+                  draggable
+                  onDragStart={e => handleDragStart(e, file.id)}
+                  onDragEnd={() => setDragFileId(null)}
                 >
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-primary" />
                     <span>{file.name}</span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={e => {
-                      e.stopPropagation();
-                      onDeleteFile(file);
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-destructive">
-                      <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="2"/>
-                      <path d="M10 10v6M14 10v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      <path d="M5 6l1-3h12l1 3" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                  </Button>
+                  <div className="flex items-center gap-0.5">
+                    {/* 查看 */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowTagId(showTagId === file.id ? null : file.id);
+                      }}
+                      aria-label="查看"
+                    >
+                      <Eye className="w-4 h-4 text-blue-700" />
+                    </Button>
+                    {/* 下載 */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={e => {
+                        e.stopPropagation();
+                        // 呼叫下載
+                        const ext = file.name.split(".").pop() || "docx";
+                        const downloadName = `${file.name}.${ext}`;
+                        const link = document.createElement("a");
+                        link.href = file.path;
+                        link.download = downloadName;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      aria-label="下載"
+                    >
+                      <Download className="w-4 h-4 text-green-700" />
+                    </Button>
+                    {/* 刪除 */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setDeleteDialog({ open: true, file });
+                      }}
+                      aria-label="刪除"
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {/* 標記區塊－只針對當前 showTagId 打開 */}
+              {files.filter(f => f.folders?.[0] === folder.id && showTagId === f.id).map(file => (
+                <div key={`tags-${file.id}`} className="ml-12 mt-1 mb-2 p-2 bg-muted rounded border border-gray-200">
+                  <p className="text-sm font-medium mb-1">已識別的標記：</p>
+                  <div className="flex flex-wrap gap-2">
+                    {file.tags && file.tags.length > 0 ? file.tags.map(tag => (
+                      <span key={tag.id} className="bg-primary/10 text-primary px-2 py-1 rounded text-sm">{tag.name}</span>
+                    )) : (
+                      <span className="text-muted-foreground text-sm">無標記</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       ))}
+      {/* 檔案刪除確認對話框 */}
+      <DeleteFileConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={open => setDeleteDialog({ open })}
+        onConfirm={() => {
+          if (deleteDialog.file) {
+            onDeleteFile(deleteDialog.file);
+          }
+          setDeleteDialog({ open: false, file: undefined });
+        }}
+        fileName={deleteDialog.file?.name}
+      />
     </div>
   );
 };
