@@ -1,12 +1,12 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FileText, Trash, Folder as FolderIcon } from "lucide-react";
+import { FileText, Folder as FolderIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SystemFile } from "@/types/program";
 import { useFiles } from "@/contexts/FileContext";
-import FolderTree, { buildFolderTree } from "./FolderTree";
+import FolderTree from "./FolderTree";
+import { useFolderTree, FolderNode } from "@/hooks/useFolderTree";
 
 interface TemplateTabsProps {
   tab: string;
@@ -25,31 +25,63 @@ const TemplateTabs = ({
   templates,
   selectedTemplate,
   setSelectedTemplate,
-  children
+  children,
 }: TemplateTabsProps) => {
   const { deleteSystemFile } = useFiles();
 
-  const handleSelectTemplate = (template: SystemFile) => {
-    setSelectedTemplate(template);
-  };
+  // Sample: 根節點只有一個「檔案模板」（id: "root"）
+  const initialFolders: FolderNode[] = [
+    { id: "root", name: "檔案模板", parentId: null },
+    // 你可以預設初始資料夾，例如
+    // { id: "year-2024", name: "2024", parentId: "root" },
+  ];
 
-  const handleDeleteTemplate = (template: SystemFile) => {
-    if (selectedTemplate?.id === template.id) {
-      setSelectedTemplate(null);
-    }
-    deleteSystemFile(template.id);
-  };
+  // 巢狀資料夾 hook
+  const {
+    folders,
+    setFolders,
+    addFolder,
+    getTree,
+  } = useFolderTree(initialFolders);
 
-  // 架構 folder tree
-  const folderTree = buildFolderTree(templates);
+  // 展開狀態
+  const [expandedFolders, setExpandedFolders] = useState<{ [key: string]: boolean }>({ root: true });
 
-  // 專門找出「未分類」的檔案
+  // 處理檔案—巢狀對應：假設每個 file.folders = [folderId]
+  const folderFiles = (folderId: string) => templates.filter(f => f.folders && f.folders[0] === folderId);
+
+  // 找出未分類
   const uncategorizedFiles = templates.filter(
     file =>
       !file.folders ||
       file.folders.length === 0 ||
-      file.folders.includes("未分類")
+      file.folders[0] === "uncategorized" ||
+      !folders.some(f => f.id === file.folders[0])
   );
+
+  // 上傳文件的資料夾選擇Dialog（省略，僅展示如何取得 folder id）
+  // 實作時應將 TemplateUploader 支援 props: folders/tree, 選擇存放 folderId
+
+  // 選擇檔案
+  const handleSelectTemplate = (template: SystemFile) => setSelectedTemplate(template);
+
+  // 刪除
+  const handleDeleteTemplate = (template: SystemFile) => {
+    if (selectedTemplate?.id === template.id) setSelectedTemplate(null);
+    deleteSystemFile(template.id);
+  };
+
+  // 新增資料夾
+  const handleAddFolder = (name: string, parentId: string | null) => {
+    addFolder(name, parentId);
+    setExpandedFolders(prev => ({
+      ...prev,
+      [parentId || "root"]: true,
+    }));
+  };
+
+  // 取得 tree（根是 "root"）
+  const folderTree = getTree();
 
   return (
     <div>
@@ -73,15 +105,18 @@ const TemplateTabs = ({
             </CardHeader>
             <CardContent>
               <div>
-                {/* 階層式資料夾樹： */}
+                {/* 階層式資料夾樹 */}
                 <FolderTree
-                  nodes={folderTree}
-                  selectedTemplate={selectedTemplate}
-                  onSelectTemplate={handleSelectTemplate}
-                  onDeleteTemplate={handleDeleteTemplate}
+                  tree={folderTree}
+                  files={templates}
+                  selectedFile={selectedTemplate}
+                  onSelectFile={handleSelectTemplate}
+                  onDeleteFile={handleDeleteTemplate}
+                  onAddFolder={handleAddFolder}
+                  expanded={expandedFolders}
+                  setExpanded={setExpandedFolders}
                 />
-
-                {/* 「未分類」置底 */}
+                {/* 未分類檔案 */}
                 {uncategorizedFiles.length > 0 && (
                   <div className="mt-6">
                     <div className="flex items-center gap-2 mb-2">
@@ -110,7 +145,13 @@ const TemplateTabs = ({
                                 handleDeleteTemplate(template);
                               }}
                             >
-                              <Trash className="h-4 w-4 text-destructive" />
+                              {/* 用紅色 trash icon 省略 */}
+                              <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-destructive">
+                                <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="2"/>
+                                <path d="M10 10v6M14 10v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                <path d="M5 6l1-3h12l1 3" stroke="currentColor" strokeWidth="2"/>
+                              </svg>
                             </Button>
                           </div>
                           <div className="bg-muted p-3 rounded-md">

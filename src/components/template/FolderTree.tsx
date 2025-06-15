@@ -1,149 +1,148 @@
 
-import React, { useState, Fragment } from "react";
-import { ChevronDown, ChevronRight, Folder as FolderIcon, FileText } from "lucide-react";
+import React, { useState } from "react";
+import { Folder as FolderIcon, ChevronDown, ChevronRight, FileText, FolderPlus } from "lucide-react";
 import { SystemFile } from "@/types/program";
 import { Button } from "@/components/ui/button";
+import { FolderNode } from "@/hooks/useFolderTree";
 
-// 將 flat folder 陣列 (["補助文件", "2024", "音樂組"]) 轉換成 tree 結構
-export interface FolderNode {
-  name: string;
-  children?: FolderNode[];
-  files?: SystemFile[];
-}
-
-function insertFileToTree(
-  folders: string[],
-  file: SystemFile,
-  currentLevel: FolderNode[],
-) {
-  if (!folders.length) return;
-
-  const folderName = folders[0];
-  let node = currentLevel.find(n => n.name === folderName);
-  if (!node) {
-    node = { name: folderName, children: [], files: [] };
-    currentLevel.push(node);
-  }
-  if (folders.length === 1) {
-    node.files = node.files || [];
-    node.files.push(file);
-  } else {
-    node.children = node.children || [];
-    insertFileToTree(folders.slice(1), file, node.children);
-  }
-}
-
-// 將所有檔案依照 folders 屬性建樹
-export function buildFolderTree(files: SystemFile[]): FolderNode[] {
-  const root: FolderNode[] = [];
-  files.forEach(file => {
-    if (file.folders && file.folders.length > 0 && !file.folders.includes('未分類')) {
-      insertFileToTree(file.folders, file, root);
-    }
-  });
-  return root;
-}
-
-// 展開所有層級用的遞迴元件
 interface FolderTreeProps {
-  nodes: FolderNode[];
-  selectedTemplate: SystemFile | null;
-  onSelectTemplate: (file: SystemFile) => void;
-  onDeleteTemplate: (file: SystemFile) => void;
-  level?: number;
+  tree: FolderNode[];
+  files: SystemFile[];
+  selectedFile: SystemFile | null;
+  onSelectFile: (file: SystemFile) => void;
+  onDeleteFile: (file: SystemFile) => void;
+  onAddFolder: (name: string, parentId: string | null) => void;
+  onAddFolderClick?: (parentId: string | null) => void;
+  expanded: Record<string, boolean>;
+  setExpanded: (exp: Record<string, boolean>) => void;
+  parentId?: string | null; // for recursion
 }
 
 const FolderTree: React.FC<FolderTreeProps> = ({
-  nodes,
-  selectedTemplate,
-  onSelectTemplate,
-  onDeleteTemplate,
-  level = 0
+  tree,
+  files,
+  selectedFile,
+  onSelectFile,
+  onDeleteFile,
+  onAddFolder,
+  onAddFolderClick,
+  expanded,
+  setExpanded,
+  parentId = null,
 }) => {
-  // 每層用 local state 控管展開
-  const [openFolders, setOpenFolders] = useState<{[folder: string]: boolean}>({});
+  const [creatingFolderId, setCreatingFolderId] = useState<string | null>(null);
+  const [newFolderName, setNewFolderName] = useState("");
 
-  if (!nodes?.length) return null;
+  if (!tree.length) return null;
 
   return (
-    <div className="space-y-2">
-      {nodes.map((folder) => {
-        const hasChildren = !!folder.children?.length;
-        const hasFiles = !!folder.files?.length;
-        const open = openFolders[folder.name] ?? true;
-        return (
-          <div key={folder.name} className="space-y-1">
-            <div
-              className={`flex items-center cursor-pointer group pl-${level * 4}`}
+    <div>
+      {tree.map(folder => (
+        <div key={folder.id} style={{ marginLeft: parentId ? 20 : 0 }} className="mb-1">
+          <div className="flex items-center group gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
               onClick={() =>
-                setOpenFolders(prev => ({
-                  ...prev,
-                  [folder.name]: !open
-                }))
+                setExpanded({
+                  ...expanded,
+                  [folder.id]: !expanded[folder.id],
+                })
               }
             >
-              {hasChildren || hasFiles ? (
-                open ? (
-                  <ChevronDown className="w-4 h-4 text-primary" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                )
+              {expanded[folder.id] ? (
+                <ChevronDown className="h-4 w-4" />
               ) : (
-                <span className="inline-block w-4" />
+                <ChevronRight className="h-4 w-4" />
               )}
-              <FolderIcon className="w-4 h-4 text-primary mx-1" />
-              <span className="font-semibold text-base group-hover:underline">{folder.name}</span>
+            </Button>
+            <FolderIcon className="h-5 w-5 text-primary mr-1" />
+            <span className="font-semibold">{folder.name}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-2"
+              onClick={() => setCreatingFolderId(folder.id)}
+            >
+              <FolderPlus className="h-4 w-4" />
+            </Button>
+          </div>
+          {/* 新增子資料夾 */}
+          {creatingFolderId === folder.id && (
+            <div className="flex items-center gap-1 ml-8 my-1">
+              <input
+                className="border px-1 py-0.5 text-sm rounded"
+                placeholder="輸入資料夾名稱"
+                value={newFolderName}
+                onChange={e => setNewFolderName(e.target.value)}
+                autoFocus
+              />
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (newFolderName.trim()) {
+                    onAddFolder(newFolderName, folder.id);
+                    setNewFolderName("");
+                    setCreatingFolderId(null);
+                  }
+                }}
+              >
+                新增
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setCreatingFolderId(null)}>取消</Button>
             </div>
-            {open && (
-              <div className="pl-5 transition-all">
-                {/* 子資料夾 */}
-                {folder.children && <FolderTree
-                  nodes={folder.children}
-                  selectedTemplate={selectedTemplate}
-                  onSelectTemplate={onSelectTemplate}
-                  onDeleteTemplate={onDeleteTemplate}
-                  level={level + 1}
-                />}
-                {/* 該層的檔案 */}
-                {folder.files?.map(file => (
-                  <div
-                    key={file.id}
-                    className={`border rounded-lg p-3 mt-1 flex items-center justify-between transition-colors cursor-pointer bg-white hover:border-primary ${
-                      selectedTemplate?.id === file.id ? 'border-primary bg-primary/5' : 'border-gray-200'
-                    }`}
+          )}
+          {expanded[folder.id] && (
+            <div>
+              {/* 子資料夾 */}
+              {folder.children && folder.children.length > 0 && (
+                <FolderTree
+                  tree={folder.children}
+                  files={files}
+                  selectedFile={selectedFile}
+                  onSelectFile={onSelectFile}
+                  onDeleteFile={onDeleteFile}
+                  onAddFolder={onAddFolder}
+                  expanded={expanded}
+                  setExpanded={setExpanded}
+                  parentId={folder.id}
+                />
+              )}
+              {/* 檔案列表 */}
+              {files.filter(f => f.folders?.[0] === folder.id).map(file => (
+                <div
+                  key={file.id}
+                  className={`border rounded p-2 mt-1 flex items-center justify-between cursor-pointer ml-8 ${
+                    selectedFile?.id === file.id ? "border-primary bg-primary/10" : "border-gray-200 bg-white"
+                  }`}
+                  onClick={() => onSelectFile(file)}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span>{file.name}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={e => {
                       e.stopPropagation();
-                      onSelectTemplate(file);
+                      onDeleteFile(file);
                     }}
                   >
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-primary" />
-                      <span className="font-medium">{file.name}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onDeleteTemplate(file);
-                      }}
-                    >
-                      <span className="sr-only">刪除</span>
-                      {/* 用紅色 trash icon (不要直接在這引入 icon 以避免重複） */}
-                      <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-destructive">
-                        <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="2"/>
-                        <path d="M10 10v6M14 10v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        <path d="M5 6l1-3h12l1 3" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
+                    <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-destructive">
+                      <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M10 10v6M14 10v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M5 6l1-3h12l1 3" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 };
