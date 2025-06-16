@@ -1,94 +1,11 @@
+
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import {
-  FileText,
-  FileCheck,
-  Home,
-  BarChart,
-  Settings,
-  Database,
-  Tag,
-  Info,
-  Folder,
-  Users,
-  Building,
-  Receipt,
-} from "lucide-react";
-import SidebarNavItem from "./SidebarNavItem";
-import GrantCloudLogo from "@/components/branding/GrantCloudLogo";
-
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-}
-
-const mainNavItems: NavItem[] = [
-  {
-    title: "儀表板",
-    href: "/",
-    icon: Home,
-  },
-  {
-    title: "活動管理",
-    href: "/activities",
-    icon: FileText,
-  },
-  {
-    title: "補助計劃",
-    href: "/programs",
-    icon: Tag,
-  },
-  {
-    title: "申請進度追蹤",
-    href: "/tracking",
-    icon: FileCheck,
-  },
-  {
-    title: "附件與檔案",
-    href: "/files",
-    icon: Folder,
-  },
-];
-
-const adminNavItems: NavItem[] = [
-  {
-    title: "統計分析",
-    href: "/statistics",
-    icon: BarChart,
-  },
-  {
-    title: "補助管理",
-    href: "/admin/subsidies",
-    icon: Receipt,
-  },
-  {
-    title: "單位管理",
-    href: "/admin/units",
-    icon: Building,
-  },
-  {
-    title: "文件模板管理",
-    href: "/document-template",
-    icon: FileText,
-  },
-  {
-    title: "系統日誌",
-    href: "/logs",
-    icon: Database,
-  },
-  {
-    title: "用戶管理",
-    href: "/users",
-    icon: Users,
-  },
-  {
-    title: "系統設定",
-    href: "/settings",
-    icon: Settings,
-  },
-];
+import SidebarHeader from "./sidebar/SidebarHeader";
+import SidebarNavSection from "./sidebar/SidebarNavSection";
+import SidebarFooter from "./sidebar/SidebarFooter";
+import { mainNavItems, adminNavItems } from "./sidebar/navigationItems";
 
 type SidebarNavProps = {
   collapsed: boolean;
@@ -123,93 +40,32 @@ const SidebarNav: React.FC<SidebarNavProps> = ({
       onMouseLeave={onMouseLeave}
       style={{ minWidth: collapsed ? "6rem" : "18rem" }}
     >
-      {/* Header / Logo */}
-      <div
-        className={cn(
-          "flex items-center px-2 py-7 gap-2",
-          collapsed ? "justify-center" : "justify-between"
-        )}
-      >
-        <Link
-          to="/"
-          className={cn(
-            "flex items-center transition-all duration-300",
-            collapsed ? "justify-center" : "space-x-3"
-          )}
-        >
-          <div className="bg-brand-600 text-white rounded-lg p-2 shadow hover:scale-110 transition-transform duration-200 flex items-center justify-center">
-            <GrantCloudLogo size={collapsed ? 32 : 40} className="drop-shadow" />
-          </div>
-          {!collapsed && (
-            <span className="font-extrabold text-2xl tracking-wide text-brand-800 drop-shadow">
-              補助雲管理系統
-              <span className="text-lg font-bold ml-4 text-brand-600">GrantCloud</span>
-            </span>
-          )}
-        </Link>
-      </div>
+      <SidebarHeader collapsed={collapsed} />
 
-      {/* 功能列表 */}
       <div
         className={cn(
           "flex-1 px-2 py-2",
           collapsed ? "px-0 py-2" : "px-4 py-2"
         )}
       >
-        {/* 主要功能 */}
-        <div className="space-y-2">
-          {!collapsed && (
-            <p className="text-lg font-bold text-muted-foreground/90 px-3 py-2">
-              主要功能
-            </p>
-          )}
-          {mainNavItems.map((item) => (
-            <SidebarNavItem
-              key={item.href}
-              item={item}
-              active={isActive(item.href)}
-              collapsed={collapsed}
-            />
-          ))}
-        </div>
+        <SidebarNavSection
+          title="主要功能"
+          items={mainNavItems}
+          collapsed={collapsed}
+          isActive={isActive}
+        />
 
-        {/* 管理員功能 */}
-        <div className="mt-8 space-y-2">
-          {!collapsed && (
-            <p className="text-lg font-bold text-muted-foreground/90 px-3 py-2">
-              管理員功能
-            </p>
-          )}
-          {adminNavItems.map((item) => (
-            <SidebarNavItem
-              key={item.href}
-              item={item}
-              active={isActive(item.href)}
-              collapsed={collapsed}
-            />
-          ))}
+        <div className="mt-8">
+          <SidebarNavSection
+            title="管理員功能"
+            items={adminNavItems}
+            collapsed={collapsed}
+            isActive={isActive}
+          />
         </div>
       </div>
 
-      {/* 版本資訊 */}
-      <div
-        className={cn(
-          "p-6 border-t border-border transition-all duration-300",
-          collapsed ? "flex justify-center p-3" : ""
-        )}
-      >
-        <div
-          className={cn(
-            "flex items-center gap-2 bg-blue-50 rounded-lg p-3 text-brand-800 shadow animate-fade-in",
-            collapsed && "justify-center p-3 bg-blue-100"
-          )}
-        >
-          <Info className="h-5 w-5" />
-          {!collapsed && (
-            <span className="text-base font-bold">版本 1.0.0</span>
-          )}
-        </div>
-      </div>
+      <SidebarFooter collapsed={collapsed} />
     </div>
   );
 };

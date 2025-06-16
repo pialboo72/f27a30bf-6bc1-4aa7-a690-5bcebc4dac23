@@ -3,9 +3,9 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/layout/MainLayout";
 import DataExport from "@/components/export/DataExport";
-import NotificationPanel from "@/components/notification/NotificationPanel";
 import DataManagement from "@/components/system/DataManagement";
 import SystemStatus from "@/components/system/SystemStatus";
+import AdminQuickSettings from "@/components/admin/AdminQuickSettings";
 
 const Settings: React.FC = () => {
   return (
@@ -18,20 +18,20 @@ const Settings: React.FC = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="export" className="w-full">
+        <Tabs defaultValue="admin" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="admin">管理員設定</TabsTrigger>
             <TabsTrigger value="export">數據導出</TabsTrigger>
-            <TabsTrigger value="notifications">通知中心</TabsTrigger>
             <TabsTrigger value="data">數據管理</TabsTrigger>
             <TabsTrigger value="status">系統狀態</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="export" className="mt-6">
-            <DataExport />
+          <TabsContent value="admin" className="mt-6">
+            <AdminQuickSettings />
           </TabsContent>
           
-          <TabsContent value="notifications" className="mt-6">
-            <NotificationPanel />
+          <TabsContent value="export" className="mt-6">
+            <DataExport />
           </TabsContent>
           
           <TabsContent value="data" className="mt-6">

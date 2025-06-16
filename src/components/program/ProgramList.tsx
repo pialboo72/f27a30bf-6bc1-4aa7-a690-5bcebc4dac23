@@ -5,19 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { SubsidyProgram } from "@/types/program";
 import ProgramCard from "./ProgramCard";
+import ProgramCardView from "./ProgramCardView";
 
 interface ProgramListProps {
   programs: SubsidyProgram[];
   onApply: (programId: number) => void;
   onManageTemplate: (programId: number) => void;
   onClearFilters: () => void;
+  viewMode?: 'list' | 'cards';
 }
 
 const ProgramList: React.FC<ProgramListProps> = ({ 
   programs, 
   onApply, 
   onManageTemplate,
-  onClearFilters 
+  onClearFilters,
+  viewMode = 'list'
 }) => {
   if (programs.length === 0) {
     return (
@@ -31,6 +34,16 @@ const ProgramList: React.FC<ProgramListProps> = ({
           </Button>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (viewMode === 'cards') {
+    return (
+      <ProgramCardView
+        programs={programs}
+        onApply={onApply}
+        onManageTemplate={onManageTemplate}
+      />
     );
   }
 
