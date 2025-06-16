@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import StorageQuotaManagement from "./StorageQuotaManagement";
 import { toast } from "sonner";
 
 const AdminQuickSettings: React.FC = () => {
@@ -20,6 +21,8 @@ const AdminQuickSettings: React.FC = () => {
 
   return (
     <div className="grid gap-6">
+      <StorageQuotaManagement />
+      
       <Card>
         <CardHeader>
           <CardTitle>AI 設定</CardTitle>
@@ -54,10 +57,10 @@ const AdminQuickSettings: React.FC = () => {
         <CardContent className="space-y-4">
           <div>
             <label className="text-sm font-medium">系統名稱</label>
-            <Input type="text" defaultValue="補助申請系統" />
+            <Input type="text" defaultValue="補助雲管理系統" />
           </div>
           <div>
-            <label className="text-sm font-medium">檔案上傳大小限制 (MB)</label>
+            <label className="text-sm font-medium">預設檔案上傳大小限制 (MB)</label>
             <Input type="number" defaultValue="10" />
           </div>
           <div>
