@@ -1,3 +1,4 @@
+
 export interface FileTag {
   id: number;
   name: string;
@@ -46,6 +47,9 @@ export interface SubsidyProgram {
   tags: string[];
   maxAmount: number;
   applyUrl: string;
+  // 新增缺少的屬性
+  status?: string;
+  amount?: number;
   // 模板相關
   applicationTemplate?: SystemFile;
   budgetTemplate?: SystemFile;

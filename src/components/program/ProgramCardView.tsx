@@ -17,7 +17,7 @@ const ProgramCardView: React.FC<ProgramCardViewProps> = ({
   onApply, 
   onManageTemplate 
 }) => {
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string) => {
     switch (status) {
       case "進行中": return "default";
       case "即將截止": return "destructive";
@@ -26,8 +26,8 @@ const ProgramCardView: React.FC<ProgramCardViewProps> = ({
     }
   };
 
-  const formatAmount = (amount: number) => {
-    return `NT$ ${amount.toLocaleString()}`;
+  const formatAmount = (amount?: number) => {
+    return `NT$ ${(amount || 0).toLocaleString()}`;
   };
 
   return (
@@ -37,7 +37,7 @@ const ProgramCardView: React.FC<ProgramCardViewProps> = ({
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start mb-2">
               <Badge variant={getStatusColor(program.status) as any}>
-                {program.status}
+                {program.status || "進行中"}
               </Badge>
               <Badge variant="outline">{program.category}</Badge>
             </div>
@@ -53,7 +53,7 @@ const ProgramCardView: React.FC<ProgramCardViewProps> = ({
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <DollarSign className="h-4 w-4 mr-2" />
-                {formatAmount(program.amount)}
+                {formatAmount(program.amount || program.maxAmount)}
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4 mr-2" />

@@ -9,6 +9,8 @@ export const subsidyPrograms = [
     category: "文化藝術",
     tags: ["展演活動", "藝術創作", "人才培育"],
     maxAmount: 500000,
+    amount: 500000,
+    status: "進行中",
     applyUrl: "#",
     applicationTemplate: {
       id: 101,
@@ -35,6 +37,8 @@ export const subsidyPrograms = [
     category: "體育",
     tags: ["運動賽事", "場地設備", "教練培訓"],
     maxAmount: 300000,
+    amount: 300000,
+    status: "進行中",
     applyUrl: "#",
     applicationTemplate: {
       id: 102,
@@ -60,6 +64,8 @@ export const subsidyPrograms = [
     category: "教育",
     tags: ["學生社團", "校園活動", "服務學習"],
     maxAmount: 150000,
+    amount: 150000,
+    status: "進行中",
     applyUrl: "#"
   },
   {
@@ -71,6 +77,8 @@ export const subsidyPrograms = [
     category: "健康照護",
     tags: ["健康促進", "社區營造", "健康講座"],
     maxAmount: 250000,
+    amount: 250000,
+    status: "即將截止",
     applyUrl: "#"
   },
   {
@@ -82,6 +90,8 @@ export const subsidyPrograms = [
     category: "環境教育",
     tags: ["環保活動", "永續發展", "生態保育"],
     maxAmount: 200000,
+    amount: 200000,
+    status: "進行中",
     applyUrl: "#"
   },
 ];

@@ -1,24 +1,44 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { categories } from "@/data/subsidyPrograms";
+import { SubsidyProgram } from "@/types/program";
 
 interface ProgramSearchFiltersProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  selectedCategory: string;
-  onCategoryChange: (category: string) => void;
+  programs: SubsidyProgram[];
+  onFilteredPrograms: (programs: SubsidyProgram[]) => void;
 }
 
 const ProgramSearchFilters: React.FC<ProgramSearchFiltersProps> = ({
-  searchTerm,
-  onSearchChange,
-  selectedCategory,
-  onCategoryChange
+  programs,
+  onFilteredPrograms
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('全部');
+
+  useEffect(() => {
+    let filtered = programs;
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(program =>
+        program.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        program.organization.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        program.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by category
+    if (selectedCategory !== '全部') {
+      filtered = filtered.filter(program => program.category === selectedCategory);
+    }
+
+    onFilteredPrograms(filtered);
+  }, [programs, searchTerm, selectedCategory, onFilteredPrograms]);
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -29,7 +49,7 @@ const ProgramSearchFilters: React.FC<ProgramSearchFiltersProps> = ({
               placeholder="搜尋補助計劃..."
               className="pl-10"
               value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -38,7 +58,7 @@ const ProgramSearchFilters: React.FC<ProgramSearchFiltersProps> = ({
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
-                onClick={() => onCategoryChange(category)}
+                onClick={() => setSelectedCategory(category)}
               >
                 {category}
               </Button>
