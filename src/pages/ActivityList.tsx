@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +9,8 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { Plus, Pencil, Copy, Trash2, Download, Printer } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Pencil, Copy, Trash2, Download, Printer, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
@@ -21,10 +21,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import BatchOperations from "@/components/activity/BatchOperations";
+import DragDropUpload from "@/components/activity/DragDropUpload";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const ActivityList: React.FC = () => {
   const { downloadFile } = useFiles();
   const [activities, setActivities] = useState<any[]>([]);
+  const [selectedActivities, setSelectedActivities] = useState<Set<number>>(new Set());
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // 載入活動數據
   useEffect(() => {
@@ -78,13 +98,101 @@ ${activity.content || ''}
 申請狀態：${activity.status || ''}`;
   };
 
+  const handleSelectActivity = (id: number, checked: boolean) => {
+    const newSelected = new Set(selectedActivities);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedActivities(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedActivities(new Set(activities.map(a => a.id)));
+    } else {
+      setSelectedActivities(new Set());
+    }
+  };
+
   const handleDelete = (id: number) => {
-    if (window.confirm('確定要刪除此活動嗎？')) {
-      const updatedActivities = activities.filter(activity => activity.id !== id);
+    setDeleteTargetId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTargetId) {
+      setIsLoading(true);
+      setTimeout(() => {
+        const updatedActivities = activities.filter(activity => activity.id !== deleteTargetId);
+        setActivities(updatedActivities);
+        localStorage.setItem('activities', JSON.stringify(updatedActivities));
+        setDeleteDialogOpen(false);
+        setDeleteTargetId(null);
+        setIsLoading(false);
+        toast.success("活動已刪除");
+      }, 500);
+    }
+  };
+
+  const handleBatchDelete = () => {
+    setBatchDeleteDialogOpen(true);
+  };
+
+  const confirmBatchDelete = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      const updatedActivities = activities.filter(activity => !selectedActivities.has(activity.id));
       setActivities(updatedActivities);
       localStorage.setItem('activities', JSON.stringify(updatedActivities));
-      toast.success("活動已刪除");
-    }
+      setSelectedActivities(new Set());
+      setBatchDeleteDialogOpen(false);
+      setIsLoading(false);
+      toast.success(`已刪除 ${selectedActivities.size} 個活動`);
+    }, 500);
+  };
+
+  const handleBatchCopy = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      const activitiesToCopy = activities.filter(activity => selectedActivities.has(activity.id));
+      const newActivities = activitiesToCopy.map(activity => ({
+        ...activity,
+        id: new Date().getTime() + Math.random(),
+        name: `${activity.name} (複製)`,
+        status: "草稿"
+      }));
+      const updatedActivities = [...activities, ...newActivities];
+      setActivities(updatedActivities);
+      localStorage.setItem('activities', JSON.stringify(updatedActivities));
+      setSelectedActivities(new Set());
+      setIsLoading(false);
+      toast.success(`已複製 ${activitiesToCopy.length} 個活動`);
+    }, 500);
+  };
+
+  const handleBatchExport = () => {
+    const activitiesToExport = activities.filter(activity => selectedActivities.has(activity.id));
+    const exportData = activitiesToExport.map(activity => generateDocumentContent(activity)).join('\n\n---\n\n');
+    
+    const blob = new Blob([exportData], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `批量活動導出_${new Date().toLocaleDateString()}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success(`已導出 ${activitiesToExport.length} 個活動`);
+  };
+
+  const handleFileUpload = (files: FileList) => {
+    console.log('上傳的檔案:', files);
+    toast.success(`準備處理 ${files.length} 個檔案`);
+    setUploadDialogOpen(false);
   };
 
   const handleCopy = (id: number) => {
@@ -101,6 +209,29 @@ ${activity.content || ''}
       localStorage.setItem('activities', JSON.stringify(updatedActivities));
       toast.success("活動已複製");
     }
+  };
+
+  // 生成活動申請文件內容
+  const generateDocumentContent = (activity: any) => {
+    return `活動申請書
+
+活動名稱：${activity.name || activity.title || ''}
+活動類別：${activity.category || ''}
+活動日期：${activity.date || ''}
+活動地點：${activity.location || ''}
+主辦單位：${activity.unit || ''}
+
+活動目的：
+${activity.purpose || ''}
+
+活動內容：
+${activity.content || ''}
+
+參與對象：${activity.target || ''}
+預計參與人數：${activity.participants || ''}人
+
+申請日期：${new Date().toLocaleDateString()}
+申請狀態：${activity.status || ''}`;
   };
 
   const handleDownload = (id: number, format: string = 'txt') => {
@@ -132,7 +263,7 @@ ${activity.content || ''}
           // ODT 格式的簡單實現
           blob = new Blob([content], { type: 'application/vnd.oasis.opendocument.text' });
           mimeType = 'application/vnd.oasis.opendocument.text';
-          fileExtension = 'txt'; // 簡化為文字檔
+          fileExtension = 'txt'; // 簮化為文字檔
           break;
         case 'pdf':
           // PDF 格式需要特殊處理，這裡簡化為文字檔
@@ -203,6 +334,16 @@ ${activity.content || ''}
     }
   };
 
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner size="lg" text="處理中..." />
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="fade-in">
@@ -220,6 +361,13 @@ ${activity.content || ''}
                 新增活動
               </Link>
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              批量匯入
+            </Button>
             <Button variant="outline" asChild>
               <Link to="/document-template">
                 <FileText className="mr-2 h-4 w-4" />
@@ -229,11 +377,25 @@ ${activity.content || ''}
           </div>
         </div>
 
-        <Card>
+        <BatchOperations
+          selectedCount={selectedActivities.size}
+          onBatchDelete={handleBatchDelete}
+          onBatchExport={handleBatchExport}
+          onBatchCopy={handleBatchCopy}
+          onClearSelection={() => setSelectedActivities(new Set())}
+        />
+
+        <Card className={selectedActivities.size > 0 ? "mt-4" : ""}>
           <CardContent className="p-6">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedActivities.size === activities.length && activities.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>活動名稱</TableHead>
                   <TableHead>類別</TableHead>
                   <TableHead>活動日期</TableHead>
@@ -244,6 +406,12 @@ ${activity.content || ''}
               <TableBody>
                 {activities.map((activity) => (
                   <TableRow key={activity.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedActivities.has(activity.id)}
+                        onCheckedChange={(checked) => handleSelectActivity(activity.id, !!checked)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">
                       {activity.name}
                     </TableCell>
@@ -322,6 +490,62 @@ ${activity.content || ''}
             </Table>
           </CardContent>
         </Card>
+
+        {/* 單個刪除確認對話框 */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>確認刪除</AlertDialogTitle>
+              <AlertDialogDescription>
+                您確定要刪除此活動嗎？此操作無法撤銷。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                確認刪除
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* 批量刪除確認對話框 */}
+        <AlertDialog open={batchDeleteDialogOpen} onOpenChange={setBatchDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>確認批量刪除</AlertDialogTitle>
+              <AlertDialogDescription>
+                您確定要刪除選中的 {selectedActivities.size} 個活動嗎？此操作無法撤銷。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmBatchDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                確認刪除
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* 批量匯入對話框 */}
+        <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>批量匯入活動</DialogTitle>
+            </DialogHeader>
+            <DragDropUpload
+              onFileUpload={handleFileUpload}
+              accept=".json,.csv,.xlsx"
+              multiple={true}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
