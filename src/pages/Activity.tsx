@@ -8,6 +8,7 @@ import ActivityFormEnhanced from "@/components/activity/ActivityFormEnhanced";
 import ActivityApplicationIntegration from "@/components/activity/ActivityApplicationIntegration";
 import BudgetForm from "@/components/activity/BudgetForm";
 import PreviewSubmission from "@/components/activity/PreviewSubmission";
+import ActivityAttachmentManager from "@/components/activity/ActivityAttachmentManager";
 import { useActivityData } from "@/hooks/useActivityData";
 
 // 補助計畫選項
@@ -70,9 +71,10 @@ const Activity: React.FC = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="activity" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="activity">活動資料</TabsTrigger>
                 <TabsTrigger value="budget">預算表</TabsTrigger>
+                <TabsTrigger value="attachments">附件上傳</TabsTrigger>
                 <TabsTrigger value="application">申請文件</TabsTrigger>
                 <TabsTrigger value="preview" disabled={!selectedProgram}>預覽送件</TabsTrigger>
               </TabsList>
@@ -86,6 +88,9 @@ const Activity: React.FC = () => {
               </TabsContent>
               <TabsContent value="budget" className="mt-6">
                 <BudgetForm activityData={activityData} isNew={isNew} />
+              </TabsContent>
+              <TabsContent value="attachments" className="mt-6">
+                <ActivityAttachmentManager activityId={id} />
               </TabsContent>
               <TabsContent value="application" className="mt-6">
                 <ActivityApplicationIntegration 

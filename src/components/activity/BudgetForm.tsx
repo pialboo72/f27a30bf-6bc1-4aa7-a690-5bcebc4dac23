@@ -10,6 +10,7 @@ import BudgetExport from './BudgetExport';
 
 interface BudgetItem {
   id: number;
+  item: string;
   quantity: number;
   unit: string;
   unitPrice: number;
@@ -29,22 +30,21 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
 
   useEffect(() => {
     if (isNew) {
-      setBudgetItems([{ id: 1, quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }]);
-      setBudgetTitle('');
+      setBudgetItems([{ id: 1, item: "", quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }]);
       localStorage.removeItem('budgetItems');
     } else {
       const savedBudget = localStorage.getItem('budgetItems');
       if (savedBudget) {
         setBudgetItems(JSON.parse(savedBudget));
       } else {
-        setBudgetItems([{ id: 1, quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }]);
+        setBudgetItems([{ id: 1, item: "", quantity: 0, unit: "", unitPrice: 0, amount: 0, remarks: "" }]);
       }
     }
 
+    // 設定預設標題為「活動名稱+預算表」
     if (activityData) {
-      const unitName = activityData.unit || '申請單位';
-      const activityName = activityData.title || activityData.name || '活動名稱';
-      setBudgetTitle(`${unitName}${activityName}預算表`);
+      const activityName = activityData.title || activityData.name || '活動';
+      setBudgetTitle(`${activityName}預算表`);
     }
   }, [isNew, activityData]);
 
@@ -52,6 +52,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
     const newId = budgetItems.length > 0 ? Math.max(...budgetItems.map(item => item.id)) + 1 : 1;
     setBudgetItems([...budgetItems, { 
       id: newId, 
+      item: "",
       quantity: 0, 
       unit: "", 
       unitPrice: 0, 
@@ -63,6 +64,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
   const validateItem = (item: BudgetItem) => {
     let itemErrors: {[key: string]: boolean} = {};
     
+    if (!item.item.trim()) itemErrors.item = true;
     if (item.quantity <= 0) itemErrors.quantity = true;
     if (!item.unit.trim()) itemErrors.unit = true;
     if (item.unitPrice <= 0) itemErrors.unitPrice = true;
@@ -140,7 +142,6 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
             className="mt-2"
           />
         </div>
-        <BudgetExport budgetItems={budgetItems} budgetTitle={budgetTitle} />
       </div>
       
       <div className="overflow-x-auto">
@@ -148,6 +149,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
           <thead>
             <tr className="bg-muted">
               <th className="border border-gray-400 px-4 py-2 text-center font-medium">項次</th>
+              <th className="border border-gray-400 px-4 py-2 text-center font-medium">項目 <span className="text-red-500">*</span></th>
               <th className="border border-gray-400 px-4 py-2 text-center font-medium">數量 <span className="text-red-500">*</span></th>
               <th className="border border-gray-400 px-4 py-2 text-center font-medium">單位 <span className="text-red-500">*</span></th>
               <th className="border border-gray-400 px-4 py-2 text-center font-medium">單價 <span className="text-red-500">*</span></th>
@@ -159,6 +161,16 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
             {budgetItems.map((item, index) => (
               <tr key={item.id} className="border-b">
                 <td className="border border-gray-400 px-4 py-2 text-center">{index + 1}</td>
+                <td className="border border-gray-400 px-4 py-2">
+                  <Input
+                    value={item.item}
+                    onChange={(e) => handleUpdateItem(item.id, 'item', e.target.value)}
+                    className={cn("border-0 p-0 h-8 text-center", errors[item.id]?.item ? "border-red-500 ring-1 ring-red-500" : "")}
+                    placeholder="項目名稱"
+                    required
+                  />
+                  {errors[item.id]?.item && <span className="text-xs text-red-500">必填</span>}
+                </td>
                 <td className="border border-gray-400 px-4 py-2">
                   <Input
                     type="number"
@@ -205,9 +217,9 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
               </tr>
             ))}
             <tr className="bg-muted">
-              <td colSpan={4} className="border border-gray-400 px-4 py-2 text-center font-bold">總計：</td>
+              <td colSpan={5} className="border border-gray-400 px-4 py-2 text-center font-bold">總計：</td>
               <td className="border border-gray-400 px-4 py-2 font-bold text-center">{calculateTotal().toLocaleString()}</td>
-              <td className="border border-gray-400 px-4 py-2"></td>
+              <td className="border border-gray-400 px-4 py-2 text-center text-sm">各項經費得相互流用</td>
             </tr>
           </tbody>
         </table>
@@ -217,10 +229,13 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
         <Button onClick={handleAddItem} variant="outline">
           新增項目
         </Button>
-        <Button onClick={handleSubmit}>
-          <Save className="mr-2 h-4 w-4" />
-          儲存預算
-        </Button>
+        <div className="flex gap-2">
+          <BudgetExport budgetItems={budgetItems} budgetTitle={budgetTitle} />
+          <Button onClick={handleSubmit}>
+            <Save className="mr-2 h-4 w-4" />
+            儲存預算
+          </Button>
+        </div>
       </div>
     </div>
   );

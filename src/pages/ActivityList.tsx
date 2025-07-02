@@ -11,17 +11,11 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Pencil, Copy, Trash2, Download, Printer, Upload } from "lucide-react";
+import { Plus, Upload, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
 import { useFiles } from "@/contexts/FileContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +30,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import BatchOperations from "@/components/activity/BatchOperations";
 import DragDropUpload from "@/components/activity/DragDropUpload";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import ActivityTableRow from "@/components/activity/ActivityTableRow";
+import { handleDownloadDocument, handlePrintDocument } from "@/components/activity/ActivityDocumentGenerator";
 
 const ActivityList: React.FC = () => {
   const { downloadFile } = useFiles();
@@ -68,36 +64,13 @@ const ActivityList: React.FC = () => {
           category: "社區服務",
           date: "2025-06-15",
           status: "已提交",
-          hasDocument: true, // 標記此活動有生成的文件
+          hasDocument: true,
         },
       ];
       setActivities(initialActivities);
       localStorage.setItem('activities', JSON.stringify(initialActivities));
     }
   }, []);
-
-  // 生成活動申請文件內容
-  const generateDocumentContent = (activity: any) => {
-    return `活動申請書
-
-活動名稱：${activity.name || activity.title || ''}
-活動類別：${activity.category || ''}
-活動日期：${activity.date || ''}
-活動地點：${activity.location || ''}
-主辦單位：${activity.unit || ''}
-
-活動目的：
-${activity.purpose || ''}
-
-活動內容：
-${activity.content || ''}
-
-參與對象：${activity.target || ''}
-預計參與人數：${activity.participants || ''}人
-
-申請日期：${new Date().toLocaleDateString()}
-申請狀態：${activity.status || ''}`;
-  };
 
   const handleSelectActivity = (id: number, checked: boolean) => {
     const newSelected = new Set(selectedActivities);
@@ -175,7 +148,27 @@ ${activity.content || ''}
 
   const handleBatchExport = () => {
     const activitiesToExport = activities.filter(activity => selectedActivities.has(activity.id));
-    const exportData = activitiesToExport.map(activity => generateDocumentContent(activity)).join('\n\n---\n\n');
+    const exportData = activitiesToExport.map(activity => {
+      return `活動申請書
+
+活動名稱：${activity.name || activity.title || ''}
+活動類別：${activity.category || ''}
+活動日期：${activity.date || ''}
+活動地點：${activity.location || ''}
+主辦單位：${activity.unit || ''}
+
+活動目的：
+${activity.purpose || ''}
+
+活動內容：
+${activity.content || ''}
+
+參與對象：${activity.target || ''}
+預計參與人數：${activity.participants || ''}人
+
+申請日期：${new Date().toLocaleDateString()}
+申請狀態：${activity.status || ''}`;
+    }).join('\n\n---\n\n');
     
     const blob = new Blob([exportData], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -220,53 +213,10 @@ ${activity.content || ''}
       return;
     }
     
-    const content = generateDocumentContent(activity);
-    const fileName = `${activity.name || activity.title}_申請文件`;
-    
-    try {
-      let blob;
-      let mimeType;
-      let fileExtension;
-      
-      switch (format) {
-        case 'docx':
-          // 簡單的 RTF 格式，可以被 Word 打開
-          const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
-\\f0\\fs24 ${content.replace(/\n/g, '\\par ')}}`;
-          blob = new Blob([rtfContent], { type: 'application/rtf' });
-          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-          fileExtension = 'rtf'; // 使用 RTF 格式，Word 可以打開
-          break;
-        case 'odt':
-          // ODT 格式的簡單實現
-          blob = new Blob([content], { type: 'application/vnd.oasis.opendocument.text' });
-          mimeType = 'application/vnd.oasis.opendocument.text';
-          fileExtension = 'txt'; // 簮化為文字檔
-          break;
-        case 'pdf':
-          // PDF 格式需要特殊處理，這裡簡化為文字檔
-          blob = new Blob([content], { type: 'text/plain' });
-          mimeType = 'text/plain';
-          fileExtension = 'txt';
-          break;
-        default:
-          blob = new Blob([content], { type: 'text/plain' });
-          mimeType = 'text/plain';
-          fileExtension = 'txt';
-      }
-      
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${fileName}.${fileExtension}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
+    const success = handleDownloadDocument(activity, format);
+    if (success) {
       toast.success("文件下載完成");
-    } catch (error) {
-      console.error('下載文件時發生錯誤:', error);
+    } else {
       toast.error("下載文件時發生錯誤");
     }
   };
@@ -279,33 +229,8 @@ ${activity.content || ''}
       return;
     }
     
-    const content = generateDocumentContent(activity);
-    
-    // 創建新視窗進行列印
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>${activity.name} - 申請文件</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-              h1 { text-align: center; margin-bottom: 30px; }
-              .content { white-space: pre-line; }
-            </style>
-          </head>
-          <body>
-            <div class="content">${content}</div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      
-      printWindow.onload = () => {
-        printWindow.print();
-        printWindow.close();
-      };
-      
+    const success = handlePrintDocument(activity);
+    if (success) {
       toast.success("正在列印文件");
     } else {
       toast.error("無法開啟列印視窗");
@@ -383,86 +308,16 @@ ${activity.content || ''}
               </TableHeader>
               <TableBody>
                 {activities.map((activity) => (
-                  <TableRow key={activity.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedActivities.has(activity.id)}
-                        onCheckedChange={(checked) => handleSelectActivity(activity.id, !!checked)}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {activity.name}
-                    </TableCell>
-                    <TableCell>{activity.category}</TableCell>
-                    <TableCell>{activity.date}</TableCell>
-                    <TableCell>{activity.status}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          asChild
-                        >
-                          <Link to={`/activity/${activity.id}`}>
-                            <Pencil className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        
-                        {/* 只有已生成文件的活動才顯示下載和列印按鈕 */}
-                        {activity.hasDocument && (
-                          <>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  title="下載申請文件"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleDownload(activity.id, 'docx')}>
-                                  下載 DOCX 格式
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDownload(activity.id, 'odt')}>
-                                  下載 ODT 格式
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDownload(activity.id, 'pdf')}>
-                                  下載 PDF 格式
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handlePrint(activity.id)}
-                              title="列印申請文件"
-                            >
-                              <Printer className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleCopy(activity.id)}
-                          title="複製活動"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDelete(activity.id)}
-                          title="刪除活動"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <ActivityTableRow
+                    key={activity.id}
+                    activity={activity}
+                    isSelected={selectedActivities.has(activity.id)}
+                    onSelect={handleSelectActivity}
+                    onCopy={handleCopy}
+                    onDelete={handleDelete}
+                    onDownload={handleDownload}
+                    onPrint={handlePrint}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -529,7 +384,6 @@ ${activity.content || ''}
   );
 };
 
-// 添加 FileText 圖標元件
 const FileText = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
