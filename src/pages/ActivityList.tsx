@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -209,29 +210,6 @@ ${activity.content || ''}
       localStorage.setItem('activities', JSON.stringify(updatedActivities));
       toast.success("活動已複製");
     }
-  };
-
-  // 生成活動申請文件內容
-  const generateDocumentContent = (activity: any) => {
-    return `活動申請書
-
-活動名稱：${activity.name || activity.title || ''}
-活動類別：${activity.category || ''}
-活動日期：${activity.date || ''}
-活動地點：${activity.location || ''}
-主辦單位：${activity.unit || ''}
-
-活動目的：
-${activity.purpose || ''}
-
-活動內容：
-${activity.content || ''}
-
-參與對象：${activity.target || ''}
-預計參與人數：${activity.participants || ''}人
-
-申請日期：${new Date().toLocaleDateString()}
-申請狀態：${activity.status || ''}`;
   };
 
   const handleDownload = (id: number, format: string = 'txt') => {
