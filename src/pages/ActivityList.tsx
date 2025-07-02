@@ -182,7 +182,6 @@ ${activity.content || ''}
   const handleFileUpload = (files: FileList) => {
     console.log('上傳的檔案:', files);
     toast.success(`準備處理 ${files.length} 個檔案`);
-    setUploadDialogOpen(false);
   };
 
   const handleCopy = (id: number) => {
