@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
 import BudgetExport from './BudgetExport';
+import BudgetTable from './BudgetTable';
 
 interface BudgetItem {
   id: number;
@@ -41,7 +41,6 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
       }
     }
 
-    // 設定預設標題為「活動名稱+預算表」
     if (activityData) {
       const activityName = activityData.title || activityData.name || '活動';
       setBudgetTitle(`${activityName}預算表`);
@@ -100,10 +99,6 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
     }
   };
 
-  const calculateTotal = () => {
-    return budgetItems.reduce((sum, item) => sum + item.amount, 0);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -144,86 +139,11 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ activityData, isNew }) => {
         </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-400">
-          <thead>
-            <tr className="bg-muted">
-              <th className="border border-gray-400 px-4 py-2 text-center font-medium">項次</th>
-              <th className="border border-gray-400 px-4 py-2 text-center font-medium">項目 <span className="text-red-500">*</span></th>
-              <th className="border border-gray-400 px-4 py-2 text-center font-medium">數量 <span className="text-red-500">*</span></th>
-              <th className="border border-gray-400 px-4 py-2 text-center font-medium">單位 <span className="text-red-500">*</span></th>
-              <th className="border border-gray-400 px-4 py-2 text-center font-medium">單價 <span className="text-red-500">*</span></th>
-              <th className="border border-gray-400 px-4 py-2 text-center font-medium">金額</th>
-              <th className="border border-gray-400 px-4 py-2 text-center font-medium">備註</th>
-            </tr>
-          </thead>
-          <tbody>
-            {budgetItems.map((item, index) => (
-              <tr key={item.id} className="border-b">
-                <td className="border border-gray-400 px-4 py-2 text-center">{index + 1}</td>
-                <td className="border border-gray-400 px-4 py-2">
-                  <Input
-                    value={item.item}
-                    onChange={(e) => handleUpdateItem(item.id, 'item', e.target.value)}
-                    className={cn("border-0 p-0 h-8 text-center", errors[item.id]?.item ? "border-red-500 ring-1 ring-red-500" : "")}
-                    placeholder="項目名稱"
-                    required
-                  />
-                  {errors[item.id]?.item && <span className="text-xs text-red-500">必填</span>}
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  <Input
-                    type="number"
-                    value={item.quantity === 0 ? '' : item.quantity}
-                    onChange={(e) => handleUpdateItem(item.id, 'quantity', Number(e.target.value))}
-                    className={cn("border-0 p-0 h-8 text-center", errors[item.id]?.quantity ? "border-red-500 ring-1 ring-red-500" : "")}
-                    placeholder="0"
-                    required
-                  />
-                  {errors[item.id]?.quantity && <span className="text-xs text-red-500">必填</span>}
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  <Input
-                    value={item.unit}
-                    onChange={(e) => handleUpdateItem(item.id, 'unit', e.target.value)}
-                    className={cn("border-0 p-0 h-8 text-center", errors[item.id]?.unit ? "border-red-500 ring-1 ring-red-500" : "")}
-                    placeholder="單位"
-                    required
-                  />
-                  {errors[item.id]?.unit && <span className="text-xs text-red-500">必填</span>}
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  <Input
-                    type="number"
-                    value={item.unitPrice === 0 ? '' : item.unitPrice}
-                    onChange={(e) => handleUpdateItem(item.id, 'unitPrice', Number(e.target.value))}
-                    className={cn("border-0 p-0 h-8 text-center", errors[item.id]?.unitPrice ? "border-red-500 ring-1 ring-red-500" : "")}
-                    placeholder="0"
-                    required
-                  />
-                  {errors[item.id]?.unitPrice && <span className="text-xs text-red-500">必填</span>}
-                </td>
-                <td className="border border-gray-400 px-4 py-2 font-medium text-center">
-                  {item.amount.toLocaleString()}
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  <Input
-                    value={item.remarks}
-                    onChange={(e) => handleUpdateItem(item.id, 'remarks', e.target.value)}
-                    className="border-0 p-0 h-8 text-center"
-                    placeholder="備註"
-                  />
-                </td>
-              </tr>
-            ))}
-            <tr className="bg-muted">
-              <td colSpan={5} className="border border-gray-400 px-4 py-2 text-center font-bold">總計：</td>
-              <td className="border border-gray-400 px-4 py-2 font-bold text-center">{calculateTotal().toLocaleString()}</td>
-              <td className="border border-gray-400 px-4 py-2 text-center text-sm">各項經費得相互流用</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <BudgetTable
+        budgetItems={budgetItems}
+        errors={errors}
+        onUpdateItem={handleUpdateItem}
+      />
 
       <div className="flex justify-between">
         <Button onClick={handleAddItem} variant="outline">

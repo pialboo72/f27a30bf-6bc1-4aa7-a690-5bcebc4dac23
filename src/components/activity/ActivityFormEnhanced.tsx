@@ -4,10 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Save, Upload, AlertCircle } from "lucide-react";
+import { Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,47 +28,36 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
-    category: '',
     date: null as Date | null,
     dateRange: null as { start: Date; end: Date } | null,
     location: '',
-    purpose: '',
     content: '',
     target: '',
-    participants: '',
     unit: '',
     subsidyUnits: [] as SubsidyUnitData[],
   });
 
-  // 當 initialData 變更時更新表單資料
   useEffect(() => {
     if (initialData) {
       console.log("正在載入活動資料到表單", initialData);
       setFormData({
         title: initialData.title || initialData.name || '',
-        category: initialData.category || '',
         date: initialData.date ? new Date(initialData.date) : null,
         dateRange: null,
         location: initialData.location || '',
-        purpose: initialData.purpose || '',
         content: initialData.content || '',
         target: initialData.target || '',
-        participants: initialData.participants || '',
         unit: initialData.unit || '',
         subsidyUnits: initialData.subsidyUnits || [],
       });
     } else if (isNew) {
-      // 新增活動時重置表單
       setFormData({
         title: '',
-        category: '',
         date: null,
         dateRange: null,
         location: '',
-        purpose: '',
         content: '',
         target: '',
-        participants: '',
         unit: '',
         subsidyUnits: [],
       });
@@ -101,7 +88,7 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.category || !formData.date || !formData.location) {
+    if (!formData.title || !formData.date || !formData.location) {
       toast.error("請填寫所有必填欄位");
       return;
     }
@@ -113,7 +100,6 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
       const newActivity = {
         id: activityId,
         name: formData.title,
-        category: formData.category,
         date: formData.date ? format(formData.date, 'yyyy-MM-dd') : '',
         status: '已提交',
         hasDocument: true,
@@ -125,7 +111,6 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
       localStorage.setItem('activities', JSON.stringify(activities));
       toast.success("活動資料已儲存");
     } else {
-      // 更新現有活動
       const activityIndex = activities.findIndex((a: any) => a.id === initialData?.id);
       if (activityIndex !== -1) {
         activities[activityIndex] = {
@@ -141,7 +126,7 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
     }
   };
 
-  const shouldShowAlert = formData.category && !selectedProgram;
+  const shouldShowAlert = !selectedProgram;
 
   return (
     <div className="space-y-8">
@@ -159,29 +144,11 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="activity-category">活動類別 <span className="text-red-500">*</span></Label>
-            <Select 
-              value={formData.category} 
-              onValueChange={(value) => handleInputChange('category', value)}
-            >
-              <SelectTrigger id="activity-category">
-                <SelectValue placeholder="請選擇活動類別" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="文化藝術">文化藝術</SelectItem>
-                <SelectItem value="體育活動">體育活動</SelectItem>
-                <SelectItem value="教育學習">教育學習</SelectItem>
-                <SelectItem value="社區服務">社區服務</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-3">
             <Label htmlFor="activity-date">活動日期 <span className="text-red-500">*</span></Label>
             <DateRangeSelector onDateChange={handleDateChange} />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 md:col-span-2">
             <Label htmlFor="activity-location">活動地點 <span className="text-red-500">*</span></Label>
             <Input 
               id="activity-location" 
@@ -211,17 +178,6 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
         <h2 className="text-lg font-semibold mb-4">活動內容</h2>
         <div className="space-y-4">
           <div className="space-y-3">
-            <Label htmlFor="activity-purpose">活動目的</Label>
-            <Textarea 
-              id="activity-purpose" 
-              placeholder="請詳述活動目的" 
-              rows={3} 
-              value={formData.purpose}
-              onChange={(e) => handleInputChange('purpose', e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-3">
             <Label htmlFor="activity-content">活動內容</Label>
             <Textarea 
               id="activity-content" 
@@ -242,53 +198,14 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label htmlFor="activity-participants">預計參與人數</Label>
-              <Input 
-                id="activity-participants" 
-                type="number" 
-                placeholder="請輸入預計人數" 
-                min="0"
-                value={formData.participants}
-                onChange={(e) => handleInputChange('participants', e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="activity-unit">主辦單位</Label>
-              <Input 
-                id="activity-unit" 
-                placeholder="請輸入主辦單位"
-                value={formData.unit}
-                onChange={(e) => handleInputChange('unit', e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-semibold mb-4">附件上傳</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="attachment1">活動企劃書</Label>
-            <div className="flex items-center space-x-2">
-              <Input id="attachment1" type="file" className="flex-1" />
-              <Button variant="outline" size="icon">
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="attachment2">預算表</Label>
-            <div className="flex items-center space-x-2">
-              <Input id="attachment2" type="file" className="flex-1" />
-              <Button variant="outline" size="icon">
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
+            <Label htmlFor="activity-unit">主辦單位</Label>
+            <Input 
+              id="activity-unit" 
+              placeholder="請輸入主辦單位"
+              value={formData.unit}
+              onChange={(e) => handleInputChange('unit', e.target.value)}
+            />
           </div>
         </div>
       </div>

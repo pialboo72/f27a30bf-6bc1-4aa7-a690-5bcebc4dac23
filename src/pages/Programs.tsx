@@ -26,6 +26,10 @@ const Programs: React.FC = () => {
     setFilteredPrograms(subsidyPrograms);
   };
 
+  const handleCreateProgram = () => {
+    navigate('/programs/create');
+  };
+
   return (
     <MainLayout>
       <div className="fade-in space-y-6">
@@ -55,7 +59,7 @@ const Programs: React.FC = () => {
                 <Grid3X3 className="h-4 w-4" />
               </Button>
             </div>
-            <Button onClick={() => navigate("/admin/programs/create")}>
+            <Button onClick={handleCreateProgram}>
               <Plus className="mr-1 h-4 w-4" />
               新增計劃
             </Button>

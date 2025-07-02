@@ -10,7 +10,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Upload, FileText } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
@@ -25,9 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import BatchOperations from "@/components/activity/BatchOperations";
-import DragDropUpload from "@/components/activity/DragDropUpload";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import ActivityTableRow from "@/components/activity/ActivityTableRow";
 import { handleDownloadDocument, handlePrintDocument } from "@/components/activity/ActivityDocumentGenerator";
@@ -39,7 +37,6 @@ const ActivityList: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
   // 載入活動數據
@@ -263,19 +260,6 @@ ${activity.content || ''}
                 新增活動
               </Link>
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setUploadDialogOpen(true)}
-            >
-              <Upload className="mr-2 h-4 w-4" />
-              批量匯入
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/document-template">
-                <FileText className="mr-2 h-4 w-4" />
-                文件模板
-              </Link>
-            </Button>
           </div>
         </div>
 
@@ -364,20 +348,6 @@ ${activity.content || ''}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
-        {/* 批量匯入對話框 */}
-        <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>批量匯入活動</DialogTitle>
-            </DialogHeader>
-            <DragDropUpload
-              onFileUpload={handleFileUpload}
-              accept=".json,.csv,.xlsx"
-              multiple={true}
-            />
-          </DialogContent>
-        </Dialog>
       </div>
     </MainLayout>
   );
