@@ -28,12 +28,17 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
+    subject: '',
     date: null as Date | null,
     dateRange: null as { start: Date; end: Date } | null,
     location: '',
-    content: '',
     target: '',
-    unit: '',
+    guidingUnit: '',
+    organizingUnit: '',
+    content: '',
+    fundingSource: '',
+    budget: '',
+    expectedBenefits: '',
     subsidyUnits: [] as SubsidyUnitData[],
   });
 
@@ -42,23 +47,33 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
       console.log("正在載入活動資料到表單", initialData);
       setFormData({
         title: initialData.title || initialData.name || '',
+        subject: initialData.subject || '',
         date: initialData.date ? new Date(initialData.date) : null,
         dateRange: null,
         location: initialData.location || '',
-        content: initialData.content || '',
         target: initialData.target || '',
-        unit: initialData.unit || '',
+        guidingUnit: initialData.guidingUnit || '',
+        organizingUnit: initialData.organizingUnit || initialData.unit || '',
+        content: initialData.content || '',
+        fundingSource: initialData.fundingSource || '',
+        budget: initialData.budget || '',
+        expectedBenefits: initialData.expectedBenefits || '',
         subsidyUnits: initialData.subsidyUnits || [],
       });
     } else if (isNew) {
       setFormData({
         title: '',
+        subject: '',
         date: null,
         dateRange: null,
         location: '',
-        content: '',
         target: '',
-        unit: '',
+        guidingUnit: '',
+        organizingUnit: '',
+        content: '',
+        fundingSource: '',
+        budget: '',
+        expectedBenefits: '',
         subsidyUnits: [],
       });
     }
@@ -88,7 +103,7 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.date || !formData.location) {
+    if (!formData.title || !formData.subject || !formData.date || !formData.location) {
       toast.error("請填寫所有必填欄位");
       return;
     }
@@ -144,17 +159,57 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="activity-date">活動日期 <span className="text-red-500">*</span></Label>
+            <Label htmlFor="activity-subject">主旨 <span className="text-red-500">*</span></Label>
+            <Input 
+              id="activity-subject" 
+              placeholder="請輸入活動主旨" 
+              value={formData.subject}
+              onChange={(e) => handleInputChange('subject', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="activity-date">時間 <span className="text-red-500">*</span></Label>
             <DateRangeSelector onDateChange={handleDateChange} />
           </div>
 
-          <div className="space-y-3 md:col-span-2">
-            <Label htmlFor="activity-location">活動地點 <span className="text-red-500">*</span></Label>
+          <div className="space-y-3">
+            <Label htmlFor="activity-location">地點 <span className="text-red-500">*</span></Label>
             <Input 
               id="activity-location" 
               placeholder="請輸入活動地點" 
               value={formData.location}
               onChange={(e) => handleInputChange('location', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="activity-target">對象</Label>
+            <Input 
+              id="activity-target" 
+              placeholder="請輸入參與對象"
+              value={formData.target}
+              onChange={(e) => handleInputChange('target', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="guiding-unit">指導單位</Label>
+            <Input 
+              id="guiding-unit" 
+              placeholder="請輸入指導單位"
+              value={formData.guidingUnit}
+              onChange={(e) => handleInputChange('guidingUnit', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-3 md:col-span-2">
+            <Label htmlFor="organizing-unit">主辦單位</Label>
+            <Input 
+              id="organizing-unit" 
+              placeholder="請輸入主辦單位"
+              value={formData.organizingUnit}
+              onChange={(e) => handleInputChange('organizingUnit', e.target.value)}
             />
           </div>
         </div>
@@ -169,11 +224,6 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
         )}
       </div>
 
-      <SubsidyUnit 
-        subsidyUnits={formData.subsidyUnits}
-        onUnitsChange={handleSubsidyUnitsChange}
-      />
-
       <div className="border-b pb-6">
         <h2 className="text-lg font-semibold mb-4">活動內容</h2>
         <div className="space-y-4">
@@ -187,26 +237,51 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
               onChange={(e) => handleInputChange('content', e.target.value)}
             />
           </div>
+        </div>
+      </div>
 
+      <div className="border-b pb-6">
+        <h2 className="text-lg font-semibold mb-4">經費資訊</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="activity-target">參與對象</Label>
+            <Label htmlFor="funding-source">活動經費來源</Label>
             <Input 
-              id="activity-target" 
-              placeholder="請輸入參與對象"
-              value={formData.target}
-              onChange={(e) => handleInputChange('target', e.target.value)}
+              id="funding-source" 
+              placeholder="請輸入經費來源"
+              value={formData.fundingSource}
+              onChange={(e) => handleInputChange('fundingSource', e.target.value)}
             />
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="activity-unit">主辦單位</Label>
+            <Label htmlFor="budget">經費預算</Label>
             <Input 
-              id="activity-unit" 
-              placeholder="請輸入主辦單位"
-              value={formData.unit}
-              onChange={(e) => handleInputChange('unit', e.target.value)}
+              id="budget" 
+              type="number"
+              placeholder="請輸入預算金額"
+              value={formData.budget}
+              onChange={(e) => handleInputChange('budget', e.target.value)}
             />
           </div>
+        </div>
+
+        <SubsidyUnit 
+          subsidyUnits={formData.subsidyUnits}
+          onUnitsChange={handleSubsidyUnitsChange}
+        />
+      </div>
+
+      <div className="border-b pb-6">
+        <h2 className="text-lg font-semibold mb-4">預期效益</h2>
+        <div className="space-y-3">
+          <Label htmlFor="expected-benefits">預期效益</Label>
+          <Textarea 
+            id="expected-benefits" 
+            placeholder="請描述活動的預期效益" 
+            rows={4}
+            value={formData.expectedBenefits}
+            onChange={(e) => handleInputChange('expectedBenefits', e.target.value)}
+          />
         </div>
       </div>
 
@@ -223,4 +298,4 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
   );
 };
 
-export default ActivityFormEnhanced;
+export default ActivityFormEnhanded;

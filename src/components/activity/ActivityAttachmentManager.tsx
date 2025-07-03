@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { File, Trash2, Plus } from "lucide-react";
+import { File, Trash2, Plus, Edit2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface Attachment {
@@ -22,14 +22,16 @@ interface ActivityAttachmentManagerProps {
 
 const ActivityAttachmentManager: React.FC<ActivityAttachmentManagerProps> = ({ activityId }) => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [newAttachmentName, setNewAttachmentName] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    const attachmentName = newAttachmentName.trim() || file.name;
+    // Default to the original file name
+    const attachmentName = file.name;
 
     const newAttachment: Attachment = {
       id: Date.now(),
@@ -40,7 +42,6 @@ const ActivityAttachmentManager: React.FC<ActivityAttachmentManagerProps> = ({ a
     };
 
     setAttachments(prev => [...prev, newAttachment]);
-    setNewAttachmentName('');
     toast.success(`附件 "${attachmentName}" 已上傳`);
     
     // Reset file input
@@ -50,6 +51,27 @@ const ActivityAttachmentManager: React.FC<ActivityAttachmentManagerProps> = ({ a
   const handleRemoveAttachment = (id: number) => {
     setAttachments(prev => prev.filter(att => att.id !== id));
     toast.success('附件已刪除');
+  };
+
+  const handleEditStart = (id: number, currentName: string) => {
+    setEditingId(id);
+    setEditingName(currentName);
+  };
+
+  const handleEditSave = (id: number) => {
+    if (editingName.trim()) {
+      setAttachments(prev => prev.map(att => 
+        att.id === id ? { ...att, name: editingName.trim() } : att
+      ));
+      toast.success('附件名稱已更新');
+    }
+    setEditingId(null);
+    setEditingName('');
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setEditingName('');
   };
 
   const handleAddMore = () => {
@@ -62,18 +84,6 @@ const ActivityAttachmentManager: React.FC<ActivityAttachmentManagerProps> = ({ a
         <CardTitle>附件上傳</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <Label htmlFor="attachment-name">附件名稱</Label>
-            <Input
-              id="attachment-name"
-              placeholder="請輸入附件名稱（可選）"
-              value={newAttachmentName}
-              onChange={(e) => setNewAttachmentName(e.target.value)}
-            />
-          </div>
-        </div>
-        
         <div className="flex gap-2">
           <Input
             id="attachment-upload"
@@ -96,13 +106,49 @@ const ActivityAttachmentManager: React.FC<ActivityAttachmentManagerProps> = ({ a
             <Label>已上傳附件</Label>
             {attachments.map((attachment) => (
               <div key={attachment.id} className="flex items-center justify-between p-3 border rounded-md">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1">
                   <File className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">{attachment.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {attachment.originalName} • {(attachment.size / 1024).toFixed(2)} KB
-                    </div>
+                  <div className="flex-1">
+                    {editingId === attachment.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          className="h-8"
+                          onKeyPress={(e) => e.key === 'Enter' && handleEditSave(attachment.id)}
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditSave(attachment.id)}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleEditCancel}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <div className="font-medium">{attachment.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {attachment.originalName} • {(attachment.size / 1024).toFixed(2)} KB
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditStart(attachment.id, attachment.name)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <Badge variant="outline">{attachment.uploadDate}</Badge>
                 </div>
