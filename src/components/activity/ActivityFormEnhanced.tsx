@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -298,4 +297,4 @@ const ActivityFormEnhanced: React.FC<ActivityFormEnhancedProps> = ({
   );
 };
 
-export default ActivityFormEnhanded;
+export default ActivityFormEnhanced;
