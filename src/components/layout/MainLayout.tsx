@@ -10,10 +10,30 @@ type MainLayoutProps = {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(true);
+  const [isPinned, setIsPinned] = useState(false);
 
-  // 當側邊欄進入/離開時切換狀態
-  const handleSidebarMouseEnter = () => setCollapsed(false);
-  const handleSidebarMouseLeave = () => setCollapsed(true);
+  const handleSidebarMouseEnter = () => {
+    if (!isPinned) {
+      setCollapsed(false);
+    }
+  };
+
+  const handleSidebarMouseLeave = () => {
+    if (!isPinned) {
+      setCollapsed(true);
+    }
+  };
+
+  const handleTogglePin = () => {
+    setIsPinned(!isPinned);
+    if (!isPinned) {
+      // When pinning, expand the sidebar
+      setCollapsed(false);
+    } else {
+      // When unpinning, collapse the sidebar
+      setCollapsed(true);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -22,12 +42,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           collapsed={collapsed}
           onMouseEnter={handleSidebarMouseEnter}
           onMouseLeave={handleSidebarMouseLeave}
+          isPinned={isPinned}
+          onTogglePin={handleTogglePin}
         />
         <div
           className="flex-1 flex flex-col transition-all duration-300"
           style={{
-            marginLeft: collapsed ? "6rem" : "18rem", // w-24:6rem, w-72:18rem
-            // 使內容盡可能置中
+            marginLeft: collapsed ? "6rem" : "18rem",
             alignItems: "center",
           }}
         >

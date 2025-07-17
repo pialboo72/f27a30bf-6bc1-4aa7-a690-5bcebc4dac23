@@ -2,6 +2,8 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Pin, PinOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import SidebarHeader from "./sidebar/SidebarHeader";
 import SidebarNavSection from "./sidebar/SidebarNavSection";
 import SidebarFooter from "./sidebar/SidebarFooter";
@@ -11,12 +13,16 @@ type SidebarNavProps = {
   collapsed: boolean;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
+  isPinned: boolean;
+  onTogglePin: () => void;
 };
 
 const SidebarNav: React.FC<SidebarNavProps> = ({
   collapsed,
   onMouseEnter,
   onMouseLeave,
+  isPinned,
+  onTogglePin,
 }) => {
   const location = useLocation();
 
@@ -36,11 +42,36 @@ const SidebarNav: React.FC<SidebarNavProps> = ({
         collapsed ? "w-24" : "w-72",
         "transition-all duration-300"
       )}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      onMouseEnter={!isPinned ? onMouseEnter : undefined}
+      onMouseLeave={!isPinned ? onMouseLeave : undefined}
       style={{ minWidth: collapsed ? "6rem" : "18rem" }}
     >
       <SidebarHeader collapsed={collapsed} />
+
+      {/* Pin button */}
+      <div className="px-2 mb-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onTogglePin}
+          className={cn(
+            "w-full justify-center",
+            collapsed && "px-0"
+          )}
+          title={isPinned ? "取消固定側邊欄" : "固定側邊欄"}
+        >
+          {isPinned ? (
+            <PinOff className="h-4 w-4" />
+          ) : (
+            <Pin className="h-4 w-4" />
+          )}
+          {!collapsed && (
+            <span className="ml-2">
+              {isPinned ? "取消固定" : "固定側邊欄"}
+            </span>
+          )}
+        </Button>
+      </div>
 
       <div
         className={cn(
