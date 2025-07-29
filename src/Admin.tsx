@@ -8,7 +8,6 @@ import MainLayout from "@/components/layout/MainLayout";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { Settings, Users, FileText, Copy, FolderOpen, Building } from "lucide-react";
-import SystemStatus from "@/components/system/SystemStatus";
 
 const Admin: React.FC = () => {
   const handleSave = () => {
@@ -25,9 +24,6 @@ const Admin: React.FC = () => {
           </p>
         </div>
 
-        <div className="mb-8">
-          <SystemStatus />
-        </div>
 
         <div className="grid gap-6 grid-cols-1 md:grid-cols-3 mb-8">
           <Link to="/admin/programs">

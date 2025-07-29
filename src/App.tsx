@@ -8,7 +8,6 @@ import "./App.css";
 import Index from "@/pages/Index";
 import Admin from "@/pages/Admin";
 import ProgramManagement from "@/pages/ProgramManagement";
-import ActivityManagement from "@/pages/ActivityManagement";
 import Programs from "@/pages/Programs";
 import ProgramCreate from "@/pages/ProgramCreate";
 import Activity from "@/pages/Activity";
@@ -42,7 +41,6 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/programs" element={<ProgramManagement />} />
-              <Route path="/admin/activities" element={<ActivityManagement />} />
               <Route path="/admin/subsidies" element={<SubsidyManagement />} />
               <Route path="/admin/subsidies/create" element={<SubsidyCreate />} />
               <Route path="/admin/subsidies/edit/:id" element={<SubsidyEdit />} />
