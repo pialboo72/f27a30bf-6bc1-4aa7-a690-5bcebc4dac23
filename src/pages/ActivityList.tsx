@@ -196,7 +196,12 @@ ${activity.content || ''}
       const updatedActivities = [...activities, newActivity];
       setActivities(updatedActivities);
       localStorage.setItem('activities', JSON.stringify(updatedActivities));
-      toast.success("活動已複製");
+      toast.success("活動已複製，正在跳轉至編輯頁面");
+      
+      // 跳轉到編輯頁面
+      setTimeout(() => {
+        window.location.href = `/activity/${newActivity.id}`;
+      }, 1000);
     }
   };
 
@@ -270,7 +275,7 @@ ${activity.content || ''}
           onClearSelection={() => setSelectedActivities(new Set())}
         />
 
-        <Card className={selectedActivities.size > 0 ? "mt-4" : ""}>
+        <Card className="mt-4">
           <CardContent className="p-6">
             <Table>
               <TableHeader>

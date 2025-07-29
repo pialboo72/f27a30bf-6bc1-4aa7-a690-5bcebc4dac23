@@ -24,25 +24,26 @@ const BatchOperations: React.FC<BatchOperationsProps> = ({
   onBatchCopy,
   onClearSelection
 }) => {
-  if (selectedCount === 0) return null;
+  const isDisabled = selectedCount === 0;
 
   return (
     <div className="flex items-center gap-2 p-4 bg-muted rounded-md">
       <span className="text-sm text-muted-foreground">
-        已選擇 {selectedCount} 個活動
+        {selectedCount > 0 ? `已選擇 ${selectedCount} 個活動` : '請選擇要操作的活動'}
       </span>
       <div className="flex gap-2 ml-auto">
         <Button
           variant="outline"
           size="sm"
           onClick={onBatchCopy}
+          disabled={isDisabled}
         >
           <Copy className="h-4 w-4 mr-1" />
           批量複製
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" disabled={isDisabled}>
               <Download className="h-4 w-4 mr-1" />
               批量導出
             </Button>
@@ -60,6 +61,7 @@ const BatchOperations: React.FC<BatchOperationsProps> = ({
           variant="destructive"
           size="sm"
           onClick={onBatchDelete}
+          disabled={isDisabled}
         >
           <Trash2 className="h-4 w-4 mr-1" />
           批量刪除
@@ -68,6 +70,7 @@ const BatchOperations: React.FC<BatchOperationsProps> = ({
           variant="ghost"
           size="sm"
           onClick={onClearSelection}
+          disabled={isDisabled}
         >
           取消選擇
         </Button>
